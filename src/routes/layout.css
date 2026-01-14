@@ -1,2 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+/* Custom theme configuration for Tailwind CSS 4 */
+@theme {
+	/* Hungry theme colors */
+	--color-hungry-50: #f0fdf4;
+	--color-hungry-100: #dcfce7;
+	--color-hungry-200: #bbf7d0;
+	--color-hungry-300: #86efac;
+	--color-hungry-400: #4ade80;
+	--color-hungry-500: #22c55e;
+	--color-hungry-600: #16a34a;
+	--color-hungry-700: #15803d;
+	--color-hungry-800: #166534;
+	--color-hungry-900: #14532d;
+
+	/* Font families */
+	--font-display: 'Fredoka', sans-serif;
+}
+
+/* Component utility classes */
+@layer components {
+	.btn-primary {
+		@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white transition-all hover:bg-hungry-600 active:bg-hungry-700 disabled:cursor-not-allowed disabled:opacity-50;
+	}
+
+	.btn-secondary {
+		@apply rounded-xl bg-gray-100 px-6 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-200 active:bg-gray-300;
+	}
+
+	.card {
+		@apply rounded-2xl border border-gray-100 bg-white p-4 shadow-sm;
+	}
+
+	.page-container {
+		@apply mx-auto w-full max-w-lg px-4 pb-24;
+	}
+
+	.input-field {
+		@apply w-full rounded-xl border border-gray-200 px-4 py-3 transition-all focus:border-transparent focus:ring-2 focus:ring-hungry-500 focus:outline-none;
+	}
+}

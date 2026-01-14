@@ -1,0 +1,100 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
+	import HabitForm from '$lib/components/HabitForm.svelte';
+	import { habits } from '$lib/stores/habits';
+	import { mockMonster, monsterStages } from '$lib/data/mockData';
+
+	let step = $state<'welcome' | 'monster' | 'habit'>('welcome');
+	let monsterName = $state('Chompy');
+
+	const newMonster = $derived({
+		...mockMonster,
+		name: monsterName,
+		stage: 'egg' as const,
+		evolutionProgress: 0
+	});
+
+	function handleHabitSubmit(habit: {
+		name: string;
+		emoji: string;
+		color: string;
+		reminderTime: string | null;
+	}) {
+		habits.reset(); // Start fresh
+		habits.add(habit);
+		goto('/');
+	}
+</script>
+
+<svelte:head>
+	<title>Welcome | Hungry Hundreds</title>
+</svelte:head>
+
+<main class="page-container flex min-h-screen flex-col justify-center pt-4">
+	{#if step === 'welcome'}
+		<!-- Welcome Screen -->
+		<div class="text-center">
+			<div class="mb-6">
+				<span class="text-7xl">{monsterStages.egg.emoji}</span>
+			</div>
+			<h1 class="font-display mb-4 text-3xl font-bold text-gray-800">Welcome to Hungry Hundreds</h1>
+			<p class="mb-8 text-gray-600">
+				Build better habits and watch your monster companion grow with you!
+			</p>
+
+			<div class="space-y-4">
+				<button onclick={() => (step = 'monster')} class="btn-primary w-full">
+					Get Started
+				</button>
+				<button onclick={() => goto('/')} class="btn-secondary w-full"> Skip for Now </button>
+			</div>
+		</div>
+	{:else if step === 'monster'}
+		<!-- Monster Naming -->
+		<div class="text-center">
+			<MonsterDisplay monster={newMonster} />
+
+			<h2 class="font-display mb-2 mt-6 text-2xl font-bold text-gray-800">Name Your Monster</h2>
+			<p class="mb-6 text-gray-600">Give your new companion a name!</p>
+
+			<input
+				type="text"
+				bind:value={monsterName}
+				placeholder="Enter a name"
+				class="input-field mb-6 text-center text-lg"
+				maxlength="20"
+			/>
+
+			<div class="space-y-3">
+				<button onclick={() => (step = 'habit')} class="btn-primary w-full" disabled={!monsterName.trim()}>
+					Continue
+				</button>
+				<button onclick={() => (step = 'welcome')} class="text-sm text-gray-500 hover:text-gray-700">
+					← Back
+				</button>
+			</div>
+		</div>
+	{:else}
+		<!-- First Habit Creation -->
+		<div>
+			<div class="mb-6 text-center">
+				<span class="text-5xl">{monsterStages.egg.emoji}</span>
+				<h2 class="font-display mt-4 text-2xl font-bold text-gray-800">Create Your First Habit</h2>
+				<p class="text-gray-600">
+					{monsterName} is hungry for good habits! Create one to get started.
+				</p>
+			</div>
+
+			<HabitForm onsubmit={handleHabitSubmit} />
+
+			<button
+				onclick={() => (step = 'monster')}
+				class="mt-4 w-full text-sm text-gray-500 hover:text-gray-700"
+			>
+				← Back
+			</button>
+		</div>
+	{/if}
+</main>
+
