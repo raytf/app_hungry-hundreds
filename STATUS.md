@@ -7,16 +7,16 @@
 
 ## Quick Status
 
-| Phase | Name          | Status         | Progress |
-| ----- | ------------- | -------------- | -------- |
-| 1     | UI Foundation | ✅ Complete    | 5/5      |
-| 2     | Data Layer    | 🚧 In Progress | 4/5      |
-| 3     | Backend       | 📋 Planned     | 0/5      |
-| 4     | Sync          | 📋 Planned     | 0/4      |
-| 5     | Animation     | 📋 Planned     | 0/4      |
-| 6     | PWA           | 📋 Planned     | 0/5      |
+| Phase | Name          | Status      | Progress |
+| ----- | ------------- | ----------- | -------- |
+| 1     | UI Foundation | ✅ Complete | 5/5      |
+| 2     | Data Layer    | ✅ Complete | 5/5      |
+| 3     | Backend       | 📋 Planned  | 0/5      |
+| 4     | Sync          | 📋 Planned  | 0/4      |
+| 5     | Animation     | 📋 Planned  | 0/4      |
+| 6     | PWA           | 📋 Planned  | 0/5      |
 
-**Current Phase:** Phase 2 (Data Layer) - Dexie.js Integration
+**Current Phase:** Phase 3 (Backend) - Supabase Integration
 **Last Updated:** 2026-01-15
 
 ---
@@ -31,13 +31,14 @@
 - ✅ **Mock Data & Stores** - Svelte 5 runes with `$state()` and derived values
 - ✅ **Tailwind Styling** - Dark theme, Fredoka font, mobile-first responsive
 
-### Phase 2: Data Layer (In Progress)
+### Phase 2: Data Layer (Complete)
 
 - ✅ **Dexie.js Installed** - IndexedDB wrapper for local-first persistence
 - ✅ **Database Schema** - `src/lib/db/db.ts` with Habit, HabitLog, SyncQueue tables
 - ✅ **Habit CRUD Operations** - `src/lib/db/habits.ts` with create/read/update/delete
 - ✅ **HabitLog Operations** - `src/lib/db/habitLogs.ts` with streak calculation
-- 🚧 **Store Migration** - `habits.ts` updated to use Dexie with liveQuery reactivity
+- ✅ **Store Migration** - `habits.ts` updated to use Dexie with liveQuery reactivity
+- ✅ **Unit Tests** - 36 tests covering CRUD operations and streak calculation
 
 ### Tech Stack In Use
 
@@ -81,22 +82,19 @@
 
 ## 🎯 Immediate Next Steps
 
-### Phase 2: Data Layer (Complete Soon)
+### Phase 2: Data Layer ✅ Complete
 
-✅ Completed:
+All Phase 2 tasks completed:
 
 1. ✅ **Install Dexie.js** - `pnpm add dexie` (v4.2.1)
 2. ✅ **Create db.ts** - Dexie schema with Habit, HabitLog, SyncQueue tables
 3. ✅ **Create habits.ts** - CRUD operations for habits
 4. ✅ **Create habitLogs.ts** - Completion tracking and streak calculation
 5. ✅ **Migrate habitStore** - Using Dexie liveQuery for reactivity
+6. ✅ **Add unit tests** - 36 tests for all Dexie operations
+7. ✅ **Verify persistence** - Data persists across browser refresh
 
-🚧 Remaining:
-
-- [ ] Add tests for Dexie operations
-- [ ] Verify data persists across browser refresh (manual testing)
-
-### Phase 3: Backend (Next)
+### Phase 3: Backend (Current)
 
 Priority order for implementation:
 
