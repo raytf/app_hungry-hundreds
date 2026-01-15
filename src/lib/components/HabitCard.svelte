@@ -1,41 +1,49 @@
 <script lang="ts">
-	import { habits } from '$lib/stores/habits';
-	import type { Habit } from '$lib/data/mockData';
+	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 
 	interface Props {
-		habit: Habit;
+		habit: HabitWithStatus;
 	}
 
 	let { habit }: Props = $props();
 
 	function handleToggle() {
-		habits.toggle(habit.id);
+		if (habit.id !== undefined) {
+			habits.toggle(habit.id);
+		}
 	}
 </script>
 
-<div
-	class="card flex items-center gap-4 transition-all"
+<button
+	type="button"
+	onclick={handleToggle}
+	class="card flex w-full cursor-pointer items-center gap-4 text-left transition-all active:scale-[0.98]"
 	class:ring-2={habit.completedToday}
 	class:ring-hungry-500={habit.completedToday}
 	class:bg-hungry-50={habit.completedToday}
+	aria-label={habit.completedToday
+		? `Mark ${habit.name} as incomplete`
+		: `Mark ${habit.name} as complete`}
 >
-	<!-- Toggle button -->
-	<button
-		onclick={handleToggle}
-		class="flex h-10 w-10 items-center justify-center rounded-xl transition-transform active:scale-90"
+	<!-- Toggle indicator -->
+	<div
+		class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform"
 		style="background-color: {habit.completedToday ? habit.color : habit.color + '20'}"
-		aria-label={habit.completedToday ? `Mark ${habit.name} as incomplete` : `Mark ${habit.name} as complete`}
 	>
 		{#if habit.completedToday}
 			<span class="text-lg text-white">✓</span>
 		{:else}
 			<span class="text-lg">{habit.emoji}</span>
 		{/if}
-	</button>
+	</div>
 
 	<!-- Habit info -->
 	<div class="min-w-0 flex-1">
-		<p class="truncate font-medium" class:line-through={habit.completedToday} class:text-gray-500={habit.completedToday}>
+		<p
+			class="truncate font-medium"
+			class:line-through={habit.completedToday}
+			class:text-gray-500={habit.completedToday}
+		>
 			{habit.name}
 		</p>
 		{#if habit.reminderTime}
@@ -56,5 +64,4 @@
 		{/if}
 		<span>{habit.streak}</span>
 	</div>
-</div>
-
+</button>

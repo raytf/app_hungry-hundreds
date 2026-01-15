@@ -10,7 +10,12 @@
 		color: string;
 		reminderTime: string | null;
 	}) {
-		habits.add(habit);
+		habits.add({
+			name: habit.name,
+			emoji: habit.emoji,
+			color: habit.color,
+			reminderTime: habit.reminderTime ?? undefined
+		});
 		goto('/habits');
 	}
 </script>
@@ -32,4 +37,3 @@
 		Tip: Start with just 1-3 habits to build consistency
 	</p>
 </main>
-

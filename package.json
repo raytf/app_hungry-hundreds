@@ -47,5 +47,8 @@
 		"vitest": "^4.0.15",
 		"vitest-browser-svelte": "^2.0.1",
 		"wrangler": "^4.56.0"
+	},
+	"dependencies": {
+		"dexie": "^4.2.1"
 	}
 }

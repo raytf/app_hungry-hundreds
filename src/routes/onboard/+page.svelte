@@ -22,7 +22,12 @@
 		reminderTime: string | null;
 	}) {
 		habits.reset(); // Start fresh
-		habits.add(habit);
+		habits.add({
+			name: habit.name,
+			emoji: habit.emoji,
+			color: habit.color,
+			reminderTime: habit.reminderTime ?? undefined
+		});
 		goto('/');
 	}
 </script>
@@ -38,15 +43,13 @@
 			<div class="mb-6">
 				<span class="text-7xl">{monsterStages.egg.emoji}</span>
 			</div>
-			<h1 class="font-display mb-4 text-3xl font-bold text-gray-800">Welcome to Hungry Hundreds</h1>
+			<h1 class="mb-4 font-display text-3xl font-bold text-gray-800">Welcome to Hungry Hundreds</h1>
 			<p class="mb-8 text-gray-600">
 				Build better habits and watch your monster companion grow with you!
 			</p>
 
 			<div class="space-y-4">
-				<button onclick={() => (step = 'monster')} class="btn-primary w-full">
-					Get Started
-				</button>
+				<button onclick={() => (step = 'monster')} class="btn-primary w-full"> Get Started </button>
 				<button onclick={() => goto('/')} class="btn-secondary w-full"> Skip for Now </button>
 			</div>
 		</div>
@@ -55,7 +58,7 @@
 		<div class="text-center">
 			<MonsterDisplay monster={newMonster} />
 
-			<h2 class="font-display mb-2 mt-6 text-2xl font-bold text-gray-800">Name Your Monster</h2>
+			<h2 class="mt-6 mb-2 font-display text-2xl font-bold text-gray-800">Name Your Monster</h2>
 			<p class="mb-6 text-gray-600">Give your new companion a name!</p>
 
 			<input
@@ -67,10 +70,17 @@
 			/>
 
 			<div class="space-y-3">
-				<button onclick={() => (step = 'habit')} class="btn-primary w-full" disabled={!monsterName.trim()}>
+				<button
+					onclick={() => (step = 'habit')}
+					class="btn-primary w-full"
+					disabled={!monsterName.trim()}
+				>
 					Continue
 				</button>
-				<button onclick={() => (step = 'welcome')} class="text-sm text-gray-500 hover:text-gray-700">
+				<button
+					onclick={() => (step = 'welcome')}
+					class="text-sm text-gray-500 hover:text-gray-700"
+				>
 					← Back
 				</button>
 			</div>
@@ -80,7 +90,7 @@
 		<div>
 			<div class="mb-6 text-center">
 				<span class="text-5xl">{monsterStages.egg.emoji}</span>
-				<h2 class="font-display mt-4 text-2xl font-bold text-gray-800">Create Your First Habit</h2>
+				<h2 class="mt-4 font-display text-2xl font-bold text-gray-800">Create Your First Habit</h2>
 				<p class="text-gray-600">
 					{monsterName} is hungry for good habits! Create one to get started.
 				</p>
@@ -97,4 +107,3 @@
 		</div>
 	{/if}
 </main>
-
