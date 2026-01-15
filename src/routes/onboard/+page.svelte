@@ -4,6 +4,7 @@
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits } from '$lib/stores/habits';
 	import { mockMonster, monsterStages } from '$lib/data/mockData';
+	import { isAuthenticated, userEmail } from '$lib/stores/auth';
 
 	let step = $state<'welcome' | 'monster' | 'habit'>('welcome');
 	let monsterName = $state('Chompy');
@@ -13,6 +14,14 @@
 		name: monsterName,
 		stage: 'egg' as const,
 		evolutionProgress: 0
+	});
+
+	// Get first name from email for personalized greeting
+	const userName = $derived(() => {
+		if ($userEmail) {
+			return $userEmail.split('@')[0];
+		}
+		return null;
 	});
 
 	function handleHabitSubmit(habit: {
@@ -43,14 +52,32 @@
 			<div class="mb-6">
 				<span class="text-7xl">{monsterStages.egg.emoji}</span>
 			</div>
-			<h1 class="mb-4 font-display text-3xl font-bold text-gray-800">Welcome to Hungry Hundreds</h1>
-			<p class="mb-8 text-gray-600">
-				Build better habits and watch your monster companion grow with you!
-			</p>
+			{#if $isAuthenticated && userName()}
+				<h1 class="mb-4 font-display text-3xl font-bold text-gray-800">
+					Welcome, {userName()}!
+				</h1>
+				<p class="mb-8 text-gray-600">
+					Let's set up your habit journey and hatch your monster companion!
+				</p>
+			{:else}
+				<h1 class="mb-4 font-display text-3xl font-bold text-gray-800">
+					Welcome to Hungry Hundreds
+				</h1>
+				<p class="mb-8 text-gray-600">
+					Build better habits and watch your monster companion grow with you!
+				</p>
+			{/if}
 
 			<div class="space-y-4">
 				<button onclick={() => (step = 'monster')} class="btn-primary w-full"> Get Started </button>
-				<button onclick={() => goto('/')} class="btn-secondary w-full"> Skip for Now </button>
+				{#if !$isAuthenticated}
+					<a href="/auth/signup" class="btn-secondary block w-full text-center"> Create Account </a>
+					<button onclick={() => goto('/')} class="text-sm text-gray-500 hover:text-gray-700">
+						Skip for Now
+					</button>
+				{:else}
+					<button onclick={() => goto('/')} class="btn-secondary w-full"> Skip for Now </button>
+				{/if}
 			</div>
 		</div>
 	{:else if step === 'monster'}

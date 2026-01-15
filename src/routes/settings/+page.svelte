@@ -1,14 +1,26 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
 	import { habits } from '$lib/stores/habits';
 	import { mockMonster } from '$lib/data/mockData';
+	import { auth, isAuthenticated, userEmail } from '$lib/stores/auth';
 
 	let monsterName = $state(mockMonster.name);
 	let showResetConfirm = $state(false);
+	let signingOut = $state(false);
 
 	function handleReset() {
 		habits.reset();
 		showResetConfirm = false;
+	}
+
+	async function handleSignOut() {
+		signingOut = true;
+		const result = await auth.signOut();
+		if (result.success) {
+			goto('/auth/signin');
+		}
+		signingOut = false;
 	}
 </script>
 
@@ -36,6 +48,39 @@
 			<p class="mt-2 text-sm text-gray-400">
 				Your monster is currently a <span class="font-medium capitalize">{mockMonster.stage}</span>
 			</p>
+		</div>
+	</section>
+
+	<!-- Account -->
+	<section class="mb-6">
+		<h3 class="mb-3 font-semibold text-gray-700">Account</h3>
+		<div class="card">
+			{#if $isAuthenticated}
+				<div class="mb-4">
+					<p class="text-sm text-gray-500">Signed in as</p>
+					<p class="font-medium text-gray-800">{$userEmail}</p>
+				</div>
+				<button onclick={handleSignOut} class="btn-secondary w-full" disabled={signingOut}>
+					{#if signingOut}
+						<span class="inline-flex items-center gap-2">
+							<span
+								class="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent"
+							></span>
+							Signing out...
+						</span>
+					{:else}
+						Sign Out
+					{/if}
+				</button>
+			{:else}
+				<p class="mb-4 text-sm text-gray-600">
+					Sign in to sync your habits across devices and never lose your progress.
+				</p>
+				<div class="flex gap-2">
+					<a href="/auth/signin" class="btn-primary flex-1 text-center">Sign In</a>
+					<a href="/auth/signup" class="btn-secondary flex-1 text-center">Sign Up</a>
+				</div>
+			{/if}
 		</div>
 	</section>
 
@@ -105,4 +150,3 @@
 		</div>
 	</section>
 </main>
-
