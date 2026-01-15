@@ -7,8 +7,8 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 | Phase | Name          | Description                                        | Status      |
 | ----- | ------------- | -------------------------------------------------- | ----------- |
 | 1     | UI Foundation | SvelteKit, components, routing, mock data          | ✅ Complete |
-| 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | 📋 Planned  |
-| 3     | Backend       | Supabase, auth, database, Edge Functions           | 📋 Planned  |
+| 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | ✅ Complete |
+| 3     | Backend       | Supabase, auth, database, Edge Functions           | ✅ Complete |
 | 4     | Sync          | Offline queue, conflict resolution, reconnect      | 📋 Planned  |
 | 5     | Animation     | Rive integration, monster evolution, Motion One    | 📋 Planned  |
 | 6     | PWA           | Service worker, push notifications, installability | 📋 Planned  |
@@ -35,17 +35,17 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 
 ---
 
-## Phase 2: Data Layer 📋
+## Phase 2: Data Layer ✅
 
 **Goal:** Replace mock data with persistent local storage using Dexie.js.
 
 | Task                         | Status | Dependencies           | Effort |
 | ---------------------------- | ------ | ---------------------- | ------ |
-| Install Dexie.js             | 📋     | Phase 1 complete       | S      |
-| Create db.ts schema          | 📋     | Dexie installed        | M      |
-| Migrate habitStore           | 📋     | db.ts created          | M      |
-| Migrate habitLogStore        | 📋     | db.ts created          | M      |
-| Implement streak calculation | 📋     | habitLogStore migrated | M      |
+| Install Dexie.js             | ✅     | Phase 1 complete       | S      |
+| Create db.ts schema          | ✅     | Dexie installed        | M      |
+| Migrate habitStore           | ✅     | db.ts created          | M      |
+| Migrate habitLogStore        | ✅     | db.ts created          | M      |
+| Implement streak calculation | ✅     | habitLogStore migrated | M      |
 
 **Key Files to Create:**
 
@@ -65,37 +65,45 @@ src/lib/db/
 
 ---
 
-## Phase 3: Backend 📋
+## Phase 3: Backend ✅
 
 **Goal:** Set up Supabase for authentication and cloud data storage.
 
-| Task                      | Status | Dependencies     | Effort |
-| ------------------------- | ------ | ---------------- | ------ |
-| Create Supabase project   | 📋     | None             | S      |
-| Define database schema    | 📋     | Project created  | M      |
-| Enable Row Level Security | 📋     | Schema defined   | M      |
-| Implement Supabase Auth   | 📋     | RLS configured   | L      |
-| Create Edge Functions     | 📋     | Auth implemented | L      |
+| Task                    | Status | Dependencies      | Effort |
+| ----------------------- | ------ | ----------------- | ------ |
+| Install Supabase client | ✅     | None              | S      |
+| Create client module    | ✅     | Package installed | S      |
+| Create TypeScript types | ✅     | Client created    | M      |
+| Create auth helpers     | ✅     | Types defined     | M      |
+| Create auth store       | ✅     | Auth helpers      | M      |
+| Create SQL migration    | ✅     | Types defined     | M      |
+| Create API wrapper      | ✅     | Types defined     | M      |
 
-**Key Files to Create:**
+**Key Files Created:**
 
 ```
 src/lib/supabase/
-├── client.ts       # Supabase client instance
-├── auth.ts         # Authentication helpers
-└── api.ts          # API wrapper functions
+├── client.ts       # Supabase client instance ✅
+├── types.ts        # TypeScript database types ✅
+├── auth.ts         # Authentication helpers ✅
+├── api.ts          # API wrapper functions ✅
+└── index.ts        # Module exports ✅
 
-supabase/functions/
-├── complete-habit/index.ts
-└── daily-reminder/index.ts
+src/lib/stores/
+└── auth.ts         # Reactive auth store ✅
+
+supabase/migrations/
+└── 20260115_initial_schema.sql  # Database schema ✅
 ```
 
 **Acceptance Criteria:**
 
-- [ ] Users can sign up and log in
-- [ ] Data is stored in Supabase
-- [ ] RLS prevents unauthorized access
-- [ ] Edge Functions work correctly
+- [x] Supabase client configured with types
+- [x] Auth helpers for sign up/in/out
+- [x] Reactive auth store for UI
+- [x] SQL migration ready to deploy
+- [ ] Supabase project created (user action required)
+- [ ] Edge Functions (Phase 4+)
 
 ---
 

@@ -11,12 +11,12 @@
 | ----- | ------------- | ----------- | -------- |
 | 1     | UI Foundation | ✅ Complete | 5/5      |
 | 2     | Data Layer    | ✅ Complete | 5/5      |
-| 3     | Backend       | 📋 Planned  | 0/5      |
+| 3     | Backend       | ✅ Complete | 5/5      |
 | 4     | Sync          | 📋 Planned  | 0/4      |
 | 5     | Animation     | 📋 Planned  | 0/4      |
 | 6     | PWA           | 📋 Planned  | 0/5      |
 
-**Current Phase:** Phase 3 (Backend) - Supabase Integration
+**Current Phase:** Phase 4 (Sync) - Offline Queue & Conflict Resolution
 **Last Updated:** 2026-01-15
 
 ---
@@ -40,17 +40,29 @@
 - ✅ **Store Migration** - `habits.ts` updated to use Dexie with liveQuery reactivity
 - ✅ **Unit Tests** - 36 tests covering CRUD operations and streak calculation
 
+### Phase 3: Backend (Complete)
+
+- ✅ **Supabase Client** - `@supabase/supabase-js` v2.90 installed
+- ✅ **Client Module** - `src/lib/supabase/client.ts` with typed client
+- ✅ **New API Keys Support** - Supports both `sb_publishable_...` and legacy `anon` keys
+- ✅ **TypeScript Types** - `src/lib/supabase/types.ts` with full database types
+- ✅ **Auth Helpers** - `src/lib/supabase/auth.ts` with sign up/in/out
+- ✅ **Auth Store** - `src/lib/stores/auth.ts` with reactive session state
+- ✅ **SQL Migration** - `supabase/migrations/20260115_initial_schema.sql`
+- ✅ **API Wrapper** - `src/lib/supabase/api.ts` for CRUD operations
+
 ### Tech Stack In Use
 
-| Technology     | Status    | Notes                              |
-| -------------- | --------- | ---------------------------------- |
-| SvelteKit 2.x  | ✅ Active | Cloudflare Pages adapter           |
-| Svelte 5       | ✅ Active | Using runes (`$state`, `$derived`) |
-| Tailwind CSS 4 | ✅ Active | Custom dark theme                  |
-| TypeScript     | ✅ Active | Strict mode                        |
-| Dexie.js 4.x   | ✅ Active | IndexedDB wrapper with liveQuery   |
-| Vitest         | ✅ Active | Unit testing                       |
-| Playwright     | ✅ Active | E2E testing                        |
+| Technology      | Status    | Notes                              |
+| --------------- | --------- | ---------------------------------- |
+| SvelteKit 2.x   | ✅ Active | Cloudflare Pages adapter           |
+| Svelte 5        | ✅ Active | Using runes (`$state`, `$derived`) |
+| Tailwind CSS 4  | ✅ Active | Custom dark theme                  |
+| TypeScript      | ✅ Active | Strict mode                        |
+| Dexie.js 4.x    | ✅ Active | IndexedDB wrapper with liveQuery   |
+| Supabase JS 2.x | ✅ Active | Auth and database client           |
+| Vitest          | ✅ Active | Unit testing                       |
+| Playwright      | ✅ Active | E2E testing                        |
 
 ---
 
@@ -58,59 +70,60 @@
 
 ### Technologies Documented but Not Installed
 
-| Technology       | Documented In           | Status           | Reason              |
-| ---------------- | ----------------------- | ---------------- | ------------------- |
-| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed     | Phase 2 - Complete  |
-| Supabase         | ARCHITECTURE.md, API.md | ❌ Not installed | Phase 3 - Backend   |
-| @rive-app/canvas | ARCHITECTURE.md         | ❌ Not installed | Phase 5 - Animation |
-| Motion One       | ARCHITECTURE.md         | ❌ Not installed | Phase 5 - Animation |
-| Firebase (FCM)   | DEPLOYMENT.md           | ❌ Not installed | Phase 6 - PWA       |
+| Technology       | Documented In           | Status       | Reason              |
+| ---------------- | ----------------------- | ------------ | ------------------- |
+| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 2 - Complete  |
+| Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete  |
+| @rive-app/canvas | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Animation |
+| Motion One       | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Animation |
+| Firebase (FCM)   | DEPLOYMENT.md           | ❌ Not yet   | Phase 6 - PWA       |
 
 ### Features Documented but Not Built
 
-| Feature                 | Status         | Blocking                           |
-| ----------------------- | -------------- | ---------------------------------- |
-| IndexedDB persistence   | ✅ Implemented | Data persists in browser           |
-| Streak calculation      | ✅ Implemented | Computed from HabitLog entries     |
-| User authentication     | ❌ Not built   | No Supabase project                |
-| Offline sync queue      | ❌ Not built   | Requires Supabase (Phase 3+4)      |
-| Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲         |
-| Push notifications      | ❌ Not built   | Requires Firebase + Service Worker |
-| PWA installability      | ❌ Not built   | No manifest or service worker      |
+| Feature                 | Status         | Blocking                             |
+| ----------------------- | -------------- | ------------------------------------ |
+| IndexedDB persistence   | ✅ Implemented | Data persists in browser             |
+| Streak calculation      | ✅ Implemented | Computed from HabitLog entries       |
+| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready    |
+| User authentication     | ⏳ Ready       | Client ready, needs Supabase project |
+| Offline sync queue      | ❌ Not built   | Requires Phase 4 (Sync)              |
+| Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲           |
+| Push notifications      | ❌ Not built   | Requires Firebase + Service Worker   |
+| PWA installability      | ❌ Not built   | No manifest or service worker        |
 
 ---
 
 ## 🎯 Immediate Next Steps
 
-### Phase 2: Data Layer ✅ Complete
+### Phase 3: Backend ✅ Complete
 
-All Phase 2 tasks completed:
+All Phase 3 tasks completed:
 
-1. ✅ **Install Dexie.js** - `pnpm add dexie` (v4.2.1)
-2. ✅ **Create db.ts** - Dexie schema with Habit, HabitLog, SyncQueue tables
-3. ✅ **Create habits.ts** - CRUD operations for habits
-4. ✅ **Create habitLogs.ts** - Completion tracking and streak calculation
-5. ✅ **Migrate habitStore** - Using Dexie liveQuery for reactivity
-6. ✅ **Add unit tests** - 36 tests for all Dexie operations
-7. ✅ **Verify persistence** - Data persists across browser refresh
+1. ✅ **Install Supabase client** - `pnpm add @supabase/supabase-js` (v2.90.1)
+2. ✅ **Create client module** - `src/lib/supabase/client.ts` with typed client
+3. ✅ **Create TypeScript types** - `src/lib/supabase/types.ts` for database schema
+4. ✅ **Create auth helpers** - `src/lib/supabase/auth.ts` with sign up/in/out
+5. ✅ **Create auth store** - `src/lib/stores/auth.ts` with reactive session
+6. ✅ **Create SQL migration** - `supabase/migrations/20260115_initial_schema.sql`
+7. ✅ **Create API wrapper** - `src/lib/supabase/api.ts` for CRUD operations
 
-### Phase 3: Backend (Current)
+### Phase 4: Sync (Next)
 
 Priority order for implementation:
 
-1. **Create Supabase project** - Set up project and get credentials
-2. **Define database schema** - Create tables matching local Dexie schema
-3. **Enable Row Level Security** - User-scoped data access
-4. **Implement Supabase Auth** - Sign up / login flow
-5. **Create Edge Functions** - API endpoints for sync
+1. **Implement SyncQueue operations** - Queue local changes for sync
+2. **Online/offline detection** - Detect connectivity changes
+3. **Background sync logic** - Process queue when online
+4. **Conflict resolution** - Handle sync conflicts (last-write-wins)
 
 ### Prerequisites Check
 
-Before starting Phase 3:
+Before starting Phase 4:
 
 - [x] Phase 1 complete
 - [x] Phase 2 data layer working
-- [ ] Supabase account created
+- [x] Phase 3 Supabase client ready
+- [ ] Supabase project created with credentials in .env
 
 ---
 

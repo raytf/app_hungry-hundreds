@@ -50,6 +50,7 @@
 		"wrangler": "^4.56.0"
 	},
 	"dependencies": {
+		"@supabase/supabase-js": "^2.90.1",
 		"dexie": "^4.2.1"
 	}
 }
