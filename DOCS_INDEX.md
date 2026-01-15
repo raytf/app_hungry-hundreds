@@ -4,14 +4,30 @@ Quick reference guide to find the right documentation for your needs.
 
 ## 🎯 I want to...
 
+### Check Implementation Status
+
+**→ Read first**: [STATUS.md](./STATUS.md)
+
+- What's implemented vs. planned
+- Current development phase
+- Immediate next steps
+
+**→ Then read**: [ROADMAP.md](./docs/ROADMAP.md)
+
+- Phased development plan
+- Feature dependencies
+- Acceptance criteria
+
 ### Understand the Project
 
 **→ Start here**: [README.md](./README.md)
+
 - Project overview and quick start
 - Tech stack summary
 - Key features
 
-**→ Then read**: [ARCHITECTURE.md](./ARCHITECTURE.md)
+**→ Then read**: [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
 - System architecture
 - Design patterns
 - Technical decisions
@@ -19,7 +35,8 @@ Quick reference guide to find the right documentation for your needs.
 
 ### Set Up Development
 
-**→ Read**: [DEVELOPMENT.md](./DEVELOPMENT.md)
+**→ Read**: [DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+
 - Installation steps
 - Development workflow
 - Testing guidelines
@@ -27,13 +44,15 @@ Quick reference guide to find the right documentation for your needs.
 
 ### Build Features
 
-**→ Read**: [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+**→ Read**: [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)
+
 - Step-by-step implementation guide
 - Page templates
 - Common patterns
 - Checklists
 
-**→ Reference**: [COMPONENTS.md](./COMPONENTS.md)
+**→ Reference**: [COMPONENTS.md](./docs/COMPONENTS.md)
+
 - Component API reference
 - Props and events
 - Usage examples
@@ -41,7 +60,8 @@ Quick reference guide to find the right documentation for your needs.
 
 ### Work with Data
 
-**→ Read**: [API.md](./API.md)
+**→ Read**: [API.md](./docs/API.md)
+
 - Data models and schemas
 - Store API reference
 - Future REST endpoints
@@ -49,7 +69,8 @@ Quick reference guide to find the right documentation for your needs.
 
 ### Deploy the App
 
-**→ Read**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+**→ Read**: [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
 - Cloudflare Pages setup
 - Build configuration
 - Environment variables
@@ -57,10 +78,43 @@ Quick reference guide to find the right documentation for your needs.
 
 ## 📂 Documentation Files
 
+### [STATUS.md](./STATUS.md) ⭐
+
+**Purpose**: Implementation status tracking
+
+**Contains**:
+
+- Current development phase
+- What's implemented vs. planned
+- Technologies installed vs. documented
+- Immediate next steps
+- Blockers
+
+**Best for**: AI agents (read first), understanding current state
+
+---
+
+### [ROADMAP.md](./docs/ROADMAP.md)
+
+**Purpose**: Phased development plan with dependencies
+
+**Contains**:
+
+- Six development phases with tasks
+- Dependency diagram (Mermaid)
+- Acceptance criteria per phase
+- Effort estimates
+
+**Best for**: Planning work, understanding dependencies
+
+---
+
 ### [README.md](./README.md)
+
 **Purpose**: Project introduction and quick start guide
 
 **Contains**:
+
 - Project overview
 - Quick start instructions
 - Tech stack summary
@@ -71,10 +125,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [ARCHITECTURE.md](./ARCHITECTURE.md)
+### [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
 **Purpose**: System architecture and design decisions
 
 **Contains**:
+
 - Tech stack details
 - Project structure
 - Design patterns
@@ -85,6 +141,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Understanding the system, making architectural decisions
 
 **Key Sections**:
+
 - Tech Stack → Why each technology was chosen
 - Project Structure → File organization
 - Data Models → TypeScript interfaces
@@ -92,10 +149,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [DEVELOPMENT.md](./DEVELOPMENT.md)
+### [DEVELOPMENT.md](./docs/DEVELOPMENT.md)
+
 **Purpose**: Development setup and workflow
 
 **Contains**:
+
 - Prerequisites and setup
 - Project scripts
 - File structure conventions
@@ -107,6 +166,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Daily development work, onboarding new developers
 
 **Key Sections**:
+
 - Initial Setup → Getting started
 - Development Workflow → Common tasks
 - Component Development → Creating components
@@ -114,10 +174,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [COMPONENTS.md](./COMPONENTS.md)
+### [COMPONENTS.md](./docs/COMPONENTS.md)
+
 **Purpose**: UI component reference
 
 **Contains**:
+
 - Component API documentation
 - Props and events
 - Usage examples
@@ -128,6 +190,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Using existing components, understanding component APIs
 
 **Key Sections**:
+
 - Core Components → Detailed component docs
 - Utility Classes → Reusable CSS classes
 - Design Tokens → Colors, typography, spacing
@@ -135,10 +198,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [IMPLEMENTATION.md](./IMPLEMENTATION.md)
+### [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)
+
 **Purpose**: Step-by-step implementation guide
 
 **Contains**:
+
 - Implementation checklist
 - Setup steps
 - Page templates
@@ -149,6 +214,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Building new features, following implementation plan
 
 **Key Sections**:
+
 - Implementation Steps → Ordered checklist
 - Common Implementation Patterns → Code templates
 - Styling Guidelines → Consistent styling
@@ -156,10 +222,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [API.md](./API.md)
+### [API.md](./docs/API.md)
+
 **Purpose**: Data models and API reference
 
 **Contains**:
+
 - Data model schemas
 - Store API reference
 - Future REST endpoints
@@ -169,6 +237,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Working with data, understanding data flow
 
 **Key Sections**:
+
 - Data Models → TypeScript interfaces
 - Store API → Current state management
 - Future API Endpoints → Planned REST API
@@ -176,10 +245,12 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
-### [DEPLOYMENT.md](./DEPLOYMENT.md)
+### [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
 **Purpose**: Deployment process and configuration
 
 **Contains**:
+
 - Cloudflare Pages setup
 - Wrangler configuration
 - Build process
@@ -190,6 +261,7 @@ Quick reference guide to find the right documentation for your needs.
 **Best for**: Deploying the app, production issues
 
 **Key Sections**:
+
 - Deployment Methods → Automatic vs manual
 - Build Process → How builds work
 - Environment Configuration → Env vars
@@ -201,38 +273,38 @@ Quick reference guide to find the right documentation for your needs.
 
 ### File Locations
 
-| What | Where |
-|------|-------|
-| Pages/Routes | `src/routes/` |
-| Components | `src/lib/components/` |
-| Stores | `src/lib/stores/` |
-| Mock Data | `src/lib/data/mockData.js` |
+| What          | Where                                    |
+| ------------- | ---------------------------------------- |
+| Pages/Routes  | `src/routes/`                            |
+| Components    | `src/lib/components/`                    |
+| Stores        | `src/lib/stores/`                        |
+| Mock Data     | `src/lib/data/mockData.js`               |
 | Global Styles | `src/routes/layout.css` or `src/app.css` |
-| Static Assets | `static/` |
-| Config Files | Root directory |
+| Static Assets | `static/`                                |
+| Config Files  | Root directory                           |
 
 ### Key Concepts
 
-| Concept | Documentation |
-|---------|---------------|
-| Routing | [ARCHITECTURE.md](./ARCHITECTURE.md#routing) |
-| State Management | [ARCHITECTURE.md](./ARCHITECTURE.md#state-management) |
-| Component Patterns | [COMPONENTS.md](./COMPONENTS.md#component-patterns) |
-| Data Models | [API.md](./API.md#data-models) |
-| Styling | [DEVELOPMENT.md](./DEVELOPMENT.md#styling-guidelines) |
-| Testing | [DEVELOPMENT.md](./DEVELOPMENT.md#testing) |
-| Deployment | [DEPLOYMENT.md](./DEPLOYMENT.md) |
+| Concept            | Documentation                                              |
+| ------------------ | ---------------------------------------------------------- |
+| Routing            | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#routing)          |
+| State Management   | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#state-management) |
+| Component Patterns | [COMPONENTS.md](./docs/COMPONENTS.md#component-patterns)   |
+| Data Models        | [API.md](./docs/API.md#data-models)                        |
+| Styling            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#styling-guidelines) |
+| Testing            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#testing)            |
+| Deployment         | [DEPLOYMENT.md](./docs/DEPLOYMENT.md)                      |
 
 ### Common Tasks
 
-| Task | Documentation |
-|------|---------------|
-| Create a new page | [IMPLEMENTATION.md](./IMPLEMENTATION.md#6-create-route-structure) |
-| Create a component | [DEVELOPMENT.md](./DEVELOPMENT.md#creating-a-new-component) |
-| Add a habit field | [DEVELOPMENT.md](./DEVELOPMENT.md#adding-a-new-habit-field) |
-| Change theme colors | [DEVELOPMENT.md](./DEVELOPMENT.md#changing-theme-colors) |
-| Deploy to production | [DEPLOYMENT.md](./DEPLOYMENT.md#deployment-methods) |
-| Debug store state | [IMPLEMENTATION.md](./IMPLEMENTATION.md#debugging-tips) |
+| Task                 | Documentation                                                          |
+| -------------------- | ---------------------------------------------------------------------- |
+| Create a new page    | [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md#6-create-route-structure) |
+| Create a component   | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#creating-a-new-component)       |
+| Add a habit field    | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#adding-a-new-habit-field)       |
+| Change theme colors  | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#changing-theme-colors)          |
+| Deploy to production | [DEPLOYMENT.md](./docs/DEPLOYMENT.md#deployment-methods)               |
+| Debug store state    | [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md#debugging-tips)           |
 
 ## 🏷️ Tags for Semantic Search
 
@@ -246,25 +318,30 @@ Quick reference guide to find the right documentation for your needs.
 ## 📖 Reading Order
 
 ### For New Developers
+
 1. [README.md](./README.md) - Overview
-2. [DEVELOPMENT.md](./DEVELOPMENT.md) - Setup
-3. [ARCHITECTURE.md](./ARCHITECTURE.md) - Understanding
-4. [COMPONENTS.md](./COMPONENTS.md) - Reference
+2. [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Setup
+3. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Understanding
+4. [COMPONENTS.md](./docs/COMPONENTS.md) - Reference
 
 ### For AI Agents
-1. [ARCHITECTURE.md](./ARCHITECTURE.md) - System understanding
-2. [API.md](./API.md) - Data structures
-3. [COMPONENTS.md](./COMPONENTS.md) - UI components
-4. [IMPLEMENTATION.md](./IMPLEMENTATION.md) - Implementation patterns
+
+1. **[STATUS.md](./STATUS.md)** - What's implemented (READ FIRST)
+2. [ROADMAP.md](./docs/ROADMAP.md) - Phase dependencies
+3. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System understanding
+4. [API.md](./docs/API.md) - Data structures
+5. [COMPONENTS.md](./docs/COMPONENTS.md) - UI components
+6. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
 
 ### For Implementation
-1. [IMPLEMENTATION.md](./IMPLEMENTATION.md) - Step-by-step guide
-2. [COMPONENTS.md](./COMPONENTS.md) - Component reference
-3. [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
-4. [API.md](./API.md) - Data models
+
+1. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Step-by-step guide
+2. [COMPONENTS.md](./docs/COMPONENTS.md) - Component reference
+3. [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Development workflow
+4. [API.md](./docs/API.md) - Data models
 
 ### For Deployment
-1. [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide
-2. [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
-3. [DEVELOPMENT.md](./DEVELOPMENT.md) - Build commands
 
+1. [DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Deployment guide
+2. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture
+3. [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Build commands

@@ -44,12 +44,13 @@ Visit `http://localhost:5173` to see the app.
 
 Comprehensive documentation for AI agents and developers:
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture, tech stack, design patterns, and data models
-- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development setup, workflow, testing, and coding guidelines
-- **[COMPONENTS.md](./COMPONENTS.md)** - UI component reference with props, usage, and styling
-- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Step-by-step implementation guide and checklists
-- **[API.md](./API.md)** - Data models, store API, and future REST endpoints
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Cloudflare Pages deployment process and configuration
+- **[STATUS.md](./STATUS.md)** - Implementation status (what's built vs. planned)
+- **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System architecture, tech stack, design patterns, and data models
+- **[DEVELOPMENT.md](./docs/DEVELOPMENT.md)** - Development setup, workflow, testing, and coding guidelines
+- **[COMPONENTS.md](./docs/COMPONENTS.md)** - UI component reference with props, usage, and styling
+- **[IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)** - Step-by-step implementation guide and checklists
+- **[API.md](./docs/API.md)** - Data models, store API, and future REST endpoints
+- **[DEPLOYMENT.md](./docs/DEPLOYMENT.md)** - Cloudflare Pages deployment process and configuration
 
 ## 🛠️ Tech Stack
 
@@ -130,12 +131,12 @@ pnpm build
 pnpm wrangler pages deploy .svelte-kit/cloudflare
 ```
 
-For automatic deployments, connect your repository to Cloudflare Pages. See [DEPLOYMENT.md](./DEPLOYMENT.md) for details.
+For automatic deployments, connect your repository to Cloudflare Pages. See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for details.
 
 ## 🤝 Contributing
 
-1. Read [DEVELOPMENT.md](./DEVELOPMENT.md) for setup and guidelines
-2. Check [ARCHITECTURE.md](./ARCHITECTURE.md) to understand the system
+1. Read [DEVELOPMENT.md](./docs/DEVELOPMENT.md) for setup and guidelines
+2. Check [ARCHITECTURE.md](./docs/ARCHITECTURE.md) to understand the system
 3. Follow the existing code style and patterns
 4. Write tests for new features
 5. Update documentation as needed
