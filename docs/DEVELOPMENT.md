@@ -41,7 +41,7 @@ Create `.env.local` in the project root (not committed to git):
 ```bash
 # Supabase
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=xxx
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
 # Firebase Cloud Messaging
 PUBLIC_FIREBASE_API_KEY=xxx
@@ -51,7 +51,7 @@ PUBLIC_FIREBASE_VAPID_KEY=xxx
 
 **Getting credentials:**
 
-1. **Supabase**: Create a project at [supabase.com](https://supabase.com), copy URL and anon key from Settings → API
+1. **Supabase**: Create a project at [supabase.com](https://supabase.com), copy URL and publishable key from Settings → API → Project API keys
 2. **Firebase**: Create a project at [console.firebase.google.com](https://console.firebase.google.com), enable Cloud Messaging, generate VAPID key
 
 ### 4. Start Development Server

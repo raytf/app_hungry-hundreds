@@ -506,7 +506,7 @@ beforeEach(async () => {
 
 ```bash
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=xxx
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 ```
 
 For CI, skip Supabase tests or use a test project:

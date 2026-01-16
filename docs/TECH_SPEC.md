@@ -320,7 +320,7 @@ export default defineConfig({
 ```bash
 # .env.local (not committed)
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=xxx
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 PUBLIC_FIREBASE_API_KEY=xxx
 PUBLIC_FIREBASE_PROJECT_ID=xxx
 PUBLIC_FIREBASE_VAPID_KEY=xxx

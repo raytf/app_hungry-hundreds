@@ -12,8 +12,7 @@ import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL;
-const supabaseKey =
-	process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 console.log('\n🔌 Supabase Connection Test\n');
 console.log('━'.repeat(50));
@@ -27,13 +26,10 @@ if (!supabaseUrl) {
 console.log(`   ✅ URL: ${supabaseUrl}`);
 
 if (!supabaseKey) {
-	console.error(
-		'   ❌ Neither PUBLIC_SUPABASE_PUBLISHABLE_KEY nor PUBLIC_SUPABASE_ANON_KEY is set'
-	);
+	console.error('   ❌ PUBLIC_SUPABASE_PUBLISHABLE_KEY is not set');
 	process.exit(1);
 }
-const keyType = supabaseKey.startsWith('sb_') ? 'publishable' : 'anon';
-console.log(`   ✅ Key: ${keyType} key (${supabaseKey.slice(0, 20)}...)`);
+console.log(`   ✅ Key: publishable key (${supabaseKey.slice(0, 20)}...)`);
 
 // Create client
 const supabase = createClient(supabaseUrl, supabaseKey);

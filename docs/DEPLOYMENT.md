@@ -168,7 +168,7 @@ This preview uses the actual Cloudflare Workers runtime, simulating production e
 ```bash
 # Supabase
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=xxx
+PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
 
 # Firebase Cloud Messaging
 PUBLIC_FIREBASE_API_KEY=xxx
@@ -181,7 +181,7 @@ PUBLIC_FIREBASE_VAPID_KEY=xxx
 Add via Dashboard → Pages → Settings → Environment Variables:
 
 - `PUBLIC_SUPABASE_URL` - Supabase project URL
-- `PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `PUBLIC_SUPABASE_PUBLISHABLE_KEY` - Supabase publishable API key
 - `PUBLIC_FIREBASE_API_KEY` - Firebase API key
 - `PUBLIC_FIREBASE_PROJECT_ID` - Firebase project ID
 - `PUBLIC_FIREBASE_VAPID_KEY` - FCM VAPID key for push notifications
