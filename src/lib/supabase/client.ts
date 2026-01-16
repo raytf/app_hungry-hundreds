@@ -8,15 +8,18 @@
  * - PUBLIC_SUPABASE_URL: Your Supabase project URL
  * - PUBLIC_SUPABASE_PUBLISHABLE_KEY: Publishable API key (sb_publishable_...)
  *
+ * Note: Uses $env/dynamic/public for Cloudflare Pages compatibility.
+ * Environment variables are set in Cloudflare dashboard and loaded at runtime.
+ *
  * @see https://supabase.com/docs/guides/api/api-keys
  * @see docs/API.md for database schema documentation
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import type { Database } from './types';
 
-const supabaseUrl = PUBLIC_SUPABASE_URL;
-const supabaseKey = PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl = env.PUBLIC_SUPABASE_URL;
+const supabaseKey = env.PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
 	console.warn(
