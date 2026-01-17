@@ -270,7 +270,7 @@
 		<div class="card text-center">
 			<p class="mb-1 text-2xl">🦖</p>
 			<h4 class="font-display text-lg font-bold text-hungry-600">Hungry Hundreds</h4>
-			<p class="text-sm text-gray-500">Version 0.1.0 (Phase 1 - UI Foundation)</p>
+			<p class="text-sm text-gray-500">Version 0.5.0 (Phase 5 - Animation)</p>
 			<p class="mt-2 text-xs text-gray-400">
 				Build better habits with your evolving monster companion
 			</p>
