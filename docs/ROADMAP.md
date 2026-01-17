@@ -9,7 +9,7 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 | 1     | UI Foundation | SvelteKit, components, routing, mock data          | ✅ Complete |
 | 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | ✅ Complete |
 | 3     | Backend       | Supabase, auth, database, Edge Functions           | ✅ Complete |
-| 4     | Sync          | Offline queue, conflict resolution, reconnect      | 📋 Planned  |
+| 4     | Sync          | Offline queue, conflict resolution, reconnect      | ✅ Complete |
 | 5     | Animation     | Rive integration, monster evolution, Motion One    | 📋 Planned  |
 | 6     | PWA           | Service worker, push notifications, installability | 📋 Planned  |
 
@@ -107,33 +107,34 @@ supabase/migrations/
 
 ---
 
-## Phase 4: Sync 📋
+## Phase 4: Sync ✅
 
 **Goal:** Implement offline-first sync between Dexie and Supabase.
 
 | Task                      | Status | Dependencies      | Effort |
 | ------------------------- | ------ | ----------------- | ------ |
-| Implement SyncQueue table | 📋     | Phase 2, Phase 3  | M      |
-| Online/offline detection  | 📋     | SyncQueue ready   | S      |
-| Background sync logic     | 📋     | Detection working | L      |
-| Conflict resolution       | 📋     | Sync working      | L      |
+| Implement SyncQueue table | ✅     | Phase 2, Phase 3  | M      |
+| Online/offline detection  | ✅     | SyncQueue ready   | S      |
+| Background sync logic     | ✅     | Detection working | L      |
+| Conflict resolution       | ✅     | Sync working      | L      |
 
-**Key Files to Create:**
+**Key Files Created:**
 
 ```
 src/lib/sync/
-├── queue.ts        # SyncQueue operations
-├── detector.ts     # Online/offline detection
-├── sync.ts         # Core sync logic
-└── conflicts.ts    # Conflict resolution
+├── queue.ts        # SyncQueue operations ✅
+├── detector.ts     # Online/offline detection ✅
+├── sync.ts         # Core sync logic ✅
+├── conflicts.ts    # Conflict resolution ✅
+└── index.ts        # Module exports ✅
 ```
 
 **Acceptance Criteria:**
 
-- [ ] Changes made offline are queued
-- [ ] Queue processes when online
-- [ ] Conflicts are resolved (last-write-wins)
-- [ ] UI shows sync status
+- [x] Changes made offline are queued
+- [x] Queue processes when online
+- [x] Conflicts are resolved (last-write-wins)
+- [x] UI shows sync status (via syncStatusText store)
 
 ---
 
