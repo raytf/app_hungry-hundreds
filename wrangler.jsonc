@@ -2,12 +2,18 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "hungry-hundreds",
 	"compatibility_date": "2026-01-12",
-	"compatibility_flags": ["nodejs_als"],
+	"compatibility_flags": [
+		"nodejs_als"
+	],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
 	"workers_dev": true,
-	"preview_urls": true
+	"preview_urls": true,
+	"vars": {
+		"PUBLIC_SUPABASE_URL": "https://kpafaoouebsijkowhpzj.supabase.co",
+		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9HLZ3AbaUF0OGjE8L9p28g_4nU1THeH"
+	}
 }
