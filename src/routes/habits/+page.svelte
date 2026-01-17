@@ -8,7 +8,7 @@
 	<title>All Habits | Hungry Hundreds</title>
 </svelte:head>
 
-<Header title="All Habits">
+<Header title="All Habits" showSyncStatus>
 	{#snippet right()}
 		<a
 			href="/habits/new"
@@ -67,4 +67,3 @@
 		{/if}
 	</section>
 </main>
-

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Header from '$lib/components/Header.svelte';
+	import SyncStatusIndicator from '$lib/components/SyncStatusIndicator.svelte';
 	import { habits } from '$lib/stores/habits';
 	import { mockMonster } from '$lib/data/mockData';
 	import { auth, isAuthenticated, userEmail } from '$lib/stores/auth';
+	import { syncStore, isOnline, isSyncing } from '$lib/sync';
 
 	let monsterName = $state(mockMonster.name);
 	let showResetConfirm = $state(false);
@@ -21,6 +23,47 @@
 			goto('/auth/signin');
 		}
 		signingOut = false;
+	}
+
+	function handleManualSync() {
+		syncStore.sync();
+	}
+
+	// Format last sync time for display
+	function formatLastSyncTime(timestamp: number | null): string {
+		if (!timestamp) return 'Never synced';
+		const date = new Date(timestamp);
+		const now = new Date();
+		const diff = now.getTime() - timestamp;
+
+		// Within last minute
+		if (diff < 60000) return 'Just now';
+
+		// Within last hour
+		if (diff < 3600000) {
+			const mins = Math.floor(diff / 60000);
+			return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+		}
+
+		// Within today
+		if (date.toDateString() === now.toDateString()) {
+			return `Today at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+		}
+
+		// Yesterday
+		const yesterday = new Date(now);
+		yesterday.setDate(yesterday.getDate() - 1);
+		if (date.toDateString() === yesterday.toDateString()) {
+			return `Yesterday at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+		}
+
+		// Older
+		return date.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit'
+		});
 	}
 </script>
 
@@ -80,6 +123,90 @@
 					<a href="/auth/signin" class="btn-primary flex-1 text-center">Sign In</a>
 					<a href="/auth/signup" class="btn-secondary flex-1 text-center">Sign Up</a>
 				</div>
+			{/if}
+		</div>
+	</section>
+
+	<!-- Sync Status -->
+	<section class="mb-6">
+		<h3 class="mb-3 font-semibold text-gray-700">Sync Status</h3>
+		<div class="card">
+			<!-- Connection Status -->
+			<div class="mb-4 flex items-center gap-3">
+				<div
+					class="flex h-10 w-10 items-center justify-center rounded-full"
+					class:bg-green-100={$isOnline}
+					class:bg-gray-100={!$isOnline}
+				>
+					<span class="text-lg">{$isOnline ? '🌐' : '📡'}</span>
+				</div>
+				<div>
+					<p class="font-medium text-gray-800">
+						{$isOnline ? 'Online' : 'Offline'}
+					</p>
+					<p class="text-sm text-gray-500">
+						{$isOnline ? 'Connected to the internet' : 'Working offline - changes will sync later'}
+					</p>
+				</div>
+			</div>
+
+			<!-- Sync Status Detail -->
+			<div class="mb-4 border-t border-gray-100 pt-4">
+				<SyncStatusIndicator showText />
+			</div>
+
+			<!-- Pending Changes -->
+			{#if $syncStore.pendingCount > 0}
+				<div class="mb-4 rounded-lg bg-amber-50 p-3">
+					<div class="flex items-center gap-2">
+						<span class="text-amber-600">📤</span>
+						<span class="text-sm font-medium text-amber-800">
+							{$syncStore.pendingCount} pending change{$syncStore.pendingCount !== 1 ? 's' : ''}
+						</span>
+					</div>
+					<p class="mt-1 text-xs text-amber-600">
+						{$isOnline ? 'Will sync automatically' : 'Will sync when back online'}
+					</p>
+				</div>
+			{/if}
+
+			<!-- Error Display -->
+			{#if $syncStore.status === 'error' && $syncStore.error}
+				<div class="mb-4 rounded-lg bg-red-50 p-3">
+					<div class="flex items-center gap-2">
+						<span class="text-red-500">⚠️</span>
+						<span class="text-sm font-medium text-red-800">Sync Error</span>
+					</div>
+					<p class="mt-1 text-xs text-red-600">{$syncStore.error}</p>
+				</div>
+			{/if}
+
+			<!-- Last Sync Time -->
+			<div class="text-sm text-gray-500">
+				<span class="font-medium">Last synced:</span>
+				{formatLastSyncTime($syncStore.lastSync)}
+			</div>
+
+			<!-- Manual Sync Button -->
+			{#if $isAuthenticated}
+				<button
+					onclick={handleManualSync}
+					disabled={$isSyncing || !$isOnline}
+					class="btn-secondary mt-4 w-full"
+				>
+					{#if $isSyncing}
+						<span class="inline-flex items-center gap-2">
+							<span
+								class="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent"
+							></span>
+							Syncing...
+						</span>
+					{:else}
+						Sync Now
+					{/if}
+				</button>
+			{:else}
+				<p class="mt-4 text-center text-sm text-gray-500">Sign in to enable cloud sync</p>
 			{/if}
 		</div>
 	</section>

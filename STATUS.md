@@ -26,7 +26,7 @@
 ### Phase 1: UI Foundation (Complete)
 
 - ✅ **SvelteKit Project** - Cloudflare adapter, TypeScript, Tailwind CSS 4
-- ✅ **Component Library** - HabitCard, Header, BottomNav, EmptyState, ProgressRing
+- ✅ **Component Library** - HabitCard, Header, BottomNav, EmptyState, ProgressRing, SyncStatusIndicator
 - ✅ **File-based Routing** - Home, habits/, dashboard/, settings/
 - ✅ **Mock Data & Stores** - Svelte 5 runes with `$state()` and derived values
 - ✅ **Tailwind Styling** - Dark theme, Fredoka font, mobile-first responsive
@@ -57,6 +57,23 @@
 - ✅ **Online/Offline Detection** - `src/lib/sync/detector.ts` with reactive connection store
 - ✅ **Background Sync Logic** - `src/lib/sync/sync.ts` with push/pull operations
 - ✅ **Conflict Resolution** - `src/lib/sync/conflicts.ts` with last-write-wins strategy
+- ✅ **Sync Status UI** - Visual indicators for offline/online, syncing, pending changes, and errors
+
+### Phase 4.5: Sync Status UI (Complete)
+
+- ✅ **SyncStatusIndicator Component** - `src/lib/components/SyncStatusIndicator.svelte`
+  - Compact mode for header display (icon with pending count badge)
+  - Full mode with status text, last sync time, and manual sync button
+  - Visual feedback for: online/offline, syncing, pending changes, errors
+- ✅ **Header Integration** - Optional `showSyncStatus` prop on Header component
+- ✅ **Settings Sync Section** - Dedicated sync status section in Settings page
+  - Connection status display (online/offline)
+  - Pending changes count with auto-sync messaging
+  - Error display for sync failures
+  - Last sync timestamp with human-readable formatting
+  - Manual "Sync Now" button for authenticated users
+- ✅ **Sync Initialization** - `syncStore.init()` called in root layout on app load
+- ✅ **Pages with Sync Status** - Today (home), Habits list pages show compact sync indicator
 
 ### Tech Stack In Use
 
@@ -94,6 +111,7 @@
 | Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready    |
 | User authentication     | ⏳ Ready       | Client ready, needs Supabase project |
 | Offline sync queue      | ✅ Implemented | Phase 4 complete                     |
+| Sync status UI          | ✅ Implemented | Visual feedback for sync state       |
 | Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲           |
 | Push notifications      | ❌ Not built   | Requires Firebase + Service Worker   |
 | PWA installability      | ❌ Not built   | No manifest or service worker        |
@@ -110,8 +128,9 @@ All Phase 4 tasks completed:
 2. ✅ **Online/offline detection** - `src/lib/sync/detector.ts` detects connectivity
 3. ✅ **Background sync logic** - `src/lib/sync/sync.ts` processes queue
 4. ✅ **Conflict resolution** - `src/lib/sync/conflicts.ts` last-write-wins
+5. ✅ **Sync status UI** - Visual indicators in Header and Settings
 
-### Phase 5: Animation (Next)
+### Phase 5: Animation (Current Priority)
 
 Priority order for implementation:
 
@@ -128,6 +147,7 @@ Before starting Phase 5:
 - [x] Phase 2 complete (Data Layer)
 - [x] Phase 3 complete (Backend)
 - [x] Phase 4 complete (Sync)
+- [x] Phase 4.5 complete (Sync Status UI)
 - [ ] Supabase project created with credentials in .env (for full testing)
 
 ---

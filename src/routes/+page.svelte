@@ -23,7 +23,7 @@
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
 
-<Header title="Today">
+<Header title="Today" showSyncStatus>
 	{#snippet right()}
 		<ProgressRing pct={$todaysProgress.pct} size={40} />
 	{/snippet}

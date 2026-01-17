@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import SyncStatusIndicator from './SyncStatusIndicator.svelte';
 
 	interface Props {
 		title?: string;
 		showBack?: boolean;
+		/** Show compact sync status indicator in header */
+		showSyncStatus?: boolean;
 		right?: Snippet;
 	}
 
-	let { title = '', showBack = false, right }: Props = $props();
+	let { title = '', showBack = false, showSyncStatus = false, right }: Props = $props();
 </script>
 
 <header class="sticky top-0 z-10 border-b border-gray-100 bg-gray-50/80 backdrop-blur-lg">
@@ -22,11 +25,13 @@
 			</a>
 		{/if}
 		<h1 class="flex-1 truncate text-lg font-semibold">{title}</h1>
-		{#if right}
-			<div class="flex items-center">
+		<div class="flex items-center gap-2">
+			{#if showSyncStatus}
+				<SyncStatusIndicator compact />
+			{/if}
+			{#if right}
 				{@render right()}
-			</div>
-		{/if}
+			{/if}
+		</div>
 	</div>
 </header>
-
