@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { WeeklyDataPoint } from '$lib/data/mockData';
+	import type { WeeklyDataPoint } from '$lib/stores/stats';
 
 	interface Props {
 		data: WeeklyDataPoint[];
@@ -37,11 +37,14 @@
 				<!-- Day label -->
 				<span class="text-xs text-gray-500">{day.day}</span>
 				<!-- Count -->
-				<span class="text-xs font-medium" class:text-hungry-600={isComplete} class:text-gray-600={!isComplete}>
+				<span
+					class="text-xs font-medium"
+					class:text-hungry-600={isComplete}
+					class:text-gray-600={!isComplete}
+				>
 					{day.completed}/{day.total}
 				</span>
 			</div>
 		{/each}
 	</div>
 </div>
-

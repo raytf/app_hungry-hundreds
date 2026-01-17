@@ -4,7 +4,7 @@
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
-	import { mockMonster } from '$lib/data/mockData';
+	import { monster } from '$lib/stores/monster';
 
 	// Get current date for greeting
 	const now = new Date();
@@ -38,7 +38,7 @@
 
 	<!-- Monster Display -->
 	<section class="mb-6">
-		<MonsterDisplay monster={mockMonster} />
+		<MonsterDisplay monster={$monster} />
 	</section>
 
 	<!-- Progress Summary -->

@@ -4,7 +4,7 @@
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import WeeklyChart from '$lib/components/WeeklyChart.svelte';
 	import { habits, todaysProgress } from '$lib/stores/habits';
-	import { mockStats } from '$lib/data/mockData';
+	import { stats } from '$lib/stores/stats';
 
 	// Calculate additional stats
 	let totalStreak = $derived($habits.reduce((sum, h) => sum + h.streak, 0));
@@ -41,12 +41,12 @@
 
 	<!-- Weekly Chart -->
 	<section class="mb-6">
-		<WeeklyChart data={mockStats.weeklyData} />
+		<WeeklyChart data={$stats.weeklyData} />
 	</section>
 
 	<!-- Stats Grid -->
 	<section class="mb-6 grid grid-cols-2 gap-3">
-		<StatsCard label="Completion Rate" value="{mockStats.completionRate}%" icon="📊" />
+		<StatsCard label="Completion Rate" value="{$stats.completionRate}%" icon="📊" />
 		<StatsCard label="Active Habits" value={String(activeHabits)} icon="📋" />
 		<StatsCard label="Total Streak Days" value={String(totalStreak)} icon="🔥" />
 		<StatsCard label="Longest Streak" value="{longestStreak} days" icon="🏆" />

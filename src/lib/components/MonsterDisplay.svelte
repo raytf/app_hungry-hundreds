@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { monsterStages, type Monster } from '$lib/data/mockData';
+	import { monsterStages, type Monster } from '$lib/stores/monster';
 
 	interface Props {
 		monster: Monster;
@@ -18,7 +18,7 @@
 	<span class="animate-bounce text-7xl">{stageConfig.emoji}</span>
 
 	<!-- Evolution progress bar -->
-	<div class="absolute bottom-2 left-2 right-2 h-2 overflow-hidden rounded-full bg-black/10">
+	<div class="absolute right-2 bottom-2 left-2 h-2 overflow-hidden rounded-full bg-black/10">
 		<div
 			class="h-full rounded-full bg-white/60 transition-all duration-500"
 			style="width: {monster.evolutionProgress}%"
@@ -37,4 +37,3 @@
 <p class="mt-3 text-center font-display text-xl font-semibold text-gray-700">
 	{monster.name}
 </p>
-
