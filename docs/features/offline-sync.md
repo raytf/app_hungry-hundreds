@@ -16,12 +16,12 @@ As a habit tracker user, I want my habits and completions to work offline so tha
 
 The sync system consists of four main modules:
 
-| Module | File | Purpose |
-|--------|------|---------|
-| Queue | `src/lib/sync/queue.ts` | Manages pending operations |
-| Detector | `src/lib/sync/detector.ts` | Monitors network connectivity |
-| Sync Engine | `src/lib/sync/sync.ts` | Orchestrates push/pull operations |
-| Conflicts | `src/lib/sync/conflicts.ts` | Resolves data conflicts |
+| Module      | File                        | Purpose                           |
+| ----------- | --------------------------- | --------------------------------- |
+| Queue       | `src/lib/sync/queue.ts`     | Manages pending operations        |
+| Detector    | `src/lib/sync/detector.ts`  | Monitors network connectivity     |
+| Sync Engine | `src/lib/sync/sync.ts`      | Orchestrates push/pull operations |
+| Conflicts   | `src/lib/sync/conflicts.ts` | Resolves data conflicts           |
 
 ### Data Flow Diagram
 
@@ -154,10 +154,10 @@ When online, the sync engine:
 async sync(): Promise<boolean> {
     // Process queue (push local changes)
     await this.processQueue(currentUserId);
-    
+
     // Pull remote changes
     await this.pullRemoteChanges(currentUserId);
-    
+
     update((s) => ({
         ...s,
         status: 'idle',
@@ -309,24 +309,24 @@ export const syncStatusText = derived(syncStore, ($sync) => {
 
 ```svelte
 <script>
-    import { isOnline, syncStore, syncStatusText, isSyncing } from '$lib/sync';
+	import { isOnline, syncStore, syncStatusText, isSyncing } from '$lib/sync';
 </script>
 
 <!-- Status indicator -->
 <div class="sync-status" class:offline={!$isOnline}>
-    {#if $isSyncing}
-        <span class="animate-spin">⟳</span>
-    {:else if !$isOnline}
-        <span>📴</span>
-    {:else}
-        <span>✓</span>
-    {/if}
-    <span>{$syncStatusText}</span>
+	{#if $isSyncing}
+		<span class="animate-spin">⟳</span>
+	{:else if !$isOnline}
+		<span>📴</span>
+	{:else}
+		<span>✓</span>
+	{/if}
+	<span>{$syncStatusText}</span>
 </div>
 
 <!-- Last sync time -->
 {#if $syncStore.lastSync}
-    <small>Last synced: {new Date($syncStore.lastSync).toLocaleTimeString()}</small>
+	<small>Last synced: {new Date($syncStore.lastSync).toLocaleTimeString()}</small>
 {/if}
 ```
 
@@ -573,12 +573,12 @@ catch (error) {
 
 ### Sync Status Values
 
-| Status | Meaning | UI Indication |
-|--------|---------|---------------|
-| `idle` | No sync in progress | ✓ Synced / X pending |
-| `syncing` | Sync currently running | ⟳ Syncing... |
-| `error` | Last sync failed | ⚠ Error message |
-| `offline` | No network connection | 📴 Offline |
+| Status    | Meaning                | UI Indication        |
+| --------- | ---------------------- | -------------------- |
+| `idle`    | No sync in progress    | ✓ Synced / X pending |
+| `syncing` | Sync currently running | ⟳ Syncing...         |
+| `error`   | Last sync failed       | ⚠ Error message      |
+| `offline` | No network connection  | 📴 Offline           |
 
 ---
 
@@ -600,11 +600,13 @@ pnpm dev
 #### DevTools Configuration
 
 **Chrome/Edge:**
+
 1. Open DevTools → Network tab
 2. Find "Offline" checkbox in toolbar
 3. Check to simulate offline, uncheck for online
 
 **Firefox:**
+
 1. Open DevTools → Network tab
 2. Click "No throttling" dropdown
 3. Select "Offline" to simulate
@@ -615,54 +617,54 @@ pnpm dev
 
 #### Test A1: Create Habit While Offline
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Open app, wait for load | App displays existing habits |
-| 2 | Enable offline mode in DevTools | Network indicator shows offline |
-| 3 | Click "Add Habit" | Form opens |
-| 4 | Enter name "Offline Habit", select emoji | Form accepts input |
-| 5 | Save habit | Habit appears in list immediately |
-| 6 | Open DevTools → Application → IndexedDB | - |
-| 7 | Expand HungryHundreds → habits | New habit visible with `id`, no `serverId` |
-| 8 | Check syncQueue table | Entry: `action: 'create', table: 'habits'` |
+| Step | Action                                   | Expected Result                            |
+| ---- | ---------------------------------------- | ------------------------------------------ |
+| 1    | Open app, wait for load                  | App displays existing habits               |
+| 2    | Enable offline mode in DevTools          | Network indicator shows offline            |
+| 3    | Click "Add Habit"                        | Form opens                                 |
+| 4    | Enter name "Offline Habit", select emoji | Form accepts input                         |
+| 5    | Save habit                               | Habit appears in list immediately          |
+| 6    | Open DevTools → Application → IndexedDB  | -                                          |
+| 7    | Expand HungryHundreds → habits           | New habit visible with `id`, no `serverId` |
+| 8    | Check syncQueue table                    | Entry: `action: 'create', table: 'habits'` |
 
 #### Test A2: Complete Habit While Offline
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | While offline, tap habit to complete | Checkmark appears |
-| 2 | Check IndexedDB → logs | New entry with `synced: false` |
-| 3 | Check syncQueue | Entry: `action: 'create', table: 'logs'` |
+| Step | Action                               | Expected Result                          |
+| ---- | ------------------------------------ | ---------------------------------------- |
+| 1    | While offline, tap habit to complete | Checkmark appears                        |
+| 2    | Check IndexedDB → logs               | New entry with `synced: false`           |
+| 3    | Check syncQueue                      | Entry: `action: 'create', table: 'logs'` |
 
 #### Test A3: Edit Habit While Offline
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | While offline, edit habit name | Change saves immediately |
-| 2 | Check IndexedDB → habits | `updatedAt` is updated |
-| 3 | Check syncQueue | Entry: `action: 'update'` |
+| Step | Action                         | Expected Result           |
+| ---- | ------------------------------ | ------------------------- |
+| 1    | While offline, edit habit name | Change saves immediately  |
+| 2    | Check IndexedDB → habits       | `updatedAt` is updated    |
+| 3    | Check syncQueue                | Entry: `action: 'update'` |
 
 #### Test A4: Delete Habit While Offline
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | While offline, delete a habit | Habit disappears |
-| 2 | Check IndexedDB → habits | Record removed |
-| 3 | Check IndexedDB → logs | Associated logs removed |
-| 4 | Check syncQueue | Entry: `action: 'delete'` |
+| Step | Action                        | Expected Result           |
+| ---- | ----------------------------- | ------------------------- |
+| 1    | While offline, delete a habit | Habit disappears          |
+| 2    | Check IndexedDB → habits      | Record removed            |
+| 3    | Check IndexedDB → logs        | Associated logs removed   |
+| 4    | Check syncQueue               | Entry: `action: 'delete'` |
 
 ### Category B: Sync on Reconnect
 
 #### Test B1: Auto-Sync When Online
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Perform 3 offline operations | syncQueue has 3 entries |
-| 2 | Disable offline mode | Connection restored |
-| 3 | Watch console for `[sync]` logs | Sync starts automatically |
-| 4 | Wait for completion | syncStore.status → 'idle' |
-| 5 | Check syncQueue | Empty (all processed) |
-| 6 | Check habits table | `serverId` populated |
+| Step | Action                          | Expected Result           |
+| ---- | ------------------------------- | ------------------------- |
+| 1    | Perform 3 offline operations    | syncQueue has 3 entries   |
+| 2    | Disable offline mode            | Connection restored       |
+| 3    | Watch console for `[sync]` logs | Sync starts automatically |
+| 4    | Wait for completion             | syncStore.status → 'idle' |
+| 5    | Check syncQueue                 | Empty (all processed)     |
+| 6    | Check habits table              | `serverId` populated      |
 
 #### Test B2: Manual Sync Trigger
 
@@ -672,38 +674,38 @@ const { syncStore } = await import('$lib/sync');
 await syncStore.sync();
 ```
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Run sync via console | Status changes to 'syncing' |
-| 2 | Wait for completion | Status returns to 'idle' |
-| 3 | Check lastSync | Updated timestamp |
+| Step | Action               | Expected Result             |
+| ---- | -------------------- | --------------------------- |
+| 1    | Run sync via console | Status changes to 'syncing' |
+| 2    | Wait for completion  | Status returns to 'idle'    |
+| 3    | Check lastSync       | Updated timestamp           |
 
 ### Category C: Conflict Resolution
 
 #### Test C1: Last-Write-Wins (Requires Two Sessions)
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Open app in Tab A and Tab B | Same data in both |
-| 2 | Tab A: Go offline | Tab A shows offline |
-| 3 | Tab A: Edit habit to "Edit A" | Saves locally |
-| 4 | Tab B: Edit same habit to "Edit B" | Syncs to Supabase |
-| 5 | Wait 5+ seconds | Ensures timestamp difference |
-| 6 | Tab A: Go back online | Sync triggers |
-| 7 | Tab A: Refresh page | Shows "Edit B" (newer) |
+| Step | Action                             | Expected Result              |
+| ---- | ---------------------------------- | ---------------------------- |
+| 1    | Open app in Tab A and Tab B        | Same data in both            |
+| 2    | Tab A: Go offline                  | Tab A shows offline          |
+| 3    | Tab A: Edit habit to "Edit A"      | Saves locally                |
+| 4    | Tab B: Edit same habit to "Edit B" | Syncs to Supabase            |
+| 5    | Wait 5+ seconds                    | Ensures timestamp difference |
+| 6    | Tab A: Go back online              | Sync triggers                |
+| 7    | Tab A: Refresh page                | Shows "Edit B" (newer)       |
 
 ### Category D: Error States
 
 #### Test D1: Failed Sync Recovery
 
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Remove Supabase credentials from .env | Simulate API failure |
-| 2 | Restart dev server | - |
-| 3 | Create habit online | API call fails |
-| 4 | Check syncQueue | Entry with `retries: 1` |
-| 5 | Check syncStore.status | 'error' |
-| 6 | Check syncStore.error | Error message present |
+| Step | Action                                | Expected Result         |
+| ---- | ------------------------------------- | ----------------------- |
+| 1    | Remove Supabase credentials from .env | Simulate API failure    |
+| 2    | Restart dev server                    | -                       |
+| 3    | Create habit online                   | API call fails          |
+| 4    | Check syncQueue                       | Entry with `retries: 1` |
+| 5    | Check syncStore.status                | 'error'                 |
+| 6    | Check syncStore.error                 | Error message present   |
 
 ### Console Commands for Testing
 
@@ -713,10 +715,10 @@ await syncStore.sync();
 // ============================================
 
 // View current sync state
-(await import('$lib/sync')).syncStore.subscribe(s => console.table(s))();
+(await import('$lib/sync')).syncStore.subscribe((s) => console.table(s))();
 
 // View connection state
-(await import('$lib/sync')).connection.subscribe(c => console.table(c))();
+(await import('$lib/sync')).connection.subscribe((c) => console.table(c))();
 
 // View pending operations
 console.table(await (await import('$lib/sync')).getPendingOperations());
@@ -754,51 +756,51 @@ Add this debug component to verify reactive stores work correctly:
 ```svelte
 <!-- src/routes/+layout.svelte (for development only) -->
 <script>
-    import { dev } from '$app/environment';
-    import { isOnline, syncStore, syncStatusText } from '$lib/sync';
+	import { dev } from '$app/environment';
+	import { isOnline, syncStore, syncStatusText } from '$lib/sync';
 </script>
 
 {#if dev}
-    <div class="fixed bottom-20 left-4 z-50 rounded bg-black/80 p-3
-                font-mono text-xs text-white">
-        <div class="grid grid-cols-2 gap-x-4 gap-y-1">
-            <span>Online:</span>
-            <span>{$isOnline ? '🟢 Yes' : '🔴 No'}</span>
+	<div
+		class="fixed bottom-20 left-4 z-50 rounded bg-black/80 p-3
+                font-mono text-xs text-white"
+	>
+		<div class="grid grid-cols-2 gap-x-4 gap-y-1">
+			<span>Online:</span>
+			<span>{$isOnline ? '🟢 Yes' : '🔴 No'}</span>
 
-            <span>Status:</span>
-            <span>{$syncStore.status}</span>
+			<span>Status:</span>
+			<span>{$syncStore.status}</span>
 
-            <span>Pending:</span>
-            <span>{$syncStore.pendingCount}</span>
+			<span>Pending:</span>
+			<span>{$syncStore.pendingCount}</span>
 
-            <span>Last Sync:</span>
-            <span>
-                {$syncStore.lastSync
-                    ? new Date($syncStore.lastSync).toLocaleTimeString()
-                    : 'Never'}
-            </span>
+			<span>Last Sync:</span>
+			<span>
+				{$syncStore.lastSync ? new Date($syncStore.lastSync).toLocaleTimeString() : 'Never'}
+			</span>
 
-            <span>Display:</span>
-            <span>{$syncStatusText}</span>
+			<span>Display:</span>
+			<span>{$syncStatusText}</span>
 
-            {#if $syncStore.error}
-                <span>Error:</span>
-                <span class="text-red-400">{$syncStore.error}</span>
-            {/if}
-        </div>
-    </div>
+			{#if $syncStore.error}
+				<span>Error:</span>
+				<span class="text-red-400">{$syncStore.error}</span>
+			{/if}
+		</div>
+	</div>
 {/if}
 ```
 
 ### Expected UI States
 
-| Scenario | Online | Status | Pending | Display |
-|----------|--------|--------|---------|---------|
-| Normal, synced | 🟢 | idle | 0 | "Synced" |
-| Pending changes | 🟢 | idle | 3 | "3 pending" |
-| Currently syncing | 🟢 | syncing | - | "Syncing..." |
-| Offline | 🔴 | offline | - | "Offline" |
-| Error | 🟢 | error | - | [error message] |
+| Scenario          | Online | Status  | Pending | Display         |
+| ----------------- | ------ | ------- | ------- | --------------- |
+| Normal, synced    | 🟢     | idle    | 0       | "Synced"        |
+| Pending changes   | 🟢     | idle    | 3       | "3 pending"     |
+| Currently syncing | 🟢     | syncing | -       | "Syncing..."    |
+| Offline           | 🔴     | offline | -       | "Offline"       |
+| Error             | 🟢     | error   | -       | [error message] |
 
 ---
 
@@ -815,15 +817,119 @@ Add this debug component to verify reactive stores work correctly:
 
 ## Related Files
 
-| File | Purpose |
-|------|---------|
-| `src/lib/sync/queue.ts` | Queue management operations |
-| `src/lib/sync/detector.ts` | Network connectivity detection |
-| `src/lib/sync/sync.ts` | Core sync engine and stores |
-| `src/lib/sync/conflicts.ts` | Conflict resolution logic |
-| `src/lib/sync/index.ts` | Module exports |
-| `src/lib/db/db.ts` | Dexie schema with SyncQueue table |
-| `src/lib/supabase/api.ts` | Remote API operations |
+| File                        | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `src/lib/sync/queue.ts`     | Queue management operations       |
+| `src/lib/sync/detector.ts`  | Network connectivity detection    |
+| `src/lib/sync/sync.ts`      | Core sync engine and stores       |
+| `src/lib/sync/conflicts.ts` | Conflict resolution logic         |
+| `src/lib/sync/index.ts`     | Module exports                    |
+| `src/lib/db/db.ts`          | Dexie schema with SyncQueue table |
+| `src/lib/supabase/api.ts`   | Remote API operations             |
+
+---
+
+## 6. Visual Flow Diagram
+
+The following Mermaid diagram provides a comprehensive view of the complete local cache and remote sync flow:
+
+```mermaid
+flowchart TB
+    %% Styling
+    classDef userAction fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef local fill:#3b82f6,stroke:#2563eb,color:#fff
+    classDef queue fill:#f59e0b,stroke:#d97706,color:#fff
+    classDef remote fill:#10b981,stroke:#059669,color:#fff
+    classDef decision fill:#fbbf24,stroke:#f59e0b,color:#1f2937
+    classDef success fill:#22c55e,stroke:#16a34a,color:#fff
+
+    %% ========== LOCAL CACHE OPERATIONS ==========
+    subgraph LOCAL["📱 LOCAL CACHE OPERATIONS"]
+        A[/"👤 User Action<br/>(Create / Read / Update / Delete)"/]:::userAction
+        B["💾 Write to IndexedDB<br/>(Dexie.js)"]:::local
+        C["✨ UI Updates Instantly<br/>(Optimistic Response)"]:::success
+        D["🏷️ Mark as 'pending sync'"]:::local
+    end
+
+    A --> B
+    B --> C
+    C --> D
+
+    %% ========== SYNC QUEUE MANAGEMENT ==========
+    subgraph QUEUE["📋 SYNC QUEUE MANAGEMENT"]
+        E{"📡 Online?"}:::decision
+        F["📥 Add to Sync Queue"]:::queue
+        G["👂 Wait for<br/>'online' event"]:::queue
+        H["🚀 Process Queue"]:::remote
+    end
+
+    D --> E
+    E -->|No| F
+    F --> G
+    G -.->|"Connectivity restored"| H
+    E -->|Yes| H
+
+    %% ========== REMOTE SYNC PROCESS ==========
+    subgraph SYNC["☁️ REMOTE SYNC PROCESS"]
+
+        subgraph PUSH["⬆️ Push Local Changes"]
+            I["📤 Send pending items<br/>to server"]:::remote
+            J{"✅ Success?"}:::decision
+            K["🏷️ Mark as 'synced'"]:::success
+            L["🔄 Retry later"]:::queue
+        end
+
+        subgraph CONFLICT["⚔️ Conflict Check"]
+            M{"🔀 Conflict?"}:::decision
+            N["👑 Server Wins<br/>(or Last-Write-Wins)"]:::remote
+            O["💾 Update local record"]:::local
+        end
+
+        subgraph PULL["⬇️ Pull Remote Updates"]
+            P["📥 Fetch changes<br/>since last sync"]:::remote
+            Q["💾 Merge into<br/>local database"]:::local
+            R["🕐 Update lastSyncTime"]:::local
+            S["✅ Sync Complete"]:::success
+        end
+    end
+
+    H --> I
+    I --> J
+    J -->|Yes| M
+    J -->|No| L
+    L -.-> I
+    M -->|No| K
+    M -->|Yes| N
+    N --> O
+    O --> K
+    K --> P
+    P --> Q
+    Q --> R
+    R --> S
+
+    %% Loop back to user actions
+    S -.->|"Continue using app"| A
+```
+
+### Diagram Legend
+
+| Symbol            | Meaning                             |
+| ----------------- | ----------------------------------- |
+| 🟣 Purple         | User actions (CRUD operations)      |
+| 🔵 Blue           | Local storage (IndexedDB/Dexie.js)  |
+| 🟡 Amber          | Sync queue (offline operations)     |
+| 🟢 Green          | Remote/server operations (Supabase) |
+| ✅ Green          | Success states                      |
+| 💛 Yellow diamond | Decision points                     |
+
+### Flow Summary
+
+1. **Local-First**: All user actions write immediately to IndexedDB
+2. **Optimistic UI**: Interface updates instantly without waiting for server
+3. **Queue Management**: Offline changes are queued for later sync
+4. **Auto-Sync**: Queue processes automatically when connectivity is restored
+5. **Conflict Resolution**: Uses last-write-wins based on timestamps
+6. **Bidirectional Sync**: Pushes local changes, then pulls remote updates
 
 ---
 
@@ -832,4 +938,3 @@ Add this debug component to verify reactive stores work correctly:
 - [ROADMAP.md](../ROADMAP.md) - Phase 4 completion details
 - [API.md](../API.md) - Data model documentation
 - [ARCHITECTURE.md](../ARCHITECTURE.md) - System architecture overview
-
