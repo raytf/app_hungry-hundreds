@@ -58,6 +58,13 @@ Quick reference guide to find the right documentation for your needs.
 - Usage examples
 - Styling guidelines
 
+**→ UI Reference**: [UI.md](./docs/UI.md)
+
+- Complete page and component catalog
+- Navigation flows and user journeys
+- Styling patterns and design tokens
+- Animation integration points
+
 ### Work with Data
 
 **→ Read**: [API.md](./docs/API.md)
@@ -198,6 +205,31 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
+### [UI.md](./docs/UI.md)
+
+**Purpose**: Comprehensive UI documentation and planning
+
+**Contains**:
+
+- Complete page and route catalog
+- Component inventory with props
+- Layout and navigation structure
+- Styling patterns and design tokens
+- Animation integration points
+- Future UI features and component roadmap
+
+**Best for**: Understanding UI architecture, planning new features, maintaining consistency
+
+**Key Sections**:
+
+- Pages → Route structure and page details
+- Components → Full component reference
+- Navigation Flow → User journey maps
+- Styling Patterns → Design tokens and utilities
+- Planning → Future features and component roadmap
+
+---
+
 ### [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)
 
 **Purpose**: Step-by-step implementation guide
@@ -290,8 +322,9 @@ Quick reference guide to find the right documentation for your needs.
 | Routing            | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#routing)          |
 | State Management   | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#state-management) |
 | Component Patterns | [COMPONENTS.md](./docs/COMPONENTS.md#component-patterns)   |
+| UI Pages & Layout  | [UI.md](./docs/UI.md#pages)                                |
 | Data Models        | [API.md](./docs/API.md#data-models)                        |
-| Styling            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#styling-guidelines) |
+| Styling            | [UI.md](./docs/UI.md#styling-patterns)                     |
 | Testing            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#testing)            |
 | Deployment         | [DEPLOYMENT.md](./docs/DEPLOYMENT.md)                      |
 
@@ -299,10 +332,10 @@ Quick reference guide to find the right documentation for your needs.
 
 | Task                 | Documentation                                                          |
 | -------------------- | ---------------------------------------------------------------------- |
-| Create a new page    | [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md#6-create-route-structure) |
-| Create a component   | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#creating-a-new-component)       |
+| Create a new page    | [UI.md](./docs/UI.md#creating-a-new-page)                              |
+| Create a component   | [UI.md](./docs/UI.md#creating-a-new-component)                         |
 | Add a habit field    | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#adding-a-new-habit-field)       |
-| Change theme colors  | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#changing-theme-colors)          |
+| Change theme colors  | [UI.md](./docs/UI.md#design-tokens)                                    |
 | Deploy to production | [DEPLOYMENT.md](./docs/DEPLOYMENT.md#deployment-methods)               |
 | Debug store state    | [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md#debugging-tips)           |
 
@@ -311,6 +344,7 @@ Quick reference guide to find the right documentation for your needs.
 **Architecture**: system design, tech stack, patterns, decisions, structure
 **Development**: setup, workflow, coding, testing, debugging
 **Components**: UI, props, events, styling, accessibility
+**UI**: pages, routes, navigation, layout, design tokens, animation
 **Implementation**: guide, checklist, templates, patterns
 **API**: data models, stores, endpoints, database
 **Deployment**: cloudflare, build, production, environment
@@ -322,16 +356,24 @@ Quick reference guide to find the right documentation for your needs.
 1. [README.md](./README.md) - Overview
 2. [DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Setup
 3. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - Understanding
-4. [COMPONENTS.md](./docs/COMPONENTS.md) - Reference
+4. [UI.md](./docs/UI.md) - UI reference
+5. [COMPONENTS.md](./docs/COMPONENTS.md) - Component details
 
 ### For AI Agents
 
 1. **[STATUS.md](./STATUS.md)** - What's implemented (READ FIRST)
 2. [ROADMAP.md](./docs/ROADMAP.md) - Phase dependencies
 3. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System understanding
-4. [API.md](./docs/API.md) - Data structures
-5. [COMPONENTS.md](./docs/COMPONENTS.md) - UI components
+4. [UI.md](./docs/UI.md) - UI pages and components
+5. [API.md](./docs/API.md) - Data structures
 6. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
+
+### For UI Development
+
+1. [UI.md](./docs/UI.md) - Complete UI reference
+2. [COMPONENTS.md](./docs/COMPONENTS.md) - Detailed component APIs
+3. [STATUS.md](./STATUS.md) - What's implemented
+4. [ROADMAP.md](./docs/ROADMAP.md) - Planned features
 
 ### For Implementation
 
