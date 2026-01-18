@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { readable, derived, writable, get } from 'svelte/store';
+import { readable, derived, writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { liveQuery } from 'dexie';
 import {
@@ -24,7 +24,7 @@ import {
 	type UpdateHabitInput
 } from '$lib/db';
 import { mockHabits } from '$lib/data/mockData';
-import { isAuthenticated } from '$lib/stores/auth';
+import { auth } from '$lib/stores/auth';
 
 // ============================================================================
 // Types
@@ -47,6 +47,21 @@ export interface HabitWithStatus extends Habit {
 let isInitialized = false;
 
 /**
+ * Wait for auth to be initialized
+ * Returns a promise that resolves when auth state is known
+ */
+function waitForAuthInitialized(): Promise<boolean> {
+	return new Promise((resolve) => {
+		const unsubscribe = auth.subscribe((state) => {
+			if (state.initialized) {
+				unsubscribe();
+				resolve(state.session !== null);
+			}
+		});
+	});
+}
+
+/**
  * Initialize the database with seed data if empty
  * Called automatically when the store is first accessed
  *
@@ -56,8 +71,8 @@ let isInitialized = false;
 async function initializeDatabase(): Promise<void> {
 	if (isInitialized) return;
 
-	// Check if user is authenticated
-	const authenticated = get(isAuthenticated);
+	// Wait for auth to be initialized before checking authentication
+	const authenticated = await waitForAuthInitialized();
 
 	if (authenticated) {
 		// Authenticated users should NOT get seeded with mock data

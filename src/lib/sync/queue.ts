@@ -76,7 +76,11 @@ export async function queueOperation(
 		retries: 0
 	};
 
+	console.log('[queue] Adding to sync queue:', { action, table, payload });
+
 	const id = await db.syncQueue.add(entry);
+
+	console.log('[queue] Added entry with id:', id);
 
 	// Notify listeners that queue has changed
 	notifyQueueChange();

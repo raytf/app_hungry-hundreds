@@ -26,6 +26,7 @@ import {
 	removeFromQueue,
 	incrementRetry,
 	onQueueChange,
+	queueOperation,
 	type QueuedHabitPayload,
 	type QueuedLogPayload
 } from './queue';
@@ -183,6 +184,9 @@ function createSyncStore() {
 			update((s) => ({ ...s, status: 'syncing', error: null }));
 
 			try {
+				// Queue any local habits that haven't been synced yet
+				await this.queueUnsyncedHabits();
+
 				// Process queue (push local changes)
 				await this.processQueue(currentUserId);
 
@@ -208,15 +212,49 @@ function createSyncStore() {
 		},
 
 		/**
+		 * Queue any local habits that don't have a serverId
+		 * This handles habits created before sync was properly wired up
+		 */
+		async queueUnsyncedHabits(): Promise<void> {
+			const habits = await db.habits.filter((h) => !h.serverId).toArray();
+
+			if (habits.length > 0) {
+				console.log(`[sync] Found ${habits.length} unsynced habits, queueing for sync`);
+			}
+
+			for (const habit of habits) {
+				// Check if already queued
+				const existingOp = await db.syncQueue
+					.filter(
+						(op) =>
+							op.table === 'habits' &&
+							op.action === 'create' &&
+							(op.payload as QueuedHabitPayload).localId === habit.id
+					)
+					.first();
+
+				if (!existingOp) {
+					await queueOperation('create', 'habits', {
+						localId: habit.id,
+						data: habit
+					} as QueuedHabitPayload);
+				}
+			}
+		},
+
+		/**
 		 * Process pending queue operations
 		 */
 		async processQueue(currentUserId: string): Promise<void> {
 			const operations = await getPendingOperations();
+			console.log(`[sync] Processing ${operations.length} queued operations`);
 
 			for (const op of operations) {
 				try {
+					console.log(`[sync] Processing:`, op.action, op.table, op.payload);
 					await this.processOperation(op, currentUserId);
 					if (op.id) await removeFromQueue(op.id);
+					console.log(`[sync] Completed:`, op.action, op.table);
 				} catch (error) {
 					console.error('[sync] Operation failed:', op, error);
 					if (op.id) await incrementRetry(op.id);
@@ -243,8 +281,12 @@ function createSyncStore() {
 
 			if (op.action === 'create') {
 				const habit = await db.habits.get(payload.localId);
-				if (!habit) return; // Already deleted locally
+				if (!habit) {
+					console.log('[sync] Habit already deleted locally, skipping');
+					return;
+				}
 
+				console.log('[sync] Creating habit on server:', habit.name);
 				const { data, error } = await createRemoteHabit(
 					{
 						name: habit.name,
@@ -255,8 +297,12 @@ function createSyncStore() {
 					userId
 				);
 
-				if (error) throw error;
+				if (error) {
+					console.error('[sync] Failed to create habit:', error);
+					throw error;
+				}
 				if (data) {
+					console.log('[sync] Habit created with serverId:', data.id);
 					// Update local record with server ID
 					await db.habits.update(payload.localId, { serverId: data.id });
 				}
@@ -291,15 +337,26 @@ function createSyncStore() {
 		async processLogOperation(op: SyncQueue, userId: string): Promise<void> {
 			const payload = op.payload as QueuedLogPayload;
 
+			// Look up current habitServerId from local DB (in case habit was synced after log was queued)
+			let habitServerId = payload.habitServerId;
+			if (!habitServerId && payload.habitLocalId) {
+				const habit = await db.habits.get(payload.habitLocalId);
+				habitServerId = habit?.serverId;
+			}
+
 			if (op.action === 'create') {
-				if (!payload.habitServerId) {
-					console.warn('[sync] Cannot create log without habitServerId');
+				if (!habitServerId) {
+					console.warn(
+						'[sync] Cannot create log without habitServerId, will retry after habit syncs'
+					);
+					// Don't remove from queue - leave it for next sync attempt after habit is synced
+					await incrementRetry(op.id!);
 					return;
 				}
 
 				const { data, error } = await createRemoteHabitLog(
 					{
-						habit_id: payload.habitServerId,
+						habit_id: habitServerId,
 						logged_date: payload.date
 					},
 					userId
@@ -310,9 +367,14 @@ function createSyncStore() {
 					await markLogSynced(payload.localId, data.id);
 				}
 			} else if (op.action === 'delete') {
-				if (!payload.habitServerId) return;
+				if (!habitServerId) {
+					// For deletes without habitServerId, we can safely remove from queue
+					// The habit might have been deleted too
+					console.warn('[sync] Skipping log delete without habitServerId');
+					return;
+				}
 
-				const { error } = await deleteRemoteHabitLog(payload.habitServerId, payload.date);
+				const { error } = await deleteRemoteHabitLog(habitServerId, payload.date);
 				if (error) throw error;
 			}
 		},
