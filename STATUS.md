@@ -17,7 +17,7 @@
 | 6     | PWA           | 📋 Planned  | 0/5      |
 
 **Current Phase:** Phase 5 (Animation) - Rive & Motion One Integration
-**Last Updated:** 2026-01-17
+**Last Updated:** 2026-01-18
 
 ---
 
@@ -75,6 +75,14 @@
 - ✅ **Sync Initialization** - `syncStore.init()` called in root layout on app load
 - ✅ **Pages with Sync Status** - Today (home), Habits list pages show compact sync indicator
 
+### Phase 4.6: Multi-Device Sync Fix (Complete)
+
+- ✅ **Clear DB on Logout** - `clearAllUserData()` in `src/lib/db/db.ts` prevents cross-user data contamination
+- ✅ **Auth-Aware Sync** - Sync triggers automatically on `SIGNED_IN` auth event in `src/lib/sync/sync.ts`
+- ✅ **Skip Seed for Auth Users** - `initializeDatabase()` in `src/lib/stores/habits.ts` skips mock data for authenticated users
+- ✅ **Sync Debouncing** - `debouncedSync()` prevents excessive sync calls during rapid auth changes (300ms)
+- 📄 **Fix Documentation** - `docs/fixes/multi-device-sync-fix.md` with full implementation plan
+
 ### Tech Stack In Use
 
 | Technology      | Status    | Notes                              |
@@ -112,6 +120,7 @@
 | User authentication     | ⏳ Ready       | Client ready, needs Supabase project |
 | Offline sync queue      | ✅ Implemented | Phase 4 complete                     |
 | Sync status UI          | ✅ Implemented | Visual feedback for sync state       |
+| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete               |
 | Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲           |
 | Push notifications      | ❌ Not built   | Requires Firebase + Service Worker   |
 | PWA installability      | ❌ Not built   | No manifest or service worker        |

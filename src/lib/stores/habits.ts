@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { readable, derived, writable } from 'svelte/store';
+import { readable, derived, writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { liveQuery } from 'dexie';
 import {
@@ -24,6 +24,7 @@ import {
 	type UpdateHabitInput
 } from '$lib/db';
 import { mockHabits } from '$lib/data/mockData';
+import { isAuthenticated } from '$lib/stores/auth';
 
 // ============================================================================
 // Types
@@ -48,10 +49,25 @@ let isInitialized = false;
 /**
  * Initialize the database with seed data if empty
  * Called automatically when the store is first accessed
+ *
+ * IMPORTANT: Only seeds for unauthenticated users.
+ * Authenticated users get their data from sync, not mock data.
  */
 async function initializeDatabase(): Promise<void> {
 	if (isInitialized) return;
 
+	// Check if user is authenticated
+	const authenticated = get(isAuthenticated);
+
+	if (authenticated) {
+		// Authenticated users should NOT get seeded with mock data
+		// Their data comes from sync
+		console.log('[habits] Authenticated user - skipping seed, waiting for sync');
+		isInitialized = true;
+		return;
+	}
+
+	// Only seed for unauthenticated/demo users
 	const seedData: CreateHabitInput[] = mockHabits.map((h) => ({
 		name: h.name,
 		emoji: h.emoji,
@@ -61,7 +77,7 @@ async function initializeDatabase(): Promise<void> {
 
 	const result = await seedHabitsIfEmpty(seedData);
 	if (result.seeded) {
-		console.log(`[habits] Seeded database with ${result.count} habits`);
+		console.log(`[habits] Seeded database with ${result.count} habits (unauthenticated user)`);
 	}
 	isInitialized = true;
 }

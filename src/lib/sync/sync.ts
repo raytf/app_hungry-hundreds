@@ -19,6 +19,7 @@ import {
 	deleteRemoteHabitLog
 } from '$lib/supabase';
 import { auth, userId } from '$lib/stores/auth';
+import { onAuthStateChange } from '$lib/supabase';
 import { connection, isOnline } from './detector';
 import {
 	getPendingOperations,
@@ -53,6 +54,9 @@ export interface SyncState {
 // Sync Store
 // ============================================================================
 
+// Debounce delay for sync calls (prevents rapid fire during auth changes)
+const SYNC_DEBOUNCE_MS = 300;
+
 function createSyncStore() {
 	const { subscribe, set, update } = writable<SyncState>({
 		status: 'idle',
@@ -63,12 +67,27 @@ function createSyncStore() {
 
 	let syncInProgress = false;
 	let autoSyncUnsubscribe: (() => void) | null = null;
+	let authUnsubscribe: (() => void) | null = null;
+	let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	return {
 		subscribe,
 
 		/**
-		 * Initialize sync - set up auto-sync on connection restore
+		 * Debounced sync - prevents excessive sync calls during rapid auth changes
+		 */
+		debouncedSync(): void {
+			if (syncDebounceTimer) {
+				clearTimeout(syncDebounceTimer);
+			}
+			syncDebounceTimer = setTimeout(() => {
+				syncDebounceTimer = null;
+				this.sync();
+			}, SYNC_DEBOUNCE_MS);
+		},
+
+		/**
+		 * Initialize sync - set up auto-sync on connection restore and auth changes
 		 */
 		init(): void {
 			if (!browser) return;
@@ -86,6 +105,15 @@ function createSyncStore() {
 				}
 			});
 
+			// Listen for auth state changes - sync when user signs in
+			authUnsubscribe = onAuthStateChange(async (event, session) => {
+				if (event === 'SIGNED_IN' && session) {
+					console.log('[sync] User signed in, triggering debounced sync');
+					// Use debounced sync to prevent rapid fire during auth flow
+					this.debouncedSync();
+				}
+			});
+
 			// Set initial status based on connection
 			if (!connection.isOnline()) {
 				update((s) => ({ ...s, status: 'offline' }));
@@ -99,6 +127,14 @@ function createSyncStore() {
 			if (autoSyncUnsubscribe) {
 				autoSyncUnsubscribe();
 				autoSyncUnsubscribe = null;
+			}
+			if (authUnsubscribe) {
+				authUnsubscribe();
+				authUnsubscribe = null;
+			}
+			if (syncDebounceTimer) {
+				clearTimeout(syncDebounceTimer);
+				syncDebounceTimer = null;
 			}
 		},
 
@@ -321,7 +357,9 @@ function createSyncStore() {
 		/**
 		 * Pull and merge remote habit logs
 		 */
-		async pullRemoteLogs(remoteLogs: Awaited<ReturnType<typeof fetchHabitLogs>>['data']): Promise<void> {
+		async pullRemoteLogs(
+			remoteLogs: Awaited<ReturnType<typeof fetchHabitLogs>>['data']
+		): Promise<void> {
 			if (!remoteLogs) return;
 
 			// Get local habits to map server IDs to local IDs
@@ -382,4 +420,3 @@ export const syncStatusText = derived(syncStore, ($sync) => {
 			return 'Offline';
 	}
 });
-
