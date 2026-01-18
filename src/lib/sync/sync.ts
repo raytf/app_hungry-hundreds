@@ -25,6 +25,7 @@ import {
 	getPendingOperations,
 	removeFromQueue,
 	incrementRetry,
+	onQueueChange,
 	type QueuedHabitPayload,
 	type QueuedLogPayload
 } from './queue';
@@ -68,6 +69,7 @@ function createSyncStore() {
 	let syncInProgress = false;
 	let autoSyncUnsubscribe: (() => void) | null = null;
 	let authUnsubscribe: (() => void) | null = null;
+	let queueChangeUnsubscribe: (() => void) | null = null;
 	let syncDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	return {
@@ -114,6 +116,14 @@ function createSyncStore() {
 				}
 			});
 
+			// Listen for queue changes - sync when local changes are queued
+			queueChangeUnsubscribe = onQueueChange(() => {
+				// Update pending count immediately
+				this.updatePendingCount();
+				// Trigger debounced sync to push changes
+				this.debouncedSync();
+			});
+
 			// Set initial status based on connection
 			if (!connection.isOnline()) {
 				update((s) => ({ ...s, status: 'offline' }));
@@ -131,6 +141,10 @@ function createSyncStore() {
 			if (authUnsubscribe) {
 				authUnsubscribe();
 				authUnsubscribe = null;
+			}
+			if (queueChangeUnsubscribe) {
+				queueChangeUnsubscribe();
+				queueChangeUnsubscribe = null;
 			}
 			if (syncDebounceTimer) {
 				clearTimeout(syncDebounceTimer);

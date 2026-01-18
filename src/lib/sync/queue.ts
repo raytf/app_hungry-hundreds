@@ -6,7 +6,8 @@
  *
  * @see docs/API.md for sync documentation
  */
-import { db, now, type SyncQueue, type Habit, type HabitLog } from '$lib/db';
+// Import directly from db.ts to avoid circular dependency with habits.ts/habitLogs.ts
+import { db, now, type SyncQueue, type Habit, type HabitLog } from '$lib/db/db';
 
 // ============================================================================
 // Types
@@ -32,6 +33,30 @@ export interface QueuedLogPayload {
 export type SyncPayload = QueuedHabitPayload | QueuedLogPayload;
 
 // ============================================================================
+// Queue Change Notification
+// ============================================================================
+
+type QueueChangeHandler = () => void;
+const queueChangeHandlers: Set<QueueChangeHandler> = new Set();
+
+/**
+ * Register a handler to be called when the queue changes
+ * Used by syncStore to trigger sync after local changes
+ * @returns Unsubscribe function
+ */
+export function onQueueChange(handler: QueueChangeHandler): () => void {
+	queueChangeHandlers.add(handler);
+	return () => queueChangeHandlers.delete(handler);
+}
+
+/**
+ * Notify all handlers that the queue has changed
+ */
+function notifyQueueChange(): void {
+	queueChangeHandlers.forEach((handler) => handler());
+}
+
+// ============================================================================
 // Queue Operations
 // ============================================================================
 
@@ -51,7 +76,12 @@ export async function queueOperation(
 		retries: 0
 	};
 
-	return await db.syncQueue.add(entry);
+	const id = await db.syncQueue.add(entry);
+
+	// Notify listeners that queue has changed
+	notifyQueueChange();
+
+	return id;
 }
 
 /**
@@ -181,4 +211,3 @@ export async function removeFailedOperations(maxRetries: number = 5): Promise<nu
 
 	return failed.length;
 }
-

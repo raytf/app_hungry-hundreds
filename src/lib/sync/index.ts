@@ -31,6 +31,7 @@ export {
 	incrementRetry,
 	clearQueue,
 	removeFailedOperations,
+	onQueueChange,
 	type SyncAction,
 	type SyncTable,
 	type QueuedHabitPayload,
@@ -61,4 +62,3 @@ export {
 	type SyncStatus,
 	type SyncState
 } from './sync';
-

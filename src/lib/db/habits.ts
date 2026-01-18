@@ -2,11 +2,12 @@
  * Habit CRUD Operations
  *
  * Provides functions for managing habits in IndexedDB via Dexie.js.
- * All operations are local-first and will sync to Supabase in Phase 4.
+ * All operations are local-first and queue changes for sync to Supabase.
  *
  * @see docs/API.md for data model documentation
  */
 import { db, now, type Habit } from './db';
+import { queueHabitCreate, queueHabitUpdate, queueHabitDelete } from '$lib/sync/queue';
 
 // ============================================================================
 // Create Operations
@@ -30,7 +31,12 @@ export async function createHabit(input: CreateHabitInput): Promise<number> {
 		updatedAt: timestamp
 	};
 
-	return await db.habits.add(habit);
+	const id = await db.habits.add(habit);
+
+	// Queue for sync to Supabase
+	await queueHabitCreate(id, habit);
+
+	return id;
 }
 
 // ============================================================================
@@ -69,10 +75,21 @@ export type UpdateHabitInput = Partial<Pick<Habit, 'name' | 'emoji' | 'color' | 
  * @returns Number of records updated (0 or 1)
  */
 export async function updateHabit(id: number, updates: UpdateHabitInput): Promise<number> {
-	return await db.habits.update(id, {
+	const result = await db.habits.update(id, {
 		...updates,
 		updatedAt: now()
 	});
+
+	if (result > 0) {
+		// Get the updated habit to check for serverId
+		const habit = await db.habits.get(id);
+		if (habit) {
+			// Queue for sync to Supabase
+			await queueHabitUpdate(id, habit.serverId, updates);
+		}
+	}
+
+	return result;
 }
 
 // ============================================================================
@@ -84,12 +101,18 @@ export async function updateHabit(id: number, updates: UpdateHabitInput): Promis
  * Uses a transaction to ensure atomicity
  */
 export async function deleteHabit(id: number): Promise<void> {
+	// Get habit before deleting to capture serverId for sync queue
+	const habit = await db.habits.get(id);
+
 	await db.transaction('rw', [db.habits, db.logs], async () => {
 		// Delete all logs for this habit
 		await db.logs.where('habitId').equals(id).delete();
 		// Delete the habit
 		await db.habits.delete(id);
 	});
+
+	// Queue for sync to Supabase (after transaction completes)
+	await queueHabitDelete(id, habit?.serverId);
 }
 
 // ============================================================================
@@ -121,4 +144,3 @@ export async function seedHabitsIfEmpty(
 	await db.habits.bulkAdd(habitsToAdd);
 	return { seeded: true, count: habitsToAdd.length };
 }
-

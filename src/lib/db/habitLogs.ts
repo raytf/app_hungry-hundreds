@@ -2,11 +2,12 @@
  * HabitLog Operations
  *
  * Handles habit completion tracking and streak calculation.
- * All operations are local-first via Dexie.js.
+ * All operations are local-first and queue changes for sync to Supabase.
  *
  * @see docs/API.md for data model documentation
  */
 import { db, getTodayDate, now, type HabitLog } from './db';
+import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
 
 // ============================================================================
 // Create/Toggle Operations
@@ -46,11 +47,22 @@ export async function toggleHabitCompletion(habitId: number, date?: string): Pro
 	const logDate = date ?? getTodayDate();
 	const existing = await db.logs.where('[habitId+date]').equals([habitId, logDate]).first();
 
+	// Get the habit to access serverId for sync queue
+	const habit = await db.habits.get(habitId);
+
 	if (existing) {
 		await db.logs.delete(existing.id!);
+
+		// Queue deletion for sync to Supabase
+		await queueLogDelete(existing.id!, existing.serverId, habitId, habit?.serverId, logDate);
+
 		return false;
 	} else {
-		await logHabitCompletion(habitId, logDate);
+		const logId = await logHabitCompletion(habitId, logDate);
+
+		// Queue creation for sync to Supabase
+		await queueLogCreate(logId, habitId, habit?.serverId, logDate);
+
 		return true;
 	}
 }
