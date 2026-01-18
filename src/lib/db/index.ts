@@ -8,7 +8,15 @@
  */
 
 // Database instance and types
-export { db, getTodayDate, now, type Habit, type HabitLog, type SyncQueue } from './db';
+export {
+	db,
+	getTodayDate,
+	now,
+	clearAllUserData,
+	type Habit,
+	type HabitLog,
+	type SyncQueue
+} from './db';
 
 // Habit CRUD operations
 export {
@@ -35,4 +43,3 @@ export {
 	calculateStreaksForHabits,
 	getCompletedTodayMap
 } from './habitLogs';
-

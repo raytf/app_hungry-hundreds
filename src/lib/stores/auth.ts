@@ -10,6 +10,7 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase, onAuthStateChange, signIn, signUp, signOut, getSession } from '$lib/supabase';
+import { clearAllUserData } from '$lib/db';
 
 // ============================================================================
 // Types
@@ -106,10 +107,19 @@ function createAuthStore() {
 		},
 
 		/**
-		 * Sign out
+		 * Sign out and clear local database
 		 */
 		signOut: async () => {
 			update((state) => ({ ...state, loading: true }));
+
+			// Clear local database BEFORE signing out to prevent cross-user data contamination
+			if (browser) {
+				try {
+					await clearAllUserData();
+				} catch (err) {
+					console.error('[auth] Failed to clear local data on logout:', err);
+				}
+			}
 
 			const result = await signOut();
 
@@ -148,4 +158,3 @@ export const userEmail = derived(auth, ($auth) => $auth.user?.email ?? null);
  * Whether auth is still loading/initializing
  */
 export const authLoading = derived(auth, ($auth) => $auth.loading || !$auth.initialized);
-

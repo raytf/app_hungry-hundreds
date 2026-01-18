@@ -94,3 +94,15 @@ export function now(): number {
 	return Date.now();
 }
 
+/**
+ * Clear all user data from IndexedDB
+ * Called on logout to prevent cross-user data contamination
+ */
+export async function clearAllUserData(): Promise<void> {
+	await db.transaction('rw', [db.habits, db.logs, db.syncQueue], async () => {
+		await db.habits.clear();
+		await db.logs.clear();
+		await db.syncQueue.clear();
+	});
+	console.log('[db] All user data cleared');
+}
