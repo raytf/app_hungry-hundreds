@@ -6,7 +6,10 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
+	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import { syncStore } from '$lib/sync';
+	import { pwaStore } from '$lib/stores/pwa';
+	import { pushStore } from '$lib/notifications';
 
 	let { children } = $props();
 
@@ -29,14 +32,21 @@
 		return protectedRoutes.some((route) => path === route || path.startsWith(route + '/'));
 	});
 
-	// Initialize sync system on app load
+	// Initialize app systems on mount
 	onMount(() => {
 		if (browser) {
+			// Initialize sync system
 			syncStore.init();
+
+			// Initialize PWA install detection
+			pwaStore.init();
+
+			// Initialize push notifications
+			pushStore.init();
 		}
 	});
 
-	// Cleanup sync listeners on unmount
+	// Cleanup on unmount
 	onDestroy(() => {
 		if (browser) {
 			syncStore.destroy();
@@ -45,9 +55,34 @@
 </script>
 
 <svelte:head>
+	<!-- Favicon -->
 	<link rel="icon" href={favicon} />
+
+	<!-- PWA Manifest -->
+	<link rel="manifest" href="/manifest.json" />
+
+	<!-- Apple Touch Icon -->
+	<link rel="apple-touch-icon" href="/icon-192.png" />
+
+	<!-- Viewport with iOS safe areas -->
 	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-	<meta name="theme-color" content="#f9fafb" />
+
+	<!-- Theme colors -->
+	<meta name="theme-color" content="#22c55e" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#166534" media="(prefers-color-scheme: dark)" />
+
+	<!-- PWA meta tags -->
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+	<meta name="apple-mobile-web-app-title" content="Hungry Hundreds" />
+
+	<!-- Description for SEO -->
+	<meta
+		name="description"
+		content="Build habits, grow your monster companion. Track daily habits and watch your monster evolve!"
+	/>
+
 	<title>Hungry Hundreds</title>
 </svelte:head>
 
@@ -58,4 +93,7 @@
 			<BottomNav />
 		{/if}
 	</div>
+
+	<!-- PWA Install Prompt -->
+	<InstallPrompt />
 </AuthGuard>

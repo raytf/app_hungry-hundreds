@@ -1,0 +1,66 @@
+{
+	"name": "Hungry Hundreds",
+	"short_name": "Hungry",
+	"description": "Build habits, grow your monster companion",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#f9fafb",
+	"theme_color": "#22c55e",
+	"orientation": "portrait",
+	"scope": "/",
+	"lang": "en",
+	"categories": ["lifestyle", "productivity", "health"],
+	"icons": [
+		{
+			"src": "/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/icon-maskable-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/icon-maskable-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	],
+	"screenshots": [
+		{
+			"src": "/screenshots/home.png",
+			"sizes": "390x844",
+			"type": "image/png",
+			"form_factor": "narrow",
+			"label": "Home screen with habit list"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Today's Habits",
+			"short_name": "Today",
+			"description": "View and complete today's habits",
+			"url": "/",
+			"icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "All Habits",
+			"short_name": "Habits",
+			"url": "/habits",
+			"icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+		}
+	],
+	"related_applications": [],
+	"prefer_related_applications": false
+}
+

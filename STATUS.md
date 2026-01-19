@@ -14,10 +14,10 @@
 | 3     | Backend       | ✅ Complete | 5/5      |
 | 4     | Sync          | ✅ Complete | 4/4      |
 | 5     | Animation     | 📋 Planned  | 0/4      |
-| 6     | PWA           | 📋 Planned  | 0/5      |
+| 6     | PWA           | 🚧 Active   | 5/5      |
 
-**Current Phase:** Phase 5 (Animation) - Rive & Motion One Integration
-**Last Updated:** 2026-01-18
+**Current Phase:** Phase 6 (PWA) - Service Worker, Push Notifications, Installability
+**Last Updated:** 2026-01-19
 
 ---
 
@@ -83,6 +83,18 @@
 - ✅ **Sync Debouncing** - `debouncedSync()` prevents excessive sync calls during rapid auth changes (300ms)
 - 📄 **Fix Documentation** - `docs/fixes/multi-device-sync-fix.md` with full implementation plan
 
+### Phase 6: PWA (In Progress)
+
+- ✅ **Firebase SDK Installed** - `firebase@12.8.0` for Cloud Messaging
+- ✅ **Service Worker** - `src/service-worker.ts` with offline caching, push notifications, background sync
+- ✅ **PWA Manifest** - `static/manifest.json` with app metadata, icons, shortcuts
+- ✅ **App Icons** - Placeholder icons at 192x192 and 512x512 (regular and maskable)
+- ✅ **Firebase/FCM Module** - `src/lib/notifications/firebase.ts` for FCM initialization
+- ✅ **Push Notification Store** - `src/lib/notifications/push.ts` for permission and token management
+- ✅ **PWA Install Store** - `src/lib/stores/pwa.ts` for install prompt detection
+- ✅ **Install Prompt Component** - `src/lib/components/InstallPrompt.svelte` for install banner
+- ✅ **Layout PWA Integration** - Manifest link, Apple meta tags, PWA initialization
+
 ### Tech Stack In Use
 
 | Technology      | Status    | Notes                              |
@@ -93,6 +105,7 @@
 | TypeScript      | ✅ Active | Strict mode                        |
 | Dexie.js 4.x    | ✅ Active | IndexedDB wrapper with liveQuery   |
 | Supabase JS 2.x | ✅ Active | Auth and database client           |
+| Firebase 12.x   | ✅ Active | Cloud Messaging for push notifs    |
 | Vitest          | ✅ Active | Unit testing                       |
 | Playwright      | ✅ Active | E2E testing                        |
 
@@ -108,7 +121,7 @@
 | Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete  |
 | @rive-app/canvas | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Animation |
 | Motion One       | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Animation |
-| Firebase (FCM)   | DEPLOYMENT.md           | ❌ Not yet   | Phase 6 - PWA       |
+| Firebase (FCM)   | DEPLOYMENT.md           | ✅ Installed | Phase 6 - PWA       |
 
 ### Features Documented but Not Built
 
@@ -122,8 +135,9 @@
 | Sync status UI          | ✅ Implemented | Visual feedback for sync state       |
 | Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete               |
 | Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲           |
-| Push notifications      | ❌ Not built   | Requires Firebase + Service Worker   |
-| PWA installability      | ❌ Not built   | No manifest or service worker        |
+| Push notifications      | ✅ Implemented | Firebase SDK + Service Worker ready  |
+| PWA installability      | ✅ Implemented | Manifest, icons, install prompt      |
+| Service worker          | ✅ Implemented | Offline caching, background sync     |
 
 ---
 
@@ -139,7 +153,17 @@ All Phase 4 tasks completed:
 4. ✅ **Conflict resolution** - `src/lib/sync/conflicts.ts` last-write-wins
 5. ✅ **Sync status UI** - Visual indicators in Header and Settings
 
-### Phase 5: Animation (Current Priority)
+### Phase 6: PWA ✅ Complete
+
+All Phase 6 tasks completed:
+
+1. ✅ **Firebase SDK installed** - `firebase@12.8.0` for Cloud Messaging
+2. ✅ **Service worker created** - Offline caching, push notifications, background sync
+3. ✅ **PWA manifest added** - App metadata, icons, shortcuts
+4. ✅ **Push notification system** - FCM integration, permission handling, token management
+5. ✅ **PWA installability** - Install prompt detection and banner component
+
+### Phase 5: Animation (Next Priority)
 
 Priority order for implementation:
 
@@ -147,6 +171,8 @@ Priority order for implementation:
 2. **Create Monster component** - Svelte component wrapping Rive canvas
 3. **Create monster.riv asset** - Animated monster with evolution states
 4. **Add Motion One** - Micro-interactions for UI elements
+
+See `docs/ANIMATION.md` for comprehensive animation system documentation.
 
 ### Prerequisites Check
 
@@ -157,7 +183,9 @@ Before starting Phase 5:
 - [x] Phase 3 complete (Backend)
 - [x] Phase 4 complete (Sync)
 - [x] Phase 4.5 complete (Sync Status UI)
+- [x] Phase 6 complete (PWA)
 - [ ] Supabase project created with credentials in .env (for full testing)
+- [ ] Firebase project created with credentials in .env (for push notifications)
 
 ---
 
