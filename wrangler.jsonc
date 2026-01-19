@@ -2,9 +2,7 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "hungry-hundreds",
 	"compatibility_date": "2026-01-12",
-	"compatibility_flags": [
-		"nodejs_als"
-	],
+	"compatibility_flags": ["nodejs_als"],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
@@ -14,6 +12,13 @@
 	"preview_urls": true,
 	"vars": {
 		"PUBLIC_SUPABASE_URL": "https://kpafaoouebsijkowhpzj.supabase.co",
-		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9HLZ3AbaUF0OGjE8L9p28g_4nU1THeH"
+		"PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_9HLZ3AbaUF0OGjE8L9p28g_4nU1THeH",
+		"PUBLIC_FIREBASE_API_KEY": "AIzaSyACSN_mDiQ4wXoTX0DGVhAKjQmU9saxN2k",
+		"PUBLIC_FIREBASE_AUTH_DOMAIN": "hungry-hundreds.firebaseapp.com",
+		"PUBLIC_FIREBASE_PROJECT_ID": "hungry-hundreds",
+		"PUBLIC_FIREBASE_STORAGE_BUCKET": "hungry-hundreds.firebasestorage.app",
+		"PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "760879206277",
+		"PUBLIC_FIREBASE_APP_ID": "1:760879206277:web:8ade81eb3b5ed4510c7eec",
+		"PUBLIC_FIREBASE_VAPID_KEY": "BNQUZLady4V2XP5Kord47UrEio3yIVH7NOQNul0z7EHprAhx5SpxUunYbZgG8eV0Y4W6U3WyLHPYZQaV86xvIxg"
 	}
 }

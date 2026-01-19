@@ -125,19 +125,19 @@
 
 ### Features Documented but Not Built
 
-| Feature                 | Status         | Blocking                             |
-| ----------------------- | -------------- | ------------------------------------ |
-| IndexedDB persistence   | ✅ Implemented | Data persists in browser             |
-| Streak calculation      | ✅ Implemented | Computed from HabitLog entries       |
-| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready    |
-| User authentication     | ⏳ Ready       | Client ready, needs Supabase project |
-| Offline sync queue      | ✅ Implemented | Phase 4 complete                     |
-| Sync status UI          | ✅ Implemented | Visual feedback for sync state       |
-| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete               |
-| Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲           |
-| Push notifications      | ✅ Implemented | Firebase SDK + Service Worker ready  |
-| PWA installability      | ✅ Implemented | Manifest, icons, install prompt      |
-| Service worker          | ✅ Implemented | Offline caching, background sync     |
+| Feature                 | Status         | Blocking                            |
+| ----------------------- | -------------- | ----------------------------------- |
+| IndexedDB persistence   | ✅ Implemented | Data persists in browser            |
+| Streak calculation      | ✅ Implemented | Computed from HabitLog entries      |
+| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready   |
+| User authentication     | ✅ Ready       | Supabase project configured in .env |
+| Offline sync queue      | ✅ Implemented | Phase 4 complete                    |
+| Sync status UI          | ✅ Implemented | Visual feedback for sync state      |
+| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete              |
+| Rive monster animations | ❌ Not built   | Using emoji placeholder 🐲          |
+| Push notifications      | ✅ Implemented | Firebase project configured in .env |
+| PWA installability      | ✅ Implemented | Manifest, icons, install prompt     |
+| Service worker          | ✅ Implemented | Offline caching, background sync    |
 
 ---
 
@@ -184,8 +184,8 @@ Before starting Phase 5:
 - [x] Phase 4 complete (Sync)
 - [x] Phase 4.5 complete (Sync Status UI)
 - [x] Phase 6 complete (PWA)
-- [ ] Supabase project created with credentials in .env (for full testing)
-- [ ] Firebase project created with credentials in .env (for push notifications)
+- [x] Supabase project created with credentials in .env (for full testing)
+- [x] Firebase project created with credentials in .env (for push notifications)
 
 ---
 
