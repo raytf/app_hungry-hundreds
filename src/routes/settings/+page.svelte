@@ -6,10 +6,12 @@
 	import { mockMonster } from '$lib/data/mockData';
 	import { auth, isAuthenticated, userEmail } from '$lib/stores/auth';
 	import { syncStore, isOnline, isSyncing } from '$lib/sync';
+	import { pushStore } from '$lib/notifications';
 
 	let monsterName = $state(mockMonster.name);
 	let showResetConfirm = $state(false);
 	let signingOut = $state(false);
+	let showToken = $state(false);
 
 	function handleReset() {
 		habits.reset();
@@ -211,20 +213,108 @@
 		</div>
 	</section>
 
+	<!-- Notifications -->
+	<section class="mb-6">
+		<h3 class="mb-3 font-semibold text-gray-700">Notifications</h3>
+		<div class="card">
+			{#if !$pushStore.isSupported}
+				<div class="flex items-center gap-3">
+					<span class="text-2xl">🔕</span>
+					<div>
+						<p class="font-medium text-gray-800">Not Available</p>
+						<p class="text-sm text-gray-500">
+							Push notifications are not supported in this browser or Firebase is not configured.
+						</p>
+					</div>
+				</div>
+			{:else if $pushStore.permission === 'denied'}
+				<div class="flex items-center gap-3">
+					<span class="text-2xl">🚫</span>
+					<div>
+						<p class="font-medium text-gray-800">Notifications Blocked</p>
+						<p class="text-sm text-gray-500">
+							You've blocked notifications. Enable them in your browser settings.
+						</p>
+					</div>
+				</div>
+			{:else if $pushStore.isEnabled && $pushStore.token}
+				<div class="flex items-center gap-3">
+					<span class="text-2xl">🔔</span>
+					<div>
+						<p class="font-medium text-gray-800">Notifications Enabled</p>
+						<p class="text-sm text-gray-500">You'll receive habit reminders</p>
+					</div>
+				</div>
+
+				<!-- Token for testing (dev only) -->
+				<div class="mt-4 border-t border-gray-100 pt-4">
+					<button
+						onclick={() => (showToken = !showToken)}
+						class="text-sm text-gray-500 hover:text-gray-700"
+					>
+						{showToken ? 'Hide' : 'Show'} FCM Token (for testing)
+					</button>
+					{#if showToken}
+						<div class="mt-2">
+							<p class="mb-1 text-xs text-gray-400">
+								Copy this token to Firebase Console → Cloud Messaging → Send test message
+							</p>
+							<textarea
+								readonly
+								class="h-20 w-full rounded-lg border border-gray-200 bg-gray-50 p-2 font-mono text-xs text-gray-600"
+								value={$pushStore.token}
+							></textarea>
+							<button
+								onclick={() => navigator.clipboard.writeText($pushStore.token ?? '')}
+								class="btn-secondary mt-2 w-full text-sm"
+							>
+								📋 Copy Token
+							</button>
+						</div>
+					{/if}
+				</div>
+
+				<button onclick={() => pushStore.disable()} class="btn-secondary mt-4 w-full">
+					Disable Notifications
+				</button>
+			{:else}
+				<div class="flex items-center gap-3">
+					<span class="text-2xl">🔔</span>
+					<div>
+						<p class="font-medium text-gray-800">Enable Notifications</p>
+						<p class="text-sm text-gray-500">Get reminded about your daily habits</p>
+					</div>
+				</div>
+				<button
+					onclick={() => pushStore.requestPermission()}
+					disabled={$pushStore.isLoading}
+					class="btn-primary mt-4 w-full"
+				>
+					{#if $pushStore.isLoading}
+						<span class="inline-flex items-center gap-2">
+							<span
+								class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+							></span>
+							Enabling...
+						</span>
+					{:else}
+						Enable Notifications
+					{/if}
+				</button>
+			{/if}
+
+			{#if $pushStore.error}
+				<div class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+					{$pushStore.error}
+				</div>
+			{/if}
+		</div>
+	</section>
+
 	<!-- App Settings -->
 	<section class="mb-6">
 		<h3 class="mb-3 font-semibold text-gray-700">App Settings</h3>
 		<div class="space-y-3">
-			<div class="card flex items-center justify-between">
-				<div>
-					<p class="font-medium text-gray-800">Notifications</p>
-					<p class="text-sm text-gray-500">Remind me about habits</p>
-				</div>
-				<div class="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-500">
-					Coming Soon
-				</div>
-			</div>
-
 			<div class="card flex items-center justify-between">
 				<div>
 					<p class="font-medium text-gray-800">Dark Mode</p>
