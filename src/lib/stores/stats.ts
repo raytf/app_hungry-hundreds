@@ -81,22 +81,33 @@ export function refreshStats() {
 
 /**
  * Raw logs from the current week
+ *
+ * Uses a derived store from statsRefreshTrigger to ensure dates are recalculated
+ * when the refresh is triggered (e.g., on app load or day change).
  */
-const weeklyLogs = readable<HabitLog[]>([], (set) => {
-	if (!browser) return () => {};
+const weeklyLogs = derived<typeof statsRefreshTrigger, HabitLog[]>(
+	statsRefreshTrigger,
+	($trigger, set) => {
+		if (!browser) {
+			set([]);
+			return () => { };
+		}
 
-	const weekStart = formatDate(getWeekStart());
-	const today = formatDate(new Date());
+		// Recalculate dates each time the trigger fires
+		const weekStart = formatDate(getWeekStart());
+		const today = formatDate(new Date());
 
-	const subscription = liveQuery(() =>
-		db.logs.filter((log) => log.date >= weekStart && log.date <= today).toArray()
-	).subscribe({
-		next: (logs) => set(logs),
-		error: (err) => console.error('[stats] Weekly logs error:', err)
-	});
+		const subscription = liveQuery(() =>
+			db.logs.filter((log) => log.date >= weekStart && log.date <= today).toArray()
+		).subscribe({
+			next: (logs) => set(logs),
+			error: (err) => console.error('[stats] Weekly logs error:', err)
+		});
 
-	return () => subscription.unsubscribe();
-});
+		return () => subscription.unsubscribe();
+	},
+	[]
+);
 
 // ============================================================================
 // Stats Store

@@ -11,6 +11,7 @@
 	import { pwaStore } from '$lib/stores/pwa';
 	import { pushStore } from '$lib/notifications';
 	import { refreshStatus } from '$lib/stores/habits';
+	import { refreshStats } from '$lib/stores/stats';
 
 	let { children } = $props();
 
@@ -41,8 +42,9 @@
 		if (document.visibilityState === 'visible') {
 			const today = new Date().toISOString().split('T')[0];
 			if (lastActiveDate && lastActiveDate !== today) {
-				// Day changed while app was in background - refresh habit status
+				// Day changed while app was in background - refresh habit status and stats
 				refreshStatus();
+				refreshStats();
 			}
 			lastActiveDate = today;
 		}
@@ -54,9 +56,10 @@
 			// Track the current date for detecting day changes
 			lastActiveDate = new Date().toISOString().split('T')[0];
 
-			// Refresh habit status to recalculate completedToday for the current date
+			// Refresh habit status and stats to recalculate for the current date
 			// This handles the case where the app was open yesterday and habits need to reset
 			refreshStatus();
+			refreshStats();
 
 			// Listen for visibility changes (tab becomes visible, app returns from background)
 			document.addEventListener('visibilitychange', handleVisibilityChange);
