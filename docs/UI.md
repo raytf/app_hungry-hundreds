@@ -19,16 +19,17 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route             | Page                  | Purpose                  | Status      |
-| ----------------- | --------------------- | ------------------------ | ----------- |
-| `/`               | Home (Today)          | Daily habit check-in     | ✅ Complete |
-| `/habits`         | Habits List           | View and manage habits   | ✅ Complete |
-| `/habits/new`     | New Habit             | Create a new habit       | ✅ Complete |
-| `/dashboard`      | Statistics            | Analytics and streaks    | ✅ Complete |
-| `/settings`       | Settings              | App preferences          | ✅ Complete |
-| `/onboard`        | Onboarding            | First-time setup wizard  | ✅ Complete |
-| `/auth/signin`    | Sign In               | User authentication      | ✅ Complete |
-| `/auth/signup`    | Sign Up               | Account creation         | ✅ Complete |
+| Route               | Page         | Purpose                 | Status      |
+| ------------------- | ------------ | ----------------------- | ----------- |
+| `/`                 | Home (Today) | Daily habit check-in    | ✅ Complete |
+| `/habits`           | Habits List  | View and manage habits  | ✅ Complete |
+| `/habits/new`       | New Habit    | Create a new habit      | ✅ Complete |
+| `/habits/[id]/edit` | Edit Habit   | Edit an existing habit  | ✅ Complete |
+| `/dashboard`        | Statistics   | Analytics and streaks   | ✅ Complete |
+| `/settings`         | Settings     | App preferences         | ✅ Complete |
+| `/onboard`          | Onboarding   | First-time setup wizard | ✅ Complete |
+| `/auth/signin`      | Sign In      | User authentication     | ✅ Complete |
+| `/auth/signup`      | Sign Up      | Account creation        | ✅ Complete |
 
 ### Page Details
 
@@ -39,6 +40,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** Primary daily interaction surface for habit tracking.
 
 **Layout:**
+
 1. Header with title "Today" and ProgressRing
 2. Time-based greeting section
 3. MonsterDisplay component
@@ -46,12 +48,14 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 5. Habits list with HabitCard components
 
 **Components Used:**
+
 - `Header` (with `showSyncStatus` enabled)
 - `HabitCard` (for each habit)
 - `MonsterDisplay`
 - `ProgressRing` (in header and summary)
 
 **Key Features:**
+
 - Time-aware greeting (morning/afternoon/evening)
 - Real-time progress tracking
 - Quick add habit link
@@ -63,22 +67,29 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **File:** `src/routes/habits/+page.svelte`
 
-**Purpose:** Complete list view of all habits with stats summary.
+**Purpose:** Complete list view of all habits with stats summary, edit/delete actions.
 
 **Layout:**
+
 1. Header with "+ New" action button
 2. Stats summary card (total habits, total streak days)
-3. Habit list section
+3. Habit list section with edit/delete buttons
 4. Quick action to add another habit
+5. Delete confirmation modal (when deleting)
 
 **Components Used:**
+
 - `Header` (with `showSyncStatus`, right slot)
-- `HabitCard` (for each habit)
+- `HabitCard` (for each habit, with `showEdit` enabled)
 
 **Key Features:**
+
 - Summary statistics
 - Empty state for new users
 - Sync status indicator in header
+- Edit button on each habit card (navigates to edit page)
+- Delete button with confirmation dialog
+- Delete removes habit and all associated completion logs
 
 ---
 
@@ -89,17 +100,53 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** Form for creating a new habit.
 
 **Layout:**
+
 1. Header with back button
 2. Description text
 3. HabitForm component
 4. Tip text
 
 **Components Used:**
+
 - `Header` (with `showBack`)
-- `HabitForm`
+- `HabitForm` (mode="create")
 
 **Navigation:**
+
 - Back button → Home (`/`)
+- On submit → Habits list (`/habits`)
+
+---
+
+#### Edit Habit (`/habits/[id]/edit`)
+
+**File:** `src/routes/habits/[id]/edit/+page.svelte`
+
+**Purpose:** Form for editing an existing habit.
+
+**Layout:**
+
+1. Header with back button and "Edit Habit" title
+2. Description text
+3. HabitForm component (pre-populated with current habit data)
+4. Error display (if update fails)
+
+**Components Used:**
+
+- `Header` (with `showBack`)
+- `HabitForm` (mode="edit", with `initialValues`)
+
+**Key Features:**
+
+- Pre-populated form with existing habit name, emoji, color, reminder time
+- Loading state while submitting
+- Error handling with user feedback
+- Habit not found state with link back to habits list
+- SSR-compatible with browser check
+
+**Navigation:**
+
+- Back button → Habits list (`/habits`)
 - On submit → Habits list (`/habits`)
 
 ---
@@ -111,6 +158,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** Statistics and analytics view.
 
 **Layout:**
+
 1. Header
 2. Today's progress card
 3. Weekly chart
@@ -118,12 +166,14 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 5. Motivation section
 
 **Components Used:**
+
 - `Header`
 - `ProgressRing`
 - `WeeklyChart`
 - `StatsCard` (4 instances)
 
 **Stats Displayed:**
+
 - Today's progress with completion message
 - Weekly completion chart
 - Completion rate, active habits, total streak days, longest streak
@@ -137,6 +187,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** App configuration and user account management.
 
 **Layout:**
+
 1. Header
 2. Monster settings (name input)
 3. Account section (sign in/out)
@@ -146,10 +197,12 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 7. About section
 
 **Components Used:**
+
 - `Header`
 - `SyncStatusIndicator` (full mode)
 
 **Key Features:**
+
 - Account status with sign in/out
 - Detailed sync status with manual sync button
 - Pending changes indicator
@@ -165,15 +218,18 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** First-time user setup wizard.
 
 **Layout:** Three-step wizard:
+
 1. **Welcome** - Introduction with get started CTA
 2. **Monster** - Name the monster companion
 3. **Habit** - Create first habit
 
 **Components Used:**
+
 - `MonsterDisplay`
 - `HabitForm`
 
 **Key Features:**
+
 - Multi-step flow with back navigation
 - Personalized greeting for authenticated users
 - Skip option for quick start
@@ -184,11 +240,13 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 #### Authentication Pages
 
 **Files:**
+
 - `src/routes/auth/+layout.svelte` - Minimal layout without BottomNav
 - `src/routes/auth/signin/+page.svelte` - Sign in form
 - `src/routes/auth/signup/+page.svelte` - Sign up form
 
 **Common Features:**
+
 - Centered card layout
 - Monster emoji decoration
 - Form validation with error display
@@ -205,12 +263,14 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** App shell providing consistent structure across all pages.
 
 **Features:**
+
 - Favicon and meta tags
 - AuthGuard wrapper for protected routes
 - BottomNav (conditionally shown)
 - Sync initialization on mount
 
 **Configuration:**
+
 - `noNavRoutes`: Routes without BottomNav (`/auth`, `/onboard`)
 - `protectedRoutes`: Routes requiring auth (currently empty for optional auth)
 
@@ -219,6 +279,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Purpose:** Minimal layout for authentication pages.
 
 **Features:**
+
 - No BottomNav
 - Full-height flex container
 - Consistent styling with main app
@@ -239,25 +300,28 @@ All components are located in `src/lib/components/`.
 
 **Props:**
 
-| Prop             | Type      | Default | Description                   |
-| ---------------- | --------- | ------- | ----------------------------- |
-| `title`          | `string`  | `''`    | Header title text             |
-| `showBack`       | `boolean` | `false` | Show back arrow button        |
-| `showSyncStatus` | `boolean` | `false` | Show compact sync indicator   |
+| Prop             | Type      | Default | Description                 |
+| ---------------- | --------- | ------- | --------------------------- |
+| `title`          | `string`  | `''`    | Header title text           |
+| `showBack`       | `boolean` | `false` | Show back arrow button      |
+| `showSyncStatus` | `boolean` | `false` | Show compact sync indicator |
 
 **Slots:**
+
 - `right` - Content for right side (Svelte 5 snippet)
 
 **Usage:**
+
 ```svelte
 <Header title="My Page" showBack showSyncStatus>
-  {#snippet right()}
-    <button>Action</button>
-  {/snippet}
+	{#snippet right()}
+		<button>Action</button>
+	{/snippet}
 </Header>
 ```
 
 **Styling:**
+
 - Height: 56px (`h-14`)
 - Sticky top with `z-10`
 - Backdrop blur (`backdrop-blur-lg`)
@@ -281,12 +345,14 @@ All components are located in `src/lib/components/`.
 | `/settings`  | Settings | ⚙️   | Settings    |
 
 **Features:**
+
 - Fixed bottom positioning
 - Safe area inset support (`pb-[env(safe-area-inset-bottom)]`)
 - Active state highlighting (`text-hungry-500`)
 - Keyboard accessible with `aria-current`
 
 **Styling:**
+
 - Height: 64px (`h-16`)
 - Max width: `max-w-lg`
 - White background with top border
@@ -299,25 +365,31 @@ All components are located in `src/lib/components/`.
 
 **File:** `src/lib/components/HabitCard.svelte`
 
-**Purpose:** Interactive card for displaying and toggling habit completion.
+**Purpose:** Interactive card for displaying and toggling habit completion, with optional edit action.
 
 **Props:**
 
-| Prop    | Type             | Required | Description         |
-| ------- | ---------------- | -------- | ------------------- |
-| `habit` | `HabitWithStatus`| Yes      | Habit object        |
+| Prop       | Type              | Required | Default | Description                  |
+| ---------- | ----------------- | -------- | ------- | ---------------------------- |
+| `habit`    | `HabitWithStatus` | Yes      | -       | Habit object                 |
+| `showEdit` | `boolean`         | No       | `false` | Show edit button on the card |
 
 **Visual States:**
+
 - **Incomplete:** Light background, emoji icon, gray streak badge
 - **Complete:** Green ring border, checkmark, green background, strike-through text
 
 **Interactions:**
-- Click anywhere on card → toggles completion
+
+- Click toggle area → toggles completion
+- Click edit button → navigates to `/habits/[id]/edit`
 - Press feedback: `active:scale-[0.98]`
 
 **Accessibility:**
-- `button` role with descriptive `aria-label`
+
+- Toggle button with descriptive `aria-label`
 - Dynamic label: "Mark [name] as complete/incomplete"
+- Edit link with `aria-label`: "Edit [name]"
 
 ---
 
@@ -325,27 +397,35 @@ All components are located in `src/lib/components/`.
 
 **File:** `src/lib/components/HabitForm.svelte`
 
-**Purpose:** Form for creating new habits.
+**Purpose:** Form for creating and editing habits.
 
 **Props:**
 
-| Prop       | Type       | Required | Description                |
-| ---------- | ---------- | -------- | -------------------------- |
-| `onsubmit` | `function` | Yes      | Callback with habit data   |
+| Prop            | Type                     | Required | Default    | Description                   |
+| --------------- | ------------------------ | -------- | ---------- | ----------------------------- |
+| `onsubmit`      | `function`               | Yes      | -          | Callback with habit data      |
+| `initialValues` | `Partial<HabitFormData>` | No       | `{}`       | Initial values for editing    |
+| `mode`          | `'create' \| 'edit'`     | No       | `'create'` | Determines button text        |
+| `isSubmitting`  | `boolean`                | No       | `false`    | Shows loading state on submit |
 
 **Form Fields:**
+
 1. **Habit Name** - Text input (required)
 2. **Icon** - Emoji picker (8 preset emojis)
 3. **Color** - Color picker (6 preset colors)
 4. **Reminder Time** - Time input (optional)
 
 **Preset Options:**
+
 - **Emojis:** 🏃 📚 🧘 💧 💪 🎯 ✍️ 🛏️
 - **Colors:** `#22c55e` (green), `#3b82f6` (blue), `#8b5cf6` (purple), `#ec4899` (pink), `#f97316` (orange), `#06b6d4` (cyan)
 
 **Features:**
+
 - Live preview card
 - Disabled submit until name entered
+- Mode-aware button text ("Create Habit" / "Save Changes")
+- Loading spinner during submission
 - Radio group accessibility for pickers
 
 ---
@@ -360,9 +440,9 @@ All components are located in `src/lib/components/`.
 
 **Props:**
 
-| Prop      | Type      | Required | Description     |
-| --------- | --------- | -------- | --------------- |
-| `monster` | `Monster` | Yes      | Monster object  |
+| Prop      | Type      | Required | Description    |
+| --------- | --------- | -------- | -------------- |
+| `monster` | `Monster` | Yes      | Monster object |
 
 **Monster Stages:**
 
@@ -375,6 +455,7 @@ All components are located in `src/lib/components/`.
 | `elder` | 🐉    | Gold             |
 
 **Features:**
+
 - Bounce animation on emoji
 - Evolution progress bar
 - Stage badge
@@ -400,11 +481,13 @@ All components are located in `src/lib/components/`.
 | `size` | `number` | `64`    | Ring diameter in pixels     |
 
 **Implementation:**
+
 - SVG-based with `stroke-dasharray` and `stroke-dashoffset`
 - Rotated -90° to start progress at top
 - 500ms transition animation
 
 **Colors:**
+
 - Background: `#e5e7eb` (gray-200)
 - Progress: `#22c55e` (green-500)
 
@@ -418,13 +501,14 @@ All components are located in `src/lib/components/`.
 
 **Props:**
 
-| Prop    | Type     | Default | Description        |
-| ------- | -------- | ------- | ------------------ |
-| `label` | `string` | `''`    | Stat label text    |
-| `value` | `string` | `''`    | Stat value         |
-| `icon`  | `string` | `''`    | Emoji icon         |
+| Prop    | Type     | Default | Description     |
+| ------- | -------- | ------- | --------------- |
+| `label` | `string` | `''`    | Stat label text |
+| `value` | `string` | `''`    | Stat value      |
+| `icon`  | `string` | `''`    | Emoji icon      |
 
 **Layout:**
+
 - Card container with icon and label row
 - Large value below
 
@@ -438,11 +522,12 @@ All components are located in `src/lib/components/`.
 
 **Props:**
 
-| Prop   | Type                | Required | Description      |
-| ------ | ------------------- | -------- | ---------------- |
-| `data` | `WeeklyDataPoint[]` | Yes      | Weekly data      |
+| Prop   | Type                | Required | Description |
+| ------ | ------------------- | -------- | ----------- |
+| `data` | `WeeklyDataPoint[]` | Yes      | Weekly data |
 
 **Data Format:**
+
 ```typescript
 interface WeeklyDataPoint {
   day: string;       // e.g., "Mon"
@@ -452,6 +537,7 @@ interface WeeklyDataPoint {
 ```
 
 **Features:**
+
 - Dynamic height scaling based on max
 - Complete vs incomplete bar colors
 - Day labels and counts
@@ -468,24 +554,25 @@ interface WeeklyDataPoint {
 
 **Props:**
 
-| Prop       | Type      | Default | Description              |
-| ---------- | --------- | ------- | ------------------------ |
-| `compact`  | `boolean` | `false` | Icon-only mode           |
-| `showText` | `boolean` | `true`  | Show status text         |
+| Prop       | Type      | Default | Description      |
+| ---------- | --------- | ------- | ---------------- |
+| `compact`  | `boolean` | `false` | Icon-only mode   |
+| `showText` | `boolean` | `true`  | Show status text |
 
 **Modes:**
+
 1. **Compact:** Small icon button with pending count badge
 2. **Full:** Status dot, text, last sync time, sync button
 
 **Status States:**
 
-| State    | Icon | Color       | Description            |
-| -------- | ---- | ----------- | ---------------------- |
-| Offline  | 📡   | Gray        | No internet connection |
-| Error    | ⚠️   | Red         | Sync failed            |
-| Syncing  | 🔄   | Green/pulse | Currently syncing      |
-| Pending  | 📤   | Amber       | Changes waiting        |
-| Synced   | ✓    | Green       | Up to date             |
+| State   | Icon | Color       | Description            |
+| ------- | ---- | ----------- | ---------------------- |
+| Offline | 📡   | Gray        | No internet connection |
+| Error   | ⚠️   | Red         | Sync failed            |
+| Syncing | 🔄   | Green/pulse | Currently syncing      |
+| Pending | 📤   | Amber       | Changes waiting        |
+| Synced  | ✓    | Green       | Up to date             |
 
 ---
 
@@ -497,12 +584,13 @@ interface WeeklyDataPoint {
 
 **Props:**
 
-| Prop          | Type      | Default         | Description             |
-| ------------- | --------- | --------------- | ----------------------- |
-| `requireAuth` | `boolean` | `false`         | Require authentication  |
-| `redirectTo`  | `string`  | `/auth/signin`  | Redirect URL when unauth|
+| Prop          | Type      | Default        | Description              |
+| ------------- | --------- | -------------- | ------------------------ |
+| `requireAuth` | `boolean` | `false`        | Require authentication   |
+| `redirectTo`  | `string`  | `/auth/signin` | Redirect URL when unauth |
 
 **Features:**
+
 - Loading state with spinner
 - Redirect with return URL
 - SSR-compatible
@@ -554,53 +642,53 @@ interface WeeklyDataPoint {
 
 **Colors (Hungry Theme):**
 
-| Token         | Value     | Usage                    |
-| ------------- | --------- | ------------------------ |
-| `hungry-50`   | `#f0fdf4` | Light backgrounds        |
-| `hungry-100`  | `#dcfce7` | Hover states, highlights |
-| `hungry-500`  | `#22c55e` | Primary actions          |
-| `hungry-600`  | `#16a34a` | Hover on primary         |
-| `hungry-700`  | `#15803d` | Active/pressed states    |
+| Token        | Value     | Usage                    |
+| ------------ | --------- | ------------------------ |
+| `hungry-50`  | `#f0fdf4` | Light backgrounds        |
+| `hungry-100` | `#dcfce7` | Hover states, highlights |
+| `hungry-500` | `#22c55e` | Primary actions          |
+| `hungry-600` | `#16a34a` | Hover on primary         |
+| `hungry-700` | `#15803d` | Active/pressed states    |
 
 **Typography:**
 
-| Class          | Font      | Usage              |
-| -------------- | --------- | ------------------ |
+| Class          | Font      | Usage                  |
+| -------------- | --------- | ---------------------- |
 | `font-display` | Fredoka   | Headings, monster name |
-| (default)      | System UI | Body text          |
+| (default)      | System UI | Body text              |
 
 ### Utility Classes
 
 Defined in `src/routes/layout.css`:
 
 **`.btn-primary`** - Primary action button
+
 ```css
-@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white
-       transition-all hover:bg-hungry-600 active:bg-hungry-700
-       disabled:cursor-not-allowed disabled:opacity-50;
+@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white transition-all hover:bg-hungry-600 active:bg-hungry-700 disabled:cursor-not-allowed disabled:opacity-50;
 ```
 
 **`.btn-secondary`** - Secondary action button
+
 ```css
-@apply rounded-xl bg-gray-100 px-6 py-3 font-semibold text-gray-700
-       transition-all hover:bg-gray-200 active:bg-gray-300;
+@apply rounded-xl bg-gray-100 px-6 py-3 font-semibold text-gray-700 transition-all hover:bg-gray-200 active:bg-gray-300;
 ```
 
 **`.card`** - Card container
+
 ```css
 @apply rounded-2xl border border-gray-100 bg-white p-4 shadow-sm;
 ```
 
 **`.page-container`** - Page content wrapper
+
 ```css
 @apply mx-auto w-full max-w-lg px-4 pb-24;
 ```
 
 **`.input-field`** - Form input
+
 ```css
-@apply w-full rounded-xl border border-gray-200 px-4 py-3
-       transition-all focus:border-transparent focus:ring-2
-       focus:ring-hungry-500 focus:outline-none;
+@apply w-full rounded-xl border border-gray-200 px-4 py-3 transition-all focus:border-transparent focus:ring-2 focus:ring-hungry-500 focus:outline-none;
 ```
 
 ### Responsive Behavior
@@ -624,14 +712,14 @@ Defined in `src/routes/layout.css`:
 
 ### Implemented Features
 
-| Feature              | Implementation                          |
-| -------------------- | --------------------------------------- |
-| Keyboard Navigation  | All interactive elements focusable      |
-| ARIA Labels          | Icon buttons have descriptive labels    |
-| Focus States         | Ring outline on focus (Tailwind)        |
-| Color Contrast       | WCAG AA compliant text                  |
-| Screen Reader        | Semantic HTML, role attributes          |
-| Current Page         | `aria-current="page"` on nav links      |
+| Feature             | Implementation                       |
+| ------------------- | ------------------------------------ |
+| Keyboard Navigation | All interactive elements focusable   |
+| ARIA Labels         | Icon buttons have descriptive labels |
+| Focus States        | Ring outline on focus (Tailwind)     |
+| Color Contrast      | WCAG AA compliant text               |
+| Screen Reader       | Semantic HTML, role attributes       |
+| Current Page        | `aria-current="page"` on nav links   |
 
 ### Accessibility Patterns
 
@@ -641,7 +729,7 @@ Defined in `src/routes/layout.css`:
 
 <!-- Radio group for pickers -->
 <div role="radiogroup" aria-label="Select habit icon">
-  <button aria-pressed={selected}>🏃</button>
+	<button aria-pressed={selected}>🏃</button>
 </div>
 
 <!-- Current navigation item -->
@@ -654,23 +742,25 @@ Defined in `src/routes/layout.css`:
 
 ### Current Animations
 
-| Animation       | Type      | Location              |
-| --------------- | --------- | --------------------- |
-| Monster bounce  | CSS       | MonsterDisplay        |
-| Progress ring   | CSS       | ProgressRing          |
-| Card press      | CSS       | HabitCard             |
-| Sync spinner    | CSS       | Loading states        |
-| Chart bars      | CSS       | WeeklyChart           |
+| Animation      | Type | Location       |
+| -------------- | ---- | -------------- |
+| Monster bounce | CSS  | MonsterDisplay |
+| Progress ring  | CSS  | ProgressRing   |
+| Card press     | CSS  | HabitCard      |
+| Sync spinner   | CSS  | Loading states |
+| Chart bars     | CSS  | WeeklyChart    |
 
 ### Planned Animations (Phase 5)
 
 **Rive Integration:**
+
 - Monster character with state machines
 - Evolution transitions
 - Happy/celebration animations
 - Idle animations per evolution stage
 
 **Motion One Integration:**
+
 - Button micro-interactions (spring physics)
 - Page transitions
 - Success celebrations
@@ -678,13 +768,13 @@ Defined in `src/routes/layout.css`:
 
 **Animation Entry Points:**
 
-| Component      | Planned Animation            |
-| -------------- | ---------------------------- |
-| MonsterDisplay | Rive canvas replacement      |
-| HabitCard      | Spring on toggle             |
-| ProgressRing   | Motion One on completion     |
-| StatsCard      | Count-up animation           |
-| Page wrapper   | Transition on route change   |
+| Component      | Planned Animation          |
+| -------------- | -------------------------- |
+| MonsterDisplay | Rive canvas replacement    |
+| HabitCard      | Spring on toggle           |
+| ProgressRing   | Motion One on completion   |
+| StatsCard      | Count-up animation         |
+| Page wrapper   | Transition on route change |
 
 ---
 
@@ -710,15 +800,16 @@ Based on the roadmap phases and current implementation:
 
 #### Future Enhancements
 
-| Feature             | Description                              | Priority |
-| ------------------- | ---------------------------------------- | -------- |
-| Dark mode           | System-aware theme switching             | Medium   |
-| Habit editing       | Edit existing habits (name, color, time) | High     |
-| Habit archiving     | Archive/restore habits                   | Medium   |
-| Habit reordering    | Drag-and-drop habit order                | Low      |
-| Streak calendar     | Calendar view of completion history      | Medium   |
-| Achievement badges  | Gamification with unlockable badges      | Low      |
-| Share progress      | Social sharing of streaks                | Low      |
+| Feature            | Description                              | Priority | Status      |
+| ------------------ | ---------------------------------------- | -------- | ----------- |
+| Habit editing      | Edit existing habits (name, color, time) | High     | ✅ Complete |
+| Habit deletion     | Delete habits with confirmation dialog   | High     | ✅ Complete |
+| Dark mode          | System-aware theme switching             | Medium   | 📋 Planned  |
+| Habit archiving    | Archive/restore habits                   | Medium   | 📋 Planned  |
+| Habit reordering   | Drag-and-drop habit order                | Low      | 📋 Planned  |
+| Streak calendar    | Calendar view of completion history      | Medium   | 📋 Planned  |
+| Achievement badges | Gamification with unlockable badges      | Low      | 📋 Planned  |
+| Share progress     | Social sharing of streaks                | Low      | 📋 Planned  |
 
 ---
 
@@ -726,28 +817,30 @@ Based on the roadmap phases and current implementation:
 
 #### Recommended New Components
 
-| Component           | Purpose                              | Phase |
-| ------------------- | ------------------------------------ | ----- |
-| `Monster.svelte`    | Rive animation wrapper               | 5     |
-| `Toast.svelte`      | Toast notifications                  | 5     |
-| `Modal.svelte`      | Reusable modal dialog                | 5     |
-| `ConfettiEffect`    | Celebration animation                | 5     |
-| `InstallPrompt`     | PWA install UI                       | 6     |
-| `OfflineBanner`     | Offline mode indicator               | 6     |
-| `StreakCalendar`    | Calendar view component              | Future|
-| `HabitEditForm`     | Edit existing habit form             | Future|
-| `DragHandle`        | Drag-and-drop reordering             | Future|
+| Component        | Purpose                  | Phase  | Status      |
+| ---------------- | ------------------------ | ------ | ----------- |
+| `Monster.svelte` | Rive animation wrapper   | 5      | 📋 Planned  |
+| `Toast.svelte`   | Toast notifications      | 5      | 📋 Planned  |
+| `Modal.svelte`   | Reusable modal dialog    | 5      | 📋 Planned  |
+| `ConfettiEffect` | Celebration animation    | 5      | 📋 Planned  |
+| `InstallPrompt`  | PWA install UI           | 6      | ✅ Complete |
+| `OfflineBanner`  | Offline mode indicator   | 6      | 📋 Planned  |
+| `StreakCalendar` | Calendar view component  | Future | 📋 Planned  |
+| `DragHandle`     | Drag-and-drop reordering | Future | 📋 Planned  |
+
+> **Note:** `HabitEditForm` is no longer needed - `HabitForm` now supports both create and edit modes via the `mode` and `initialValues` props.
 
 #### Component Enhancements
 
-| Component            | Enhancement                        | Priority |
-| -------------------- | ---------------------------------- | -------- |
-| `HabitCard`          | Swipe actions (edit/delete)        | Medium   |
-| `HabitCard`          | Long-press context menu            | Low      |
-| `Header`             | Animated title transitions         | Low      |
-| `ProgressRing`       | Animated count-up                  | Medium   |
-| `MonsterDisplay`     | Replace with Rive component        | High     |
-| `SyncStatusIndicator`| Pull-to-refresh integration        | Medium   |
+| Component             | Enhancement                 | Priority | Status      |
+| --------------------- | --------------------------- | -------- | ----------- |
+| `HabitCard`           | Edit button                 | High     | ✅ Complete |
+| `HabitCard`           | Swipe actions (edit/delete) | Medium   | 📋 Planned  |
+| `HabitCard`           | Long-press context menu     | Low      | 📋 Planned  |
+| `Header`              | Animated title transitions  | Low      | 📋 Planned  |
+| `ProgressRing`        | Animated count-up           | Medium   | 📋 Planned  |
+| `MonsterDisplay`      | Replace with Rive component | High     | 📋 Planned  |
+| `SyncStatusIndicator` | Pull-to-refresh integration | Medium   | 📋 Planned  |
 
 ---
 
@@ -756,12 +849,13 @@ Based on the roadmap phases and current implementation:
 #### Recommended Additions
 
 **New Color Tokens:**
+
 ```css
 /* Status colors */
 --color-success: var(--color-hungry-500);
---color-warning: #f59e0b;  /* amber-500 */
---color-error: #ef4444;    /* red-500 */
---color-info: #3b82f6;     /* blue-500 */
+--color-warning: #f59e0b; /* amber-500 */
+--color-error: #ef4444; /* red-500 */
+--color-info: #3b82f6; /* blue-500 */
 
 /* Semantic aliases */
 --color-primary: var(--color-hungry-500);
@@ -770,30 +864,40 @@ Based on the roadmap phases and current implementation:
 ```
 
 **New Utility Classes:**
+
 ```css
 .btn-danger {
-  @apply rounded-xl bg-red-500 px-6 py-3 font-semibold text-white
-         transition-all hover:bg-red-600 active:bg-red-700;
+	@apply rounded-xl bg-red-500 px-6 py-3 font-semibold text-white transition-all hover:bg-red-600 active:bg-red-700;
 }
 
 .toast {
-  @apply fixed bottom-20 left-4 right-4 rounded-xl bg-gray-900 p-4
-         text-white shadow-lg mx-auto max-w-lg;
+	@apply fixed right-4 bottom-20 left-4 mx-auto max-w-lg rounded-xl bg-gray-900 p-4 text-white shadow-lg;
 }
 
 .skeleton {
-  @apply animate-pulse bg-gray-200 rounded;
+	@apply animate-pulse rounded bg-gray-200;
 }
 ```
 
 **Typography Scale:**
+
 ```css
 /* Recommended text sizes */
-.text-display { @apply font-display text-3xl font-bold; }
-.text-title { @apply text-xl font-semibold; }
-.text-body { @apply text-base; }
-.text-caption { @apply text-sm text-gray-500; }
-.text-micro { @apply text-xs text-gray-400; }
+.text-display {
+	@apply font-display text-3xl font-bold;
+}
+.text-title {
+	@apply text-xl font-semibold;
+}
+.text-body {
+	@apply text-base;
+}
+.text-caption {
+	@apply text-sm text-gray-500;
+}
+.text-micro {
+	@apply text-xs text-gray-400;
+}
 ```
 
 ---
@@ -802,21 +906,21 @@ Based on the roadmap phases and current implementation:
 
 ### File Locations
 
-| Type       | Location                        |
-| ---------- | ------------------------------- |
-| Pages      | `src/routes/`                   |
-| Components | `src/lib/components/`           |
-| Stores     | `src/lib/stores/`               |
-| Styles     | `src/routes/layout.css`         |
-| Mock Data  | `src/lib/data/mockData.ts`      |
+| Type       | Location                   |
+| ---------- | -------------------------- |
+| Pages      | `src/routes/`              |
+| Components | `src/lib/components/`      |
+| Stores     | `src/lib/stores/`          |
+| Styles     | `src/routes/layout.css`    |
+| Mock Data  | `src/lib/data/mockData.ts` |
 
 ### Component Import Pattern
 
 ```svelte
 <script lang="ts">
-  import Header from '$lib/components/Header.svelte';
-  import HabitCard from '$lib/components/HabitCard.svelte';
-  import { habits } from '$lib/stores/habits';
+	import Header from '$lib/components/Header.svelte';
+	import HabitCard from '$lib/components/HabitCard.svelte';
+	import { habits } from '$lib/stores/habits';
 </script>
 ```
 
@@ -845,4 +949,3 @@ Based on the roadmap phases and current implementation:
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development workflow
 - **[STATUS.md](../STATUS.md)** - Current implementation status
 - **[ROADMAP.md](./ROADMAP.md)** - Phase-based development plan
-

@@ -1,22 +1,30 @@
 <script lang="ts">
 	import { habitColors, habitEmojis } from '$lib/data/mockData';
 
-	interface Props {
-		onsubmit: (habit: {
-			name: string;
-			emoji: string;
-			color: string;
-			reminderTime: string | null;
-		}) => void;
+	interface HabitFormData {
+		name: string;
+		emoji: string;
+		color: string;
+		reminderTime: string | null;
 	}
 
-	let { onsubmit }: Props = $props();
+	interface Props {
+		onsubmit: (habit: HabitFormData) => void;
+		/** Initial values for editing an existing habit */
+		initialValues?: Partial<HabitFormData>;
+		/** Mode determines button text: 'create' or 'edit' */
+		mode?: 'create' | 'edit';
+		/** Whether the form is submitting (shows loading state) */
+		isSubmitting?: boolean;
+	}
 
-	// Form state
-	let name = $state('');
-	let emoji = $state(habitEmojis[0]);
-	let color = $state(habitColors[0]);
-	let reminderTime = $state('');
+	let { onsubmit, initialValues, mode = 'create', isSubmitting = false }: Props = $props();
+
+	// Form state - initialize from props if provided
+	let name = $state(initialValues?.name ?? '');
+	let emoji = $state(initialValues?.emoji ?? habitEmojis[0]);
+	let color = $state(initialValues?.color ?? habitColors[0]);
+	let reminderTime = $state(initialValues?.reminderTime ?? '');
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -115,5 +123,15 @@
 	</div>
 
 	<!-- Submit Button -->
-	<button type="submit" class="btn-primary w-full" disabled={!name.trim()}> Create Habit </button>
+	<button type="submit" class="btn-primary w-full" disabled={!name.trim() || isSubmitting}>
+		{#if isSubmitting}
+			<span class="inline-flex items-center gap-2">
+				<span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+				></span>
+				{mode === 'edit' ? 'Saving...' : 'Creating...'}
+			</span>
+		{:else}
+			{mode === 'edit' ? 'Save Changes' : 'Create Habit'}
+		{/if}
+	</button>
 </form>
