@@ -49,7 +49,7 @@ export interface HabitWithStatus extends Habit {
 const rawHabits = readable<Habit[]>([], (set) => {
 	// Only run in browser - IndexedDB is not available during SSR
 	if (!browser) {
-		return () => {};
+		return () => { };
 	}
 
 	// Subscribe to Dexie liveQuery for reactive updates
@@ -68,12 +68,16 @@ const rawHabits = readable<Habit[]>([], (set) => {
 // ============================================================================
 
 /**
- * Writable trigger to force status refresh after toggle
+ * Writable trigger to force status refresh after toggle or date change
  * Increment this to re-run the habitStatus derived store
  */
 const statusRefreshTrigger = writable(0);
 
-function refreshStatus() {
+/**
+ * Force a refresh of the habit status (streaks, completedToday)
+ * Called after toggle, and also on app initialization to handle date changes
+ */
+export function refreshStatus() {
 	statusRefreshTrigger.update((n) => n + 1);
 }
 

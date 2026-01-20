@@ -10,6 +10,7 @@
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
 	import { pushStore } from '$lib/notifications';
+	import { refreshStatus } from '$lib/stores/habits';
 
 	let { children } = $props();
 
@@ -32,9 +33,34 @@
 		return protectedRoutes.some((route) => path === route || path.startsWith(route + '/'));
 	});
 
+	// Track the date when the app was last active to detect day changes
+	let lastActiveDate = '';
+
+	// Handle visibility change to refresh habits when returning to the app on a new day
+	function handleVisibilityChange() {
+		if (document.visibilityState === 'visible') {
+			const today = new Date().toISOString().split('T')[0];
+			if (lastActiveDate && lastActiveDate !== today) {
+				// Day changed while app was in background - refresh habit status
+				refreshStatus();
+			}
+			lastActiveDate = today;
+		}
+	}
+
 	// Initialize app systems on mount
 	onMount(() => {
 		if (browser) {
+			// Track the current date for detecting day changes
+			lastActiveDate = new Date().toISOString().split('T')[0];
+
+			// Refresh habit status to recalculate completedToday for the current date
+			// This handles the case where the app was open yesterday and habits need to reset
+			refreshStatus();
+
+			// Listen for visibility changes (tab becomes visible, app returns from background)
+			document.addEventListener('visibilitychange', handleVisibilityChange);
+
 			// Initialize sync system
 			syncStore.init();
 
@@ -49,6 +75,7 @@
 	// Cleanup on unmount
 	onDestroy(() => {
 		if (browser) {
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			syncStore.destroy();
 		}
 	});
