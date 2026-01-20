@@ -21,13 +21,13 @@
 	const protectedRoutes: string[] = [];
 
 	// Check if current route should show nav
-	const showNav = $derived(() => {
+	const showNav = $derived.by(() => {
 		const path = page.url.pathname;
 		return !noNavRoutes.some((route) => path.startsWith(route));
 	});
 
 	// Check if current route requires auth
-	const requiresAuth = $derived(() => {
+	const requiresAuth = $derived.by(() => {
 		const path = page.url.pathname;
 		return protectedRoutes.some((route) => path === route || path.startsWith(route + '/'));
 	});
@@ -86,10 +86,10 @@
 	<title>Hungry Hundreds</title>
 </svelte:head>
 
-<AuthGuard requireAuth={requiresAuth()}>
+<AuthGuard requireAuth={requiresAuth}>
 	<div class="min-h-screen bg-gray-50">
 		{@render children()}
-		{#if showNav()}
+		{#if showNav}
 			<BottomNav />
 		{/if}
 	</div>

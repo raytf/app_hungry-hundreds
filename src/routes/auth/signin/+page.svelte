@@ -10,9 +10,7 @@
 	let loading = $state(false);
 
 	// Get redirect URL from query params
-	const redirectUrl = $derived(() => {
-		return page.url.searchParams.get('redirect') || '/';
-	});
+	const redirectUrl = $derived(page.url.searchParams.get('redirect') || '/');
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -40,7 +38,7 @@
 			}
 
 			// Redirect to original page or home on success
-			goto(redirectUrl());
+			goto(redirectUrl);
 		} catch (err) {
 			error = 'An unexpected error occurred. Please try again.';
 			loading = false;

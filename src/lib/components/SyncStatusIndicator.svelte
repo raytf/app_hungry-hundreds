@@ -30,7 +30,7 @@
 	}
 
 	// Get status color
-	const statusColor = $derived(() => {
+	const statusColor = $derived.by(() => {
 		if (!$isOnline) return 'text-gray-400';
 		if ($syncStore.status === 'error') return 'text-red-500';
 		if ($syncStore.status === 'syncing') return 'text-hungry-500';
@@ -39,7 +39,7 @@
 	});
 
 	// Get status icon
-	const statusIcon = $derived(() => {
+	const statusIcon = $derived.by(() => {
 		if (!$isOnline) return '📡';
 		if ($syncStore.status === 'error') return '⚠️';
 		if ($syncStore.status === 'syncing') return '🔄';
@@ -58,7 +58,7 @@
 		aria-label={$syncStatusText}
 		disabled={$isSyncing || !$isOnline}
 	>
-		<span class={statusColor()}>{statusIcon()}</span>
+		<span class={statusColor}>{statusIcon}</span>
 		{#if $hasPendingChanges && !$isSyncing}
 			<span
 				class="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white"
@@ -86,7 +86,7 @@
 
 		{#if showText}
 			<div class="flex flex-col">
-				<span class="text-sm font-medium {statusColor()}">{$syncStatusText}</span>
+				<span class="text-sm font-medium {statusColor}">{$syncStatusText}</span>
 				{#if $isAuthenticated && $syncStore.lastSync}
 					<span class="text-xs text-gray-400">
 						Last sync: {formatLastSync($syncStore.lastSync)}
@@ -107,4 +107,3 @@
 		{/if}
 	</div>
 {/if}
-

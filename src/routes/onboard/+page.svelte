@@ -17,7 +17,7 @@
 	});
 
 	// Get first name from email for personalized greeting
-	const userName = $derived(() => {
+	const userName = $derived.by(() => {
 		if ($userEmail) {
 			return $userEmail.split('@')[0];
 		}
@@ -52,9 +52,9 @@
 			<div class="mb-6">
 				<span class="text-7xl">{monsterStages.egg.emoji}</span>
 			</div>
-			{#if $isAuthenticated && userName()}
+			{#if $isAuthenticated && userName}
 				<h1 class="mb-4 font-display text-3xl font-bold text-gray-800">
-					Welcome, {userName()}!
+					Welcome, {userName}!
 				</h1>
 				<p class="mb-8 text-gray-600">
 					Let's set up your habit journey and hatch your monster companion!

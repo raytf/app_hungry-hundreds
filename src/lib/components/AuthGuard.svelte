@@ -44,7 +44,7 @@
 	});
 
 	// Determine if we should show content
-	const showContent = $derived(() => {
+	const showContent = $derived.by(() => {
 		// During SSR, show content (hydration will handle redirect)
 		if (!browser) return true;
 
@@ -56,13 +56,13 @@
 	});
 
 	// Show loading state while checking auth
-	const showLoading = $derived(() => {
+	const showLoading = $derived.by(() => {
 		if (!browser) return false;
 		return requireAuth && ($authLoading || !hasChecked);
 	});
 </script>
 
-{#if showLoading()}
+{#if showLoading}
 	<div class="flex min-h-screen items-center justify-center bg-gray-50">
 		<div class="text-center">
 			<div
@@ -71,6 +71,6 @@
 			<p class="text-gray-500">Loading...</p>
 		</div>
 	</div>
-{:else if showContent()}
+{:else if showContent}
 	{@render children()}
 {/if}
