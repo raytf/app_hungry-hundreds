@@ -17,24 +17,28 @@ All components are located in `src/lib/components/` directory.
 **Location**: `src/lib/components/BottomNav.svelte`
 
 **Features**:
+
 - Fixed positioning at bottom of screen
 - Safe area inset support for mobile devices
 - Active state highlighting
 - Icon + label navigation items
 
 **Navigation Items**:
+
 - Home (`/`) - Today's habits
 - Habits (`/habits`) - All habits list
 - Stats (`/dashboard`) - Statistics dashboard
 - Settings (`/settings`) - App settings
 
 **Usage**:
+
 ```svelte
 <!-- In src/routes/+layout.svelte -->
 <BottomNav />
 ```
 
 **Styling**:
+
 - Active: `text-hungry-500` (green)
 - Inactive: `text-gray-400`
 - Height: 64px (16 Tailwind units)
@@ -48,6 +52,7 @@ All components are located in `src/lib/components/` directory.
 **Location**: `src/lib/components/Header.svelte`
 
 **Props**:
+
 ```typescript
 interface Props {
   title?: string;      // Header title text
@@ -56,16 +61,19 @@ interface Props {
 ```
 
 **Slots**:
+
 - `right` - Content for right side of header (e.g., action buttons)
 
 **Usage**:
+
 ```svelte
 <Header title="My Habits" showBack={true}>
-  <button slot="right">Edit</button>
+	<button slot="right">Edit</button>
 </Header>
 ```
 
 **Features**:
+
 - Sticky positioning
 - Backdrop blur effect
 - Back button navigates to home (`/`)
@@ -79,6 +87,7 @@ interface Props {
 **Location**: `src/lib/components/HabitCard.svelte`
 
 **Props**:
+
 ```typescript
 interface Props {
   habit: Habit;  // Habit object from store
@@ -86,6 +95,7 @@ interface Props {
 ```
 
 **Features**:
+
 - Checkbox toggle for completion
 - Visual feedback (ring, background color) when completed
 - Streak counter with fire emoji
@@ -93,12 +103,47 @@ interface Props {
 - Strike-through text when completed
 
 **Interactions**:
+
 - Click checkbox → calls `habits.toggle(habit.id)`
 - Updates `completedToday` and `streak` in store
 
 **Visual States**:
+
 - **Uncompleted**: Light background, emoji icon
 - **Completed**: Colored ring, checkmark, strike-through text
+
+---
+
+### HabitSuggestions.svelte
+
+**Purpose**: Display suggested habits in the empty state to help users get started.
+
+**Location**: `src/lib/components/HabitSuggestions.svelte`
+
+**Props**:
+
+```typescript
+interface Props {
+  maxSuggestions?: number;  // Maximum suggestions to display (default: 4)
+}
+```
+
+**Features**:
+
+- Grid of clickable habit suggestion cards
+- Loading state while adding habits
+- Link to create custom habit
+- Uses suggestions from `src/lib/data/suggestedHabits.ts`
+
+**Interactions**:
+
+- Click suggestion card → adds habit via `habits.add()`
+- Click "Create a custom habit" → navigates to `/habits/new`
+
+**Visual States**:
+
+- **Default**: Suggestion cards with emoji, name, and "+ Add" label
+- **Adding**: Spinner emoji while habit is being created
 
 ---
 
@@ -109,6 +154,7 @@ interface Props {
 **Location**: `src/lib/components/HabitForm.svelte`
 
 **Events**:
+
 ```typescript
 interface Events {
   submit: {
@@ -121,25 +167,28 @@ interface Events {
 ```
 
 **Form Fields**:
+
 1. **Habit Name** - Text input (required, 1-50 chars)
 2. **Icon** - Emoji picker (8 preset emojis)
 3. **Color** - Color picker (6 preset colors)
 4. **Reminder Time** - Time input (optional, HH:MM format)
 
 **Preset Options**:
+
 - **Emojis**: 🏃 📚 🧘 💧 💪 🎯 ✍️ 🛏️
 - **Colors**: Green, Blue, Purple, Pink, Orange, Cyan
 
 **Usage**:
-```svelte
-<HabitForm on:submit={handleSubmit} />
 
+```svelte
 <script>
-  function handleSubmit(event) {
-    const habitData = event.detail;
-    habits.add(habitData);
-  }
+	function handleSubmit(event) {
+		const habitData = event.detail;
+		habits.add(habitData);
+	}
 </script>
+
+<HabitForm on:submit={handleSubmit} />
 ```
 
 ---
@@ -153,6 +202,7 @@ interface Events {
 **Current Implementation**: Emoji placeholder (to be replaced with Rive animation)
 
 **Monster Stages**:
+
 - `egg` 🥚 - Yellow background
 - `baby` 🐣 - Blue background
 - `teen` 🐲 - Purple background
@@ -160,6 +210,7 @@ interface Events {
 - `elder` 🐉 - Gold background
 
 **Features**:
+
 - Stage indicator badge
 - Evolution progress bar
 - Bounce animation
@@ -177,6 +228,7 @@ Replace with `@rive-app/canvas` for animated monster graphics.
 **Location**: `src/lib/components/ProgressRing.svelte`
 
 **Props**:
+
 ```typescript
 interface Props {
   pct?: number;   // Progress percentage (0-100)
@@ -185,17 +237,20 @@ interface Props {
 ```
 
 **Usage**:
+
 ```svelte
 <ProgressRing pct={75} size={80} />
 ```
 
 **Styling**:
+
 - Background: Gray (`#e5e7eb`)
 - Progress: Green (`#22c55e`)
 - Stroke width: 6px
 - Smooth transition animation
 
 **Math**:
+
 - Uses SVG circle with `stroke-dasharray` and `stroke-dashoffset`
 - Rotated -90° to start at top
 
@@ -208,6 +263,7 @@ interface Props {
 **Location**: `src/lib/components/StatsCard.svelte`
 
 **Props**:
+
 ```typescript
 interface Props {
   label?: string;  // Stat label (e.g., "Completion Rate")
@@ -217,15 +273,13 @@ interface Props {
 ```
 
 **Usage**:
+
 ```svelte
-<StatsCard 
-  label="Completion Rate" 
-  value="78%" 
-  icon="📊" 
-/>
+<StatsCard label="Completion Rate" value="78%" icon="📊" />
 ```
 
 **Layout**:
+
 - Card container with padding
 - Label and icon in header row
 - Large value display below
@@ -237,44 +291,48 @@ interface Props {
 Defined in `src/routes/layout.css` (or `src/app.css`):
 
 ### .btn-primary
+
 Primary action button styling.
 
 ```css
-@apply bg-hungry-500 text-white font-semibold py-3 px-6 rounded-xl
-       hover:bg-hungry-600 active:bg-hungry-700 transition-all
-       disabled:opacity-50 disabled:cursor-not-allowed;
+@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white transition-all hover:bg-hungry-600 active:bg-hungry-700 disabled:cursor-not-allowed disabled:opacity-50;
 ```
 
 **Usage**:
+
 ```svelte
 <button class="btn-primary">Save Habit</button>
 ```
 
 ### .card
+
 Card container styling.
 
 ```css
-@apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4;
+@apply rounded-2xl border border-gray-100 bg-white p-4 shadow-sm;
 ```
 
 **Usage**:
+
 ```svelte
 <div class="card">
-  <!-- Card content -->
+	<!-- Card content -->
 </div>
 ```
 
 ### .page-container
+
 Page layout wrapper with max width and padding.
 
 ```css
-@apply max-w-lg mx-auto px-4 pb-24;
+@apply mx-auto max-w-lg px-4 pb-24;
 ```
 
 **Usage**:
+
 ```svelte
 <div class="page-container">
-  <!-- Page content -->
+	<!-- Page content -->
 </div>
 ```
 
@@ -287,6 +345,7 @@ Page layout wrapper with max width and padding.
 ### Colors
 
 **Hungry Theme** (Green):
+
 - `hungry-50`: `#f0fdf4` - Lightest
 - `hungry-100`: `#dcfce7`
 - `hungry-500`: `#22c55e` - Primary
@@ -294,6 +353,7 @@ Page layout wrapper with max width and padding.
 - `hungry-700`: `#15803d` - Active
 
 **Usage**:
+
 ```svelte
 <div class="bg-hungry-500 text-white">Primary</div>
 <div class="bg-hungry-100 text-hungry-700">Light</div>
@@ -302,10 +362,12 @@ Page layout wrapper with max width and padding.
 ### Typography
 
 **Font Family**:
+
 - Display: `Fredoka` (Google Fonts)
 - Body: System sans-serif
 
 **Usage**:
+
 ```svelte
 <h1 class="font-display">Heading</h1>
 ```
@@ -313,6 +375,7 @@ Page layout wrapper with max width and padding.
 ### Spacing
 
 **Bottom Navigation Clearance**: 96px (`pb-24`)
+
 - Ensures content doesn't hide behind fixed bottom nav
 - Applied to `.page-container`
 
@@ -326,12 +389,12 @@ Components use Svelte's `createEventDispatcher` for parent communication:
 
 ```svelte
 <script>
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
-  
-  function handleAction() {
-    dispatch('eventName', { data: 'value' });
-  }
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
+	function handleAction() {
+		dispatch('eventName', { data: 'value' });
+	}
 </script>
 ```
 
@@ -341,11 +404,11 @@ Components subscribe to stores using `$` prefix:
 
 ```svelte
 <script>
-  import { habits } from '$lib/stores/habits.js';
+	import { habits } from '$lib/stores/habits.js';
 </script>
 
 {#each $habits as habit}
-  <HabitCard {habit} />
+	<HabitCard {habit} />
 {/each}
 ```
 
@@ -354,13 +417,7 @@ Components subscribe to stores using `$` prefix:
 Use `class:` directive for dynamic classes:
 
 ```svelte
-<div 
-  class="card"
-  class:ring-2={isActive}
-  class:ring-hungry-500={isActive}
->
-  Content
-</div>
+<div class="card" class:ring-2={isActive} class:ring-hungry-500={isActive}>Content</div>
 ```
 
 ---
@@ -368,20 +425,21 @@ Use `class:` directive for dynamic classes:
 ## Accessibility
 
 ### Keyboard Navigation
+
 - All interactive elements are keyboard accessible
 - Tab order follows visual layout
 - Focus states visible
 
 ### ARIA Labels
+
 Add ARIA labels for icon-only buttons:
 
 ```svelte
-<button aria-label="Toggle habit completion">
-  ✓
-</button>
+<button aria-label="Toggle habit completion"> ✓ </button>
 ```
 
 ### Color Contrast
+
 - Text meets WCAG AA standards
 - Interactive elements have sufficient contrast
 
@@ -392,4 +450,3 @@ Add ARIA labels for icon-only buttons:
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and design patterns
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow and guidelines
 - [API.md](./API.md) - Data models and store API
-

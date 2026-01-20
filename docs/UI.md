@@ -59,7 +59,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - Time-aware greeting (morning/afternoon/evening)
 - Real-time progress tracking
 - Quick add habit link
-- Empty state with call-to-action
+- Empty state with habit suggestions (HabitSuggestions component)
 
 ---
 

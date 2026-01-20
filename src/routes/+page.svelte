@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import HabitCard from '$lib/components/HabitCard.svelte';
+	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
@@ -54,24 +55,22 @@
 
 	<!-- Habits List -->
 	<section>
-		<div class="mb-3 flex items-center justify-between">
-			<h3 class="font-semibold text-gray-700">Your Habits</h3>
-			<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
-				+ Add New
-			</a>
-		</div>
-
-		{#if $sortedHabits.length === 0}
-			<div class="card py-8 text-center">
-				<p class="mb-2 text-4xl">🌱</p>
-				<p class="text-gray-500">No habits yet!</p>
-				<a href="/habits/new" class="btn-primary mt-4 inline-block">Create your first habit</a>
+		{#if $sortedHabits.length > 0}
+			<div class="mb-3 flex items-center justify-between">
+				<h3 class="font-semibold text-gray-700">Your Habits</h3>
+				<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
+					+ Add New
+				</a>
 			</div>
-		{:else}
 			<div class="space-y-3">
 				{#each $sortedHabits as habit (habit.id)}
 					<HabitCard {habit} />
 				{/each}
+			</div>
+		{:else}
+			<!-- Empty state with habit suggestions -->
+			<div class="card py-6">
+				<HabitSuggestions maxSuggestions={4} />
 			</div>
 		{/if}
 	</section>

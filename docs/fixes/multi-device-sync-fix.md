@@ -2,6 +2,8 @@
 
 > **Status:** ✅ FIXED (2026-01-18)
 > **Related:** See [sync-queue-integration-fix.md](./sync-queue-integration-fix.md) for additional fixes required
+>
+> **Update (2026-01-20):** The seeding behavior has been further simplified. All users now start with an empty habits list—no mock data is seeded for any users. Instead, users are presented with a `HabitSuggestions` component in the empty state to help them get started.
 
 ## Purpose
 

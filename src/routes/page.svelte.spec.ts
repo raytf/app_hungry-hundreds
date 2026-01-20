@@ -12,11 +12,12 @@ describe('/+page.svelte (Home)', () => {
 		await expect.element(heading).toBeInTheDocument();
 	});
 
-	it('should render habits section', async () => {
+	it('should render habits section or suggestions when empty', async () => {
 		render(Page);
 
-		// Should show "Your Habits" section
-		const habitsHeading = page.getByText('Your Habits');
-		await expect.element(habitsHeading).toBeInTheDocument();
+		// When there are no habits, shows suggestions; with habits, shows "Your Habits"
+		// Look for either the suggestions heading or the habits heading
+		const suggestionsHeading = page.getByText('Start Your Habit Journey');
+		await expect.element(suggestionsHeading).toBeInTheDocument();
 	});
 });

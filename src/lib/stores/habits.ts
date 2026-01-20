@@ -4,6 +4,9 @@
  * This store provides reactive habit data backed by IndexedDB.
  * Uses Dexie's liveQuery for automatic reactivity when data changes.
  *
+ * All users (authenticated and unauthenticated) start with an empty habit list.
+ * Users create their own habits manually, with suggested habits available in the UI.
+ *
  * @see docs/API.md for data model documentation
  */
 import { readable, derived, writable } from 'svelte/store';
@@ -15,7 +18,6 @@ import {
 	createHabit,
 	updateHabit,
 	deleteHabit,
-	seedHabitsIfEmpty,
 	toggleHabitCompletion,
 	calculateStreaksForHabits,
 	getCompletedTodayMap,
@@ -23,8 +25,6 @@ import {
 	type CreateHabitInput,
 	type UpdateHabitInput
 } from '$lib/db';
-import { mockHabits } from '$lib/data/mockData';
-import { auth } from '$lib/stores/auth';
 
 // ============================================================================
 // Types
@@ -40,64 +40,6 @@ export interface HabitWithStatus extends Habit {
 }
 
 // ============================================================================
-// Database Initialization
-// ============================================================================
-
-/** Flag to track if database has been seeded */
-let isInitialized = false;
-
-/**
- * Wait for auth to be initialized
- * Returns a promise that resolves when auth state is known
- */
-function waitForAuthInitialized(): Promise<boolean> {
-	return new Promise((resolve) => {
-		const unsubscribe = auth.subscribe((state) => {
-			if (state.initialized) {
-				unsubscribe();
-				resolve(state.session !== null);
-			}
-		});
-	});
-}
-
-/**
- * Initialize the database with seed data if empty
- * Called automatically when the store is first accessed
- *
- * IMPORTANT: Only seeds for unauthenticated users.
- * Authenticated users get their data from sync, not mock data.
- */
-async function initializeDatabase(): Promise<void> {
-	if (isInitialized) return;
-
-	// Wait for auth to be initialized before checking authentication
-	const authenticated = await waitForAuthInitialized();
-
-	if (authenticated) {
-		// Authenticated users should NOT get seeded with mock data
-		// Their data comes from sync
-		console.log('[habits] Authenticated user - skipping seed, waiting for sync');
-		isInitialized = true;
-		return;
-	}
-
-	// Only seed for unauthenticated/demo users
-	const seedData: CreateHabitInput[] = mockHabits.map((h) => ({
-		name: h.name,
-		emoji: h.emoji,
-		color: h.color,
-		reminderTime: h.reminderTime ?? undefined
-	}));
-
-	const result = await seedHabitsIfEmpty(seedData);
-	if (result.seeded) {
-		console.log(`[habits] Seeded database with ${result.count} habits (unauthenticated user)`);
-	}
-	isInitialized = true;
-}
-
-// ============================================================================
 // Core Habits Store (Dexie LiveQuery)
 // ============================================================================
 
@@ -109,9 +51,6 @@ const rawHabits = readable<Habit[]>([], (set) => {
 	if (!browser) {
 		return () => {};
 	}
-
-	// Initialize database on first subscription (with error handling)
-	initializeDatabase().catch((err) => console.error('[habits] Init error:', err));
 
 	// Subscribe to Dexie liveQuery for reactive updates
 	const subscription = liveQuery(() => getAllHabits()).subscribe({
@@ -231,14 +170,12 @@ export const habits = {
 	},
 
 	/**
-	 * Clear all habits and reseed from mock data
+	 * Clear all habits and logs (for testing or account reset)
 	 */
 	reset: async (): Promise<void> => {
 		if (!browser) return;
 		await db.habits.clear();
 		await db.logs.clear();
-		isInitialized = false;
-		await initializeDatabase();
 		refreshStatus();
 	}
 };

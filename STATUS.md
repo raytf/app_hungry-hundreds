@@ -79,9 +79,15 @@
 
 - ✅ **Clear DB on Logout** - `clearAllUserData()` in `src/lib/db/db.ts` prevents cross-user data contamination
 - ✅ **Auth-Aware Sync** - Sync triggers automatically on `SIGNED_IN` auth event in `src/lib/sync/sync.ts`
-- ✅ **Skip Seed for Auth Users** - `initializeDatabase()` in `src/lib/stores/habits.ts` skips mock data for authenticated users
+- ✅ **No Auto-Seeding** - All users start with empty habits list, create habits manually or via suggestions
 - ✅ **Sync Debouncing** - `debouncedSync()` prevents excessive sync calls during rapid auth changes (300ms)
 - 📄 **Fix Documentation** - `docs/fixes/multi-device-sync-fix.md` with full implementation plan
+
+### UI Enhancements
+
+- ✅ **HabitSuggestions Component** - `src/lib/components/HabitSuggestions.svelte` displays suggested habits in empty state
+- ✅ **Suggested Habits Data** - `src/lib/data/suggestedHabits.ts` provides curated habit suggestions
+- ✅ **Empty State UX** - Users see suggested habits they can click to add, plus link to create custom habits
 
 ### Phase 6: PWA (In Progress)
 
