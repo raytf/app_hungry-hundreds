@@ -8,20 +8,14 @@
  * - PUBLIC_SUPABASE_URL: Your Supabase project URL
  * - PUBLIC_SUPABASE_PUBLISHABLE_KEY: Publishable API key (sb_publishable_...)
  *
- * Note: Uses $env/dynamic/public for Cloudflare Pages compatibility.
- * Environment variables are set in Cloudflare dashboard and loaded at runtime.
- *
  * @see https://supabase.com/docs/guides/api/api-keys
  * @see docs/API.md for database schema documentation
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/public';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
 import type { Database } from './types';
 
-const supabaseUrl = env.PUBLIC_SUPABASE_URL;
-const supabaseKey = env.PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
+if (!PUBLIC_SUPABASE_URL || !PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
 	console.warn(
 		'[supabase] Missing environment variables. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env'
 	);
@@ -36,8 +30,8 @@ if (!supabaseUrl || !supabaseKey) {
  * - Realtime subscriptions (Phase 4)
  */
 export const supabase: SupabaseClient<Database> = createClient<Database>(
-	supabaseUrl || 'https://placeholder.supabase.co',
-	supabaseKey || 'placeholder-key',
+	PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+	PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-key',
 	{
 		auth: {
 			// Persist session in localStorage
