@@ -9,7 +9,7 @@
 import { derived, readable, writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { liveQuery } from 'dexie';
-import { db, type HabitLog, type Habit } from '$lib/db';
+import { db, formatDateLocal, type HabitLog, type Habit } from '$lib/db';
 import { habits } from './habits';
 
 // ============================================================================
@@ -30,13 +30,6 @@ export interface Stats {
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Get date string in YYYY-MM-DD format
- */
-function formatDate(date: Date): string {
-	return date.toISOString().split('T')[0];
-}
 
 /**
  * Get the start of the current week (Monday)
@@ -90,12 +83,12 @@ const weeklyLogs = derived<typeof statsRefreshTrigger, HabitLog[]>(
 	($trigger, set) => {
 		if (!browser) {
 			set([]);
-			return () => { };
+			return () => {};
 		}
 
 		// Recalculate dates each time the trigger fires
-		const weekStart = formatDate(getWeekStart());
-		const today = formatDate(new Date());
+		const weekStart = formatDateLocal(getWeekStart());
+		const today = formatDateLocal(new Date());
 
 		const subscription = liveQuery(() =>
 			db.logs.filter((log) => log.date >= weekStart && log.date <= today).toArray()
@@ -116,49 +109,50 @@ const weeklyLogs = derived<typeof statsRefreshTrigger, HabitLog[]>(
 /**
  * Reactive stats store derived from habits and weekly logs
  */
-export const stats = derived<
-	[typeof habits, typeof weeklyLogs, typeof statsRefreshTrigger],
-	Stats
->([habits, weeklyLogs, statsRefreshTrigger], ([$habits, $weeklyLogs]) => {
-	const weekDates = getWeekDates();
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
+export const stats = derived<[typeof habits, typeof weeklyLogs, typeof statsRefreshTrigger], Stats>(
+	[habits, weeklyLogs, statsRefreshTrigger],
+	([$habits, $weeklyLogs]) => {
+		const weekDates = getWeekDates();
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
 
-	const totalHabits = $habits.length;
+		const totalHabits = $habits.length;
 
-	// Create a set of completed (habitId, date) pairs for fast lookup
-	const completedSet = new Set($weeklyLogs.map((log) => `${log.habitId}:${log.date}`));
+		// Create a set of completed (habitId, date) pairs for fast lookup
+		const completedSet = new Set($weeklyLogs.map((log) => `${log.habitId}:${log.date}`));
 
-	// Build weekly data
-	const weeklyData: WeeklyDataPoint[] = weekDates.map(({ date, dayName }) => {
-		const dateStr = formatDate(date);
+		// Build weekly data
+		const weeklyData: WeeklyDataPoint[] = weekDates.map(({ date, dayName }) => {
+			const dateStr = formatDateLocal(date);
 
-		// Only count days up to and including today
-		if (date > today) {
-			return { day: dayName, completed: 0, total: 0 };
-		}
+			// Only count days up to and including today
+			if (date > today) {
+				return { day: dayName, completed: 0, total: 0 };
+			}
 
-		// Count completions for this date
-		const completed = $habits.filter((h) => completedSet.has(`${h.id}:${dateStr}`)).length;
+			// Count completions for this date
+			const completed = $habits.filter((h) => completedSet.has(`${h.id}:${dateStr}`)).length;
+
+			return {
+				day: dayName,
+				completed,
+				total: totalHabits
+			};
+		});
+
+		// Calculate overall completion rate for the week
+		const daysWithData = weeklyData.filter((d) => d.total > 0);
+		const totalPossible = daysWithData.reduce((sum, d) => sum + d.total, 0);
+		const totalCompleted = daysWithData.reduce((sum, d) => sum + d.completed, 0);
+		const completionRate =
+			totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
 
 		return {
-			day: dayName,
-			completed,
-			total: totalHabits
+			completionRate,
+			weeklyData
 		};
-	});
-
-	// Calculate overall completion rate for the week
-	const daysWithData = weeklyData.filter((d) => d.total > 0);
-	const totalPossible = daysWithData.reduce((sum, d) => sum + d.total, 0);
-	const totalCompleted = daysWithData.reduce((sum, d) => sum + d.completed, 0);
-	const completionRate = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0;
-
-	return {
-		completionRate,
-		weeklyData
-	};
-});
+	}
+);
 
 /**
  * Just the weekly data for the chart
@@ -169,4 +163,3 @@ export const weeklyData = derived(stats, ($stats) => $stats.weeklyData);
  * Just the completion rate
  */
 export const completionRate = derived(stats, ($stats) => $stats.completionRate);
-

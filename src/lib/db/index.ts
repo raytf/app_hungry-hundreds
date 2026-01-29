@@ -10,6 +10,7 @@
 // Database instance and types
 export {
 	db,
+	formatDateLocal,
 	getTodayDate,
 	now,
 	clearAllUserData,

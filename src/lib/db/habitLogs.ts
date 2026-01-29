@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { db, getTodayDate, now, type HabitLog } from './db';
+import { db, formatDateLocal, getTodayDate, now, type HabitLog } from './db';
 import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
 
 // ============================================================================
@@ -120,19 +120,19 @@ export async function calculateStreak(habitId: number): Promise<number> {
 
 	// Start from today and count backwards
 	let streak = 0;
-	const checkDate = new Date(today);
+	const checkDate = new Date(today + 'T00:00:00'); // Parse as local time, not UTC
 
 	// If not completed today, start checking from yesterday
 	if (!dateSet.has(today)) {
 		checkDate.setDate(checkDate.getDate() - 1);
 		// If yesterday also not done, streak is 0
-		if (!dateSet.has(checkDate.toISOString().split('T')[0])) {
+		if (!dateSet.has(formatDateLocal(checkDate))) {
 			return 0;
 		}
 	}
 
 	// Count consecutive days
-	while (dateSet.has(checkDate.toISOString().split('T')[0])) {
+	while (dateSet.has(formatDateLocal(checkDate))) {
 		streak++;
 		checkDate.setDate(checkDate.getDate() - 1);
 	}
