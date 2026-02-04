@@ -50,8 +50,10 @@
 		"wrangler": "^4.56.0"
 	},
 	"dependencies": {
+		"@rive-app/canvas": "^2.34.3",
 		"@supabase/supabase-js": "^2.90.1",
 		"dexie": "^4.2.1",
-		"firebase": "^12.8.0"
+		"firebase": "^12.8.0",
+		"motion": "^12.31.0"
 	}
 }

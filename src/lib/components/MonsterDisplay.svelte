@@ -1,11 +1,22 @@
 <script lang="ts">
-	import { monsterStages, type Monster } from '$lib/stores/monster';
+	/**
+	 * MonsterDisplay Component
+	 *
+	 * Displays the monster companion with Rive animation (or emoji fallback),
+	 * evolution progress bar, stage badge, and monster name.
+	 *
+	 * @see docs/ANIMATION.md for animation system documentation
+	 */
+	import { monsterStages, type Monster as MonsterType } from '$lib/stores/monster';
+	import Monster from './Monster.svelte';
 
 	interface Props {
-		monster: Monster;
+		monster: MonsterType;
+		/** Trigger happy animation (e.g., after habit completion) */
+		isHappy?: boolean;
 	}
 
-	let { monster }: Props = $props();
+	let { monster, isHappy = false }: Props = $props();
 
 	let stageConfig = $derived(monsterStages[monster.stage]);
 </script>
@@ -14,8 +25,8 @@
 	class="relative mx-auto flex h-48 w-48 items-center justify-center rounded-3xl"
 	style="background-color: {stageConfig.color}"
 >
-	<!-- Monster emoji with bounce animation -->
-	<span class="animate-bounce text-7xl">{stageConfig.emoji}</span>
+	<!-- Monster animation (Rive with emoji fallback) -->
+	<Monster stage={monster.stage} {isHappy} />
 
 	<!-- Evolution progress bar -->
 	<div class="absolute right-2 bottom-2 left-2 h-2 overflow-hidden rounded-full bg-black/10">

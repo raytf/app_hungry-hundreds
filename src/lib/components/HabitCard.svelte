@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
+	import { buttonSpring, celebrate } from '$lib/animations/transitions';
 
 	interface Props {
 		habit: HabitWithStatus;
@@ -9,8 +10,19 @@
 
 	let { habit, showEdit = false }: Props = $props();
 
-	function handleToggle() {
+	function handleToggle(event: MouseEvent) {
 		if (habit.id !== undefined) {
+			// Animate the button
+			const target = event.currentTarget as HTMLElement;
+			buttonSpring(target);
+
+			// Check for milestone celebration (7 or 30 day streak)
+			const newStreak = habit.completedToday ? habit.streak - 1 : habit.streak + 1;
+			if (!habit.completedToday && (newStreak === 7 || newStreak === 30 || newStreak === 100)) {
+				// Delay celebration slightly for better effect
+				setTimeout(() => celebrate(target), 200);
+			}
+
 			habits.toggle(habit.id);
 		}
 	}

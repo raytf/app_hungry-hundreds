@@ -432,17 +432,48 @@ All components are located in `src/lib/components/`.
 
 ### Monster Components
 
+#### Monster
+
+**File:** `src/lib/components/Monster.svelte`
+
+**Purpose:** Render the monster companion using Rive animations with emoji fallback.
+
+**Props:**
+
+| Prop      | Type           | Required | Default | Description             |
+| --------- | -------------- | -------- | ------- | ----------------------- |
+| `stage`   | `MonsterStage` | Yes      | -       | Current evolution stage |
+| `isHappy` | `boolean`      | No       | `false` | Trigger happy animation |
+| `class`   | `string`       | No       | `''`    | Additional CSS classes  |
+
+**Features:**
+
+- Rive canvas animation (when WebGL available)
+- Automatic emoji fallback (when Rive fails or WebGL unavailable)
+- Visibility-based pause/play (saves battery when off-screen)
+- Tab visibility handling (pauses when tab hidden)
+- Reduced motion support
+
+**Fallback Strategy:**
+
+1. Check WebGL support on mount
+2. Attempt to load Rive animation
+3. On error → display emoji with bounce animation
+
+---
+
 #### MonsterDisplay
 
 **File:** `src/lib/components/MonsterDisplay.svelte`
 
-**Purpose:** Display the user's monster companion.
+**Purpose:** Display the user's monster companion with progress bar and stage info.
 
 **Props:**
 
-| Prop      | Type      | Required | Description    |
-| --------- | --------- | -------- | -------------- |
-| `monster` | `Monster` | Yes      | Monster object |
+| Prop      | Type      | Required | Default | Description             |
+| --------- | --------- | -------- | ------- | ----------------------- |
+| `monster` | `Monster` | Yes      | -       | Monster object          |
+| `isHappy` | `boolean` | No       | `false` | Trigger happy animation |
 
 **Monster Stages:**
 
@@ -456,12 +487,10 @@ All components are located in `src/lib/components/`.
 
 **Features:**
 
-- Bounce animation on emoji
+- Uses Monster.svelte for Rive animation (with emoji fallback)
 - Evolution progress bar
 - Stage badge
 - Monster name display
-
-**Future:** Replace with Rive animation component.
 
 ---
 
@@ -740,41 +769,71 @@ Defined in `src/routes/layout.css`:
 
 ## Animation Integration
 
-### Current Animations
+### Animation System (Phase 5)
 
-| Animation      | Type | Location       |
-| -------------- | ---- | -------------- |
-| Monster bounce | CSS  | MonsterDisplay |
-| Progress ring  | CSS  | ProgressRing   |
-| Card press     | CSS  | HabitCard      |
-| Sync spinner   | CSS  | Loading states |
-| Chart bars     | CSS  | WeeklyChart    |
+Hungry Hundreds uses a two-tier animation system:
 
-### Planned Animations (Phase 5)
+1. **Rive (`@rive-app/canvas`)** - Character animations for the monster companion
+2. **Motion One (`motion`)** - Lightweight micro-interactions for UI feedback
 
-**Rive Integration:**
+### Implemented Animations
 
-- Monster character with state machines
-- Evolution transitions
-- Happy/celebration animations
-- Idle animations per evolution stage
+| Animation        | Type       | Location       | Trigger                     |
+| ---------------- | ---------- | -------------- | --------------------------- |
+| Monster Rive     | Rive       | Monster.svelte | Page load, stage change     |
+| Monster fallback | CSS        | Monster.svelte | WebGL unavailable           |
+| Button spring    | Motion One | HabitCard      | Toggle button tap           |
+| Celebrate        | Motion One | HabitCard      | Streak milestone (7/30/100) |
+| Icon tap         | Motion One | BottomNav      | Navigation icon tap         |
+| Progress ring    | CSS        | ProgressRing   | Progress change             |
+| Sync spinner     | CSS        | Loading states | Sync in progress            |
+| Chart bars       | CSS        | WeeklyChart    | Data change                 |
 
-**Motion One Integration:**
+### Animation Utilities
 
-- Button micro-interactions (spring physics)
-- Page transitions
-- Success celebrations
-- Streak milestone effects
+**File:** `src/lib/animations/transitions.ts`
 
-**Animation Entry Points:**
+| Function       | Purpose                      | Reduced Motion Fallback |
+| -------------- | ---------------------------- | ----------------------- |
+| `buttonSpring` | Spring scale on button tap   | Opacity fade            |
+| `checkmarkPop` | Pop animation for checkmarks | Opacity fade            |
+| `staggerList`  | Staggered entrance for lists | Instant appearance      |
+| `celebrate`    | Celebration for milestones   | Simple pulse            |
+| `iconTap`      | Spring scale for nav icons   | Opacity fade            |
 
-| Component      | Planned Animation          |
-| -------------- | -------------------------- |
-| MonsterDisplay | Rive canvas replacement    |
-| HabitCard      | Spring on toggle           |
-| ProgressRing   | Motion One on completion   |
-| StatsCard      | Count-up animation         |
-| Page wrapper   | Transition on route change |
+**File:** `src/lib/animations/rive-utils.ts`
+
+| Function                     | Purpose                             |
+| ---------------------------- | ----------------------------------- |
+| `supportsWebGL`              | Check WebGL availability            |
+| `shouldEnableRive`           | Determine if Rive should be used    |
+| `createVisibilityObserver`   | Pause/play when off-screen          |
+| `createTabVisibilityHandler` | Pause/play on tab visibility change |
+| `getStateMachineInput`       | Safely get Rive state machine input |
+| `setBooleanInput`            | Set boolean state machine input     |
+| `setNumberInput`             | Set number state machine input      |
+| `fireTrigger`                | Fire trigger state machine input    |
+
+### Reduced Motion Support
+
+All animations respect `prefers-reduced-motion: reduce`:
+
+```typescript
+import { prefersReducedMotion } from '$lib/animations/transitions';
+
+if (prefersReducedMotion()) {
+  // Use simple opacity fade instead of spring
+}
+```
+
+### Future Animations (Planned)
+
+| Component    | Planned Animation        | Status     |
+| ------------ | ------------------------ | ---------- |
+| ProgressRing | Motion One on completion | 📋 Planned |
+| StatsCard    | Count-up animation       | 📋 Planned |
+| Page wrapper | Route transitions        | 📋 Planned |
+| Monster      | Full state machine       | 📋 Planned |
 
 ---
 
@@ -784,12 +843,14 @@ Defined in `src/routes/layout.css`:
 
 Based on the roadmap phases and current implementation:
 
-#### Phase 5: Animation (Current Priority)
+#### Phase 5: Animation (In Progress)
 
-- [ ] **Monster.svelte** - Rive canvas component replacing MonsterDisplay
+- [x] **Monster.svelte** - Rive canvas component with emoji fallback
+- [x] **Micro-interactions** - Button springs on HabitCard, icon taps on BottomNav
+- [x] **Milestone celebrations** - Celebrate animation on streak milestones
+- [x] **Animation utilities** - `transitions.ts` and `rive-utils.ts`
 - [ ] **Celebration effects** - Confetti/particles on habit completion
 - [ ] **Page transitions** - Smooth route transitions with Motion One
-- [ ] **Micro-interactions** - Button springs, toggle animations
 
 #### Phase 6: PWA
 
@@ -819,7 +880,7 @@ Based on the roadmap phases and current implementation:
 
 | Component        | Purpose                  | Phase  | Status      |
 | ---------------- | ------------------------ | ------ | ----------- |
-| `Monster.svelte` | Rive animation wrapper   | 5      | 📋 Planned  |
+| `Monster.svelte` | Rive animation wrapper   | 5      | ✅ Complete |
 | `Toast.svelte`   | Toast notifications      | 5      | 📋 Planned  |
 | `Modal.svelte`   | Reusable modal dialog    | 5      | 📋 Planned  |
 | `ConfettiEffect` | Celebration animation    | 5      | 📋 Planned  |
@@ -835,11 +896,14 @@ Based on the roadmap phases and current implementation:
 | Component             | Enhancement                 | Priority | Status      |
 | --------------------- | --------------------------- | -------- | ----------- |
 | `HabitCard`           | Edit button                 | High     | ✅ Complete |
+| `HabitCard`           | Spring animation on toggle  | High     | ✅ Complete |
+| `HabitCard`           | Milestone celebration       | High     | ✅ Complete |
 | `HabitCard`           | Swipe actions (edit/delete) | Medium   | 📋 Planned  |
 | `HabitCard`           | Long-press context menu     | Low      | 📋 Planned  |
+| `BottomNav`           | Icon tap animation          | Medium   | ✅ Complete |
 | `Header`              | Animated title transitions  | Low      | 📋 Planned  |
 | `ProgressRing`        | Animated count-up           | Medium   | 📋 Planned  |
-| `MonsterDisplay`      | Replace with Rive component | High     | 📋 Planned  |
+| `MonsterDisplay`      | Rive animation integration  | High     | ✅ Complete |
 | `SyncStatusIndicator` | Pull-to-refresh integration | Medium   | 📋 Planned  |
 
 ---
@@ -911,8 +975,10 @@ Based on the roadmap phases and current implementation:
 | Pages      | `src/routes/`              |
 | Components | `src/lib/components/`      |
 | Stores     | `src/lib/stores/`          |
+| Animations | `src/lib/animations/`      |
 | Styles     | `src/routes/layout.css`    |
 | Mock Data  | `src/lib/data/mockData.ts` |
+| Rive Files | `static/animations/`       |
 
 ### Component Import Pattern
 
