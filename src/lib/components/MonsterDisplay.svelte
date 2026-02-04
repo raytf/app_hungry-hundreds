@@ -29,15 +29,15 @@
 	<div class="relative flex items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
 		<Monster stage={monster.stage} {isHappy} />
+		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">
+			<div
+				class="h-full bg-white/80 transition-all duration-500"
+				style="width: {monster.evolutionProgress}%"
+			></div>
+		</div>
 	</div>
 
 	<!-- Evolution progress bar - full width at bottom -->
-	<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">
-		<div
-			class="h-full bg-white/80 transition-all duration-500"
-			style="width: {monster.evolutionProgress}%"
-		></div>
-	</div>
 
 	<!-- Stage badge -->
 	<span

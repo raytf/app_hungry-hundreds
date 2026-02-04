@@ -7,7 +7,7 @@
 	import { browser } from '$app/environment';
 
 	// Get habit ID from URL params
-	const habitId = $derived(parseInt(page.params.id, 10));
+	const habitId = $derived(parseInt(page.params.id ?? '', 10));
 
 	// Find the habit by ID
 	const habit = $derived($habits.find((h) => h.id === habitId));
