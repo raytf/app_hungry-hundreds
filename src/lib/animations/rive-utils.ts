@@ -55,10 +55,7 @@ export function shouldEnableRive(): boolean {
  * @param element - The element to observe (usually the canvas)
  * @returns Cleanup function to disconnect the observer
  */
-export function createVisibilityObserver(
-	riveInstance: Rive,
-	element: HTMLElement
-): () => void {
+export function createVisibilityObserver(riveInstance: Rive, element: HTMLElement): () => void {
 	const observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
@@ -169,14 +166,9 @@ export function setNumberInput(
 /**
  * Safely fire a trigger state machine input
  */
-export function fireTrigger(
-	riveInstance: Rive,
-	stateMachineName: string,
-	inputName: string
-): void {
+export function fireTrigger(riveInstance: Rive, stateMachineName: string, inputName: string): void {
 	const input = getStateMachineInput(riveInstance, stateMachineName, inputName);
 	if (input && 'fire' in input) {
 		(input as { fire: () => void }).fire();
 	}
 }
-

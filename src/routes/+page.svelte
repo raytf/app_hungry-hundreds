@@ -18,6 +18,26 @@
 		day: 'numeric'
 	};
 	const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+
+	// Monster happy state - triggered when a habit is completed
+	let isMonsterHappy = $state(false);
+	let happyTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function triggerMonsterHappy() {
+		// Clear any existing timeout
+		if (happyTimeout) {
+			clearTimeout(happyTimeout);
+		}
+
+		// Set happy state
+		isMonsterHappy = true;
+
+		// Reset after 2 seconds
+		happyTimeout = setTimeout(() => {
+			isMonsterHappy = false;
+			happyTimeout = null;
+		}, 2000);
+	}
 </script>
 
 <svelte:head>
@@ -39,7 +59,7 @@
 
 	<!-- Monster Display -->
 	<section class="mb-6">
-		<MonsterDisplay monster={$monster} />
+		<MonsterDisplay monster={$monster} isHappy={isMonsterHappy} />
 	</section>
 
 	<!-- Progress Summary -->
@@ -64,7 +84,7 @@
 			</div>
 			<div class="space-y-3">
 				{#each $sortedHabits as habit (habit.id)}
-					<HabitCard {habit} />
+					<HabitCard {habit} onComplete={triggerMonsterHappy} />
 				{/each}
 			</div>
 		{:else}

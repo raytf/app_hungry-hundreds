@@ -12,7 +12,8 @@
 	import {
 		supportsWebGL,
 		createVisibilityObserver,
-		createTabVisibilityHandler
+		createTabVisibilityHandler,
+		setBooleanInput
 	} from '$lib/animations/rive-utils';
 
 	interface Props {
@@ -60,6 +61,7 @@
 				src: '/animations/cat-treat.riv',
 				canvas,
 				autoplay: true,
+				stateMachines: 'State Machine 1',
 				onLoad: () => {
 					riveLoaded = true;
 
@@ -80,15 +82,23 @@
 		}
 	}
 
-	// React to isHappy changes
+	// React to isHappy changes - temporarily using cat-treat.riv's IsClose input
 	$effect(() => {
-		if (isHappy && riveInstance && riveLoaded) {
-			// For the placeholder cat-treat.riv, we don't have state machine inputs
-			// When real monster.riv is ready, uncomment:
-			// setBooleanInput(riveInstance, 'MonsterController', 'isHappy', true);
-			// setTimeout(() => {
-			//   setBooleanInput(riveInstance, 'MonsterController', 'isHappy', false);
-			// }, 2000);
+		// Read isHappy at top level to ensure effect tracks it
+		const happy = isHappy;
+		console.log(
+			'[Monster] $effect - happy:',
+			happy,
+			'riveInstance:',
+			!!riveInstance,
+			'riveLoaded:',
+			riveLoaded
+		);
+		if (riveInstance && riveLoaded) {
+			// Map isHappy to IsClose for the placeholder animation
+			// TODO: Replace with 'MonsterController' and 'isHappy' when real monster.riv is ready
+			console.log('[Monster] Setting IsClose to:', happy);
+			setBooleanInput(riveInstance, 'State Machine 1', 'IsClose', happy);
 		}
 	});
 

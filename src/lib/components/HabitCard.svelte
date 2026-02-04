@@ -6,9 +6,11 @@
 		habit: HabitWithStatus;
 		/** Show edit button on the card */
 		showEdit?: boolean;
+		/** Callback when habit is completed (not uncompleted) */
+		onComplete?: () => void;
 	}
 
-	let { habit, showEdit = false }: Props = $props();
+	let { habit, showEdit = false, onComplete }: Props = $props();
 
 	function handleToggle(event: MouseEvent) {
 		if (habit.id !== undefined) {
@@ -21,6 +23,11 @@
 			if (!habit.completedToday && (newStreak === 7 || newStreak === 30 || newStreak === 100)) {
 				// Delay celebration slightly for better effect
 				setTimeout(() => celebrate(target), 200);
+			}
+
+			// Trigger onComplete callback when completing (not uncompleting)
+			if (!habit.completedToday && onComplete) {
+				onComplete();
 			}
 
 			habits.toggle(habit.id);
