@@ -46,17 +46,17 @@ describe('HabitForm Component', () => {
 		});
 	});
 
-	describe('edit mode with initialValues', () => {
-		const initialValues = {
-			name: 'Morning Run',
-			emoji: '🏃',
-			color: '#3b82f6',
-			reminderTime: '07:00'
+	describe('edit mode with initial values', () => {
+		const initialProps = {
+			initialName: 'Morning Run',
+			initialEmoji: '🏃',
+			initialColor: '#3b82f6',
+			initialReminderTime: '07:00'
 		};
 
 		it('should pre-populate name field', async () => {
 			render(HabitForm, {
-				props: { onsubmit: mockSubmit, initialValues, mode: 'edit' }
+				props: { onsubmit: mockSubmit, ...initialProps, mode: 'edit' }
 			});
 
 			const nameInput = page.getByLabelText('Habit Name');
@@ -65,7 +65,7 @@ describe('HabitForm Component', () => {
 
 		it('should display "Save Changes" button text', async () => {
 			render(HabitForm, {
-				props: { onsubmit: mockSubmit, initialValues, mode: 'edit' }
+				props: { onsubmit: mockSubmit, ...initialProps, mode: 'edit' }
 			});
 
 			const button = page.getByRole('button', { name: 'Save Changes' });
@@ -74,7 +74,7 @@ describe('HabitForm Component', () => {
 
 		it('should pre-populate reminder time field', async () => {
 			render(HabitForm, {
-				props: { onsubmit: mockSubmit, initialValues, mode: 'edit' }
+				props: { onsubmit: mockSubmit, ...initialProps, mode: 'edit' }
 			});
 
 			const timeInput = page.getByLabelText(/Reminder Time/);
@@ -83,7 +83,7 @@ describe('HabitForm Component', () => {
 
 		it('should enable submit button with pre-populated name', async () => {
 			render(HabitForm, {
-				props: { onsubmit: mockSubmit, initialValues, mode: 'edit' }
+				props: { onsubmit: mockSubmit, ...initialProps, mode: 'edit' }
 			});
 
 			const button = page.getByRole('button', { name: 'Save Changes' });
@@ -92,7 +92,7 @@ describe('HabitForm Component', () => {
 
 		it('should show habit name in preview', async () => {
 			render(HabitForm, {
-				props: { onsubmit: mockSubmit, initialValues, mode: 'edit' }
+				props: { onsubmit: mockSubmit, ...initialProps, mode: 'edit' }
 			});
 
 			const preview = page.getByText('Morning Run');
@@ -105,7 +105,7 @@ describe('HabitForm Component', () => {
 			render(HabitForm, {
 				props: {
 					onsubmit: mockSubmit,
-					initialValues: { name: 'Test' },
+					initialName: 'Test',
 					isSubmitting: true
 				}
 			});
@@ -118,7 +118,7 @@ describe('HabitForm Component', () => {
 			render(HabitForm, {
 				props: {
 					onsubmit: mockSubmit,
-					initialValues: { name: 'Test' },
+					initialName: 'Test',
 					mode: 'create',
 					isSubmitting: true
 				}
@@ -132,7 +132,7 @@ describe('HabitForm Component', () => {
 			render(HabitForm, {
 				props: {
 					onsubmit: mockSubmit,
-					initialValues: { name: 'Test' },
+					initialName: 'Test',
 					mode: 'edit',
 					isSubmitting: true
 				}

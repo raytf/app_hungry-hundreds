@@ -7,17 +7,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
 
-	build: {
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					// Lazy-load Rive to reduce initial bundle size
-					rive: ['@rive-app/canvas']
-				}
-			}
-		}
-	},
-
 	test: {
 		expect: { requireAssertions: true },
 

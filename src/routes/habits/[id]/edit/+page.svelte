@@ -74,12 +74,10 @@
 
 		<HabitForm
 			onsubmit={handleSubmit}
-			initialValues={{
-				name: habit.name,
-				emoji: habit.emoji,
-				color: habit.color,
-				reminderTime: habit.reminderTime ?? null
-			}}
+			initialName={habit.name}
+			initialEmoji={habit.emoji}
+			initialColor={habit.color}
+			initialReminderTime={habit.reminderTime ?? null}
 			mode="edit"
 			{isSubmitting}
 		/>

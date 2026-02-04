@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { habitColors, habitEmojis } from '$lib/data/mockData';
 
 	interface HabitFormData {
@@ -10,21 +11,36 @@
 
 	interface Props {
 		onsubmit: (habit: HabitFormData) => void;
-		/** Initial values for editing an existing habit */
-		initialValues?: Partial<HabitFormData>;
+		/** Initial name for editing an existing habit */
+		initialName?: string;
+		/** Initial emoji for editing an existing habit */
+		initialEmoji?: string;
+		/** Initial color for editing an existing habit */
+		initialColor?: string;
+		/** Initial reminder time for editing an existing habit */
+		initialReminderTime?: string | null;
 		/** Mode determines button text: 'create' or 'edit' */
 		mode?: 'create' | 'edit';
 		/** Whether the form is submitting (shows loading state) */
 		isSubmitting?: boolean;
 	}
 
-	let { onsubmit, initialValues, mode = 'create', isSubmitting = false }: Props = $props();
+	let {
+		onsubmit,
+		initialName = '',
+		initialEmoji = habitEmojis[0],
+		initialColor = habitColors[0],
+		initialReminderTime = '',
+		mode = 'create',
+		isSubmitting = false
+	}: Props = $props();
 
-	// Form state - initialize from props if provided
-	let name = $state(initialValues?.name ?? '');
-	let emoji = $state(initialValues?.emoji ?? habitEmojis[0]);
-	let color = $state(initialValues?.color ?? habitColors[0]);
-	let reminderTime = $state(initialValues?.reminderTime ?? '');
+	// Form state - initialized from props (intentionally non-reactive after mount)
+	// Using untrack() to explicitly signal these are initial values only
+	let name = $state(untrack(() => initialName));
+	let emoji = $state(untrack(() => initialEmoji));
+	let color = $state(untrack(() => initialColor));
+	let reminderTime = $state(untrack(() => initialReminderTime ?? ''));
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
