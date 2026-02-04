@@ -44,54 +44,113 @@
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
 
-<Header title="Today" showSyncStatus>
-	{#snippet right()}
-		<ProgressRing pct={$todaysProgress.pct} size={40} />
-	{/snippet}
-</Header>
+<!-- Full page grid layout: Header (auto) | Main (1fr) | Monster (auto) | BottomNav spacer (auto) -->
+<div
+	class="grid"
+	style="height: calc(100dvh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto auto;"
+>
+	<Header title={formattedDate} showSyncStatus>
+		{#snippet right()}
+			<!-- <ProgressRing pct={$todaysProgress.pct} size={40} /> -->
+		{/snippet}
+	</Header>
 
-<main class="page-container pt-4">
-	<!-- Greeting -->
-	<section class="mb-6 text-center">
-		<h2 class="font-display text-2xl font-bold text-gray-800">{greeting}!</h2>
-		<p class="text-sm text-gray-500">{formattedDate}</p>
-	</section>
+	<!-- Scrollable main content area - takes remaining space -->
+	<main class="scrollable-main overflow-y-auto overscroll-contain">
+		<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
+			<!-- Progress Summary -->
+			<section class="card mb-6 flex items-center justify-between">
+				<div>
+					<p class="text-sm text-gray-500">Today's Progress</p>
+					<p class="text-xl font-bold text-gray-900">
+						{$todaysProgress.completed} of {$todaysProgress.total} habits
+					</p>
+				</div>
+				<ProgressRing pct={$todaysProgress.pct} size={64} />
+			</section>
 
-	<!-- Monster Display -->
-	<section class="mb-6">
+			<!-- Habits List -->
+			<section>
+				{#if $sortedHabits.length > 0}
+					<div class="mb-3 flex items-center justify-between">
+						<h3 class="font-semibold text-gray-700">Your Habits</h3>
+						<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
+							+ Add New
+						</a>
+					</div>
+					<div class="space-y-3">
+						{#each $sortedHabits as habit (habit.id)}
+							<HabitCard {habit} onComplete={triggerMonsterHappy} />
+						{/each}
+					</div>
+				{:else}
+					<!-- Empty state with habit suggestions -->
+					<div class="card py-6">
+						<HabitSuggestions maxSuggestions={4} />
+					</div>
+				{/if}
+			</section>
+		</div>
+	</main>
+
+	<!-- Monster Display - part of grid flow, constrained height -->
+	<section class="monster-section mx-auto w-full max-w-lg">
 		<MonsterDisplay monster={$monster} isHappy={isMonsterHappy} />
 	</section>
 
-	<!-- Progress Summary -->
-	<section class="card mb-6 flex items-center justify-between">
-		<div>
-			<p class="text-sm text-gray-500">Today's Progress</p>
-			<p class="text-xl font-bold text-gray-900">
-				{$todaysProgress.completed} of {$todaysProgress.total} habits
-			</p>
-		</div>
-		<ProgressRing pct={$todaysProgress.pct} size={64} />
-	</section>
+	<!-- Spacer for BottomNav -->
+	<div class="h-16"></div>
+</div>
 
-	<!-- Habits List -->
-	<section>
-		{#if $sortedHabits.length > 0}
-			<div class="mb-3 flex items-center justify-between">
-				<h3 class="font-semibold text-gray-700">Your Habits</h3>
-				<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
-					+ Add New
-				</a>
-			</div>
-			<div class="space-y-3">
-				{#each $sortedHabits as habit (habit.id)}
-					<HabitCard {habit} onComplete={triggerMonsterHappy} />
-				{/each}
-			</div>
-		{:else}
-			<!-- Empty state with habit suggestions -->
-			<div class="card py-6">
-				<HabitSuggestions maxSuggestions={4} />
-			</div>
-		{/if}
-	</section>
-</main>
+<style>
+	/* Constrain monster height to prevent it from taking too much space */
+	.monster-section {
+		max-height: 40vh;
+		overflow: hidden;
+	}
+
+	/* Ensure monster content scales properly within constrained height */
+	.monster-section :global(> div) {
+		max-height: 40vh;
+	}
+
+	.monster-section :global(.aspect-square) {
+		aspect-ratio: auto;
+		max-height: 40vh;
+		width: auto;
+		margin: 0 auto;
+	}
+
+	/* Force scrollbar to always be visible */
+	.scrollable-main {
+		scrollbar-gutter: stable;
+	}
+
+	/* WebKit browsers (Chrome, Safari, Edge) - always show scrollbar */
+	.scrollable-main::-webkit-scrollbar {
+		width: 8px;
+		background-color: transparent;
+	}
+
+	.scrollable-main::-webkit-scrollbar-track {
+		background-color: rgba(0, 0, 0, 0.05);
+		border-radius: 4px;
+	}
+
+	.scrollable-main::-webkit-scrollbar-thumb {
+		background-color: rgba(0, 0, 0, 0.2);
+		border-radius: 4px;
+	}
+
+	.scrollable-main::-webkit-scrollbar-thumb:hover {
+		background-color: rgba(0, 0, 0, 0.3);
+	}
+
+	/* Firefox - always show scrollbar */
+	@supports (scrollbar-width: thin) {
+		.scrollable-main {
+			scrollbar-width: thin;
+			scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+		}
+	}
+</style>

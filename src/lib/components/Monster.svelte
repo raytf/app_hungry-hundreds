@@ -62,6 +62,7 @@
 				canvas,
 				autoplay: true,
 				stateMachines: 'State Machine 1',
+				useOffscreenRenderer: true,
 				onLoad: () => {
 					riveLoaded = true;
 
@@ -116,7 +117,7 @@
 <!-- Rive Canvas (hidden if not loaded or error) -->
 <canvas
 	bind:this={canvas}
-	class="h-48 w-48 {className}"
+	class="aspect-square w-full {className}"
 	class:hidden={!showRive}
 	aria-label="Animated monster companion"
 ></canvas>
@@ -124,7 +125,7 @@
 <!-- Emoji Fallback -->
 {#if showEmoji}
 	<div
-		class="flex h-48 w-48 items-center justify-center {className}"
+		class="flex aspect-square w-full items-center justify-center {className}"
 		aria-label="Monster companion"
 	>
 		<span class="animate-bounce text-7xl">{stageConfig.emoji}</span>
