@@ -6,7 +6,7 @@
  *
  * @see docs/ANIMATION.md for animation system documentation
  */
-import { animate, spring } from 'motion';
+import { animate } from 'motion';
 
 // ============================================================================
 // Reduced Motion Detection
@@ -40,7 +40,7 @@ export function buttonSpring(element: HTMLElement) {
 	return animate(
 		element,
 		{ scale: [1, 0.95, 1.02, 1] },
-		{ duration: 0.3, easing: spring({ stiffness: 500, damping: 15 }) }
+		{ type: 'spring', stiffness: 500, damping: 15 }
 	);
 }
 
@@ -135,7 +135,6 @@ export function iconTap(element: HTMLElement) {
 	return animate(
 		element,
 		{ scale: [1, 0.85, 1.1, 1] },
-		{ duration: 0.25, easing: spring({ stiffness: 400, damping: 10 }) }
+		{ type: 'spring', stiffness: 400, damping: 10 }
 	);
 }
-

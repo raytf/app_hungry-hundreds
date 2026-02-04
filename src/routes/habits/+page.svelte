@@ -80,7 +80,7 @@
 			<div class="space-y-3">
 				{#each $habits as habit (habit.id)}
 					<div class="flex items-center gap-2">
-						<div class="flex-1">
+						<div class="min-w-0 flex-1">
 							<HabitCard {habit} showEdit />
 						</div>
 						<!-- Delete button -->

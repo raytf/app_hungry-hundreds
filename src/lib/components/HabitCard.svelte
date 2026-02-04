@@ -34,7 +34,7 @@
 </script>
 
 <div
-	class="card flex w-full items-center gap-4 transition-all"
+	class="card flex w-full items-center gap-4 overflow-hidden transition-all"
 	class:ring-2={habit.completedToday}
 	class:ring-hungry-500={habit.completedToday}
 	class:bg-hungry-50={habit.completedToday}
@@ -43,7 +43,7 @@
 	<button
 		type="button"
 		onclick={handleToggle}
-		class="flex flex-1 cursor-pointer items-center gap-4 text-left active:scale-[0.98]"
+		class="flex min-w-0 flex-1 cursor-pointer items-center gap-4 text-left active:scale-[0.98]"
 		aria-label={habit.completedToday
 			? `Mark ${habit.name} as incomplete`
 			: `Mark ${habit.name} as complete`}
@@ -66,6 +66,7 @@
 				class="truncate font-medium"
 				class:line-through={habit.completedToday}
 				class:text-gray-500={habit.completedToday}
+				title={habit.name}
 			>
 				{habit.name}
 			</p>
