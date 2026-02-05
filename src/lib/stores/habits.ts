@@ -20,6 +20,7 @@ import {
 	deleteHabit,
 	toggleHabitCompletion,
 	calculateFlexibleStreaksForHabits,
+	getCompletedTodayMap,
 	type Habit,
 	type CreateHabitInput,
 	type UpdateHabitInput
@@ -127,9 +128,10 @@ const habitStatusWithTrigger = derived<
 			return;
 		}
 
-		// Use flexible streak calculation which handles both daily and weekly habits
-		calculateFlexibleStreaksForHabits($rawHabits)
-			.then((flexibleStreaks) => {
+		// Get flexible streaks and actual today completion status in parallel
+		const habitIds = $rawHabits.map((h) => h.id!);
+		Promise.all([calculateFlexibleStreaksForHabits($rawHabits), getCompletedTodayMap(habitIds)])
+			.then(([flexibleStreaks, completedTodayMap]) => {
 				const statusMap = new Map<number, HabitStatusResult>();
 				for (const habit of $rawHabits) {
 					const id = habit.id!;
@@ -137,12 +139,12 @@ const habitStatusWithTrigger = derived<
 
 					if (flexResult) {
 						// For daily habits: completedToday = target met for the day
-						// For weekly habits: completedToday = has any completion today
-						// (we use periodProgress >= periodTarget for daily habits with target)
+						// For weekly habits: completedToday = has any completion for TODAY specifically
+						// (not just any progress this week)
 						const completedToday =
 							habit.frequencyType === 'daily'
 								? flexResult.periodProgress >= flexResult.periodTarget
-								: flexResult.periodProgress > 0; // For weekly, any progress counts
+								: (completedTodayMap.get(id) ?? false);
 
 						statusMap.set(id, {
 							streak: flexResult.streak,

@@ -540,6 +540,81 @@ describe('Multi-Completion Daily Habits', () => {
 		});
 	});
 
+	describe('getCompletedTodayMap for weekly habits', () => {
+		it('should return false when weekly habit has week progress but no completion today', async () => {
+			// This is the bug scenario: Gym 3x/week with 2/3 completions this week
+			// but none of those completions are for today
+			const habitId = await createHabit({
+				name: 'Gym',
+				emoji: '🏋️',
+				color: '#22c55e',
+				frequencyType: 'weekly',
+				frequencyTarget: 3,
+				weekStartsOn: 1
+			});
+
+			// Add completions for earlier days this week (not today)
+			await logHabitCompletion(habitId, daysAgo(1)); // yesterday
+			await logHabitCompletion(habitId, daysAgo(2)); // 2 days ago
+
+			const result = await getCompletedTodayMap([habitId]);
+
+			// Should be false because no completion exists for TODAY
+			expect(result.get(habitId)).toBe(false);
+		});
+
+		it('should return true when weekly habit has completion today', async () => {
+			const habitId = await createHabit({
+				name: 'Gym',
+				emoji: '🏋️',
+				color: '#22c55e',
+				frequencyType: 'weekly',
+				frequencyTarget: 3,
+				weekStartsOn: 1
+			});
+
+			// Add completions including one for today
+			await logHabitCompletion(habitId, daysAgo(1)); // yesterday
+			await logHabitCompletion(habitId, daysAgo(0)); // today
+
+			const result = await getCompletedTodayMap([habitId]);
+
+			// Should be true because there IS a completion for today
+			expect(result.get(habitId)).toBe(true);
+		});
+
+		it('should correctly distinguish daily vs weekly habit completedToday logic', async () => {
+			// Daily habit: completedToday = target met for the day
+			const dailyHabitId = await createHabit({
+				name: 'Meditate',
+				emoji: '🧘',
+				color: '#8b5cf6',
+				frequencyType: 'daily',
+				frequencyTarget: 1
+			});
+
+			// Weekly habit: completedToday = has log for today (regardless of week progress)
+			const weeklyHabitId = await createHabit({
+				name: 'Gym',
+				emoji: '🏋️',
+				color: '#22c55e',
+				frequencyType: 'weekly',
+				frequencyTarget: 3,
+				weekStartsOn: 1
+			});
+
+			// Daily habit: not completed today
+			// Weekly habit: has week progress but not completed today
+			await logHabitCompletion(weeklyHabitId, daysAgo(1));
+			await logHabitCompletion(weeklyHabitId, daysAgo(2));
+
+			const result = await getCompletedTodayMap([dailyHabitId, weeklyHabitId]);
+
+			expect(result.get(dailyHabitId)).toBe(false); // No completion today
+			expect(result.get(weeklyHabitId)).toBe(false); // Week progress exists but not today
+		});
+	});
+
 	describe('calculateFlexibleStreak for multi-daily habits', () => {
 		it('should return correct periodProgress for today', async () => {
 			const habitId = await createHabit({
