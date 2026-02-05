@@ -53,7 +53,21 @@
 	let frequencyType = $state<FrequencyType>(untrack(() => initialFrequencyType));
 	let frequencyTarget = $state(untrack(() => initialFrequencyTarget));
 
-	// Options for weekly frequency target
+	// Options for daily frequency target (1-10 times per day)
+	const dailyTargetOptions = [
+		{ value: 1, label: '1 time per day' },
+		{ value: 2, label: '2 times per day' },
+		{ value: 3, label: '3 times per day' },
+		{ value: 4, label: '4 times per day' },
+		{ value: 5, label: '5 times per day' },
+		{ value: 6, label: '6 times per day' },
+		{ value: 7, label: '7 times per day' },
+		{ value: 8, label: '8 times per day' },
+		{ value: 9, label: '9 times per day' },
+		{ value: 10, label: '10 times per day' }
+	];
+
+	// Options for weekly frequency target (1-7 times per week)
 	const weeklyTargetOptions = [
 		{ value: 1, label: '1 time per week' },
 		{ value: 2, label: '2 times per week' },
@@ -74,7 +88,7 @@
 			color,
 			reminderTime: reminderTime || null,
 			frequencyType,
-			frequencyTarget: frequencyType === 'weekly' ? frequencyTarget : 1
+			frequencyTarget
 		});
 	}
 </script>
@@ -164,13 +178,35 @@
 				</label>
 			</div>
 
-			<!-- Weekly Target Selector (shown only when weekly is selected) -->
+			<!-- Daily Target Selector (shown when daily is selected) -->
+			{#if frequencyType === 'daily'}
+				<div class="ml-6">
+					<label for="frequency-target-daily" class="mb-1 block text-sm text-gray-600">
+						How many times per day?
+					</label>
+					<select
+						id="frequency-target-daily"
+						bind:value={frequencyTarget}
+						class="input-field w-auto"
+					>
+						{#each dailyTargetOptions as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+
+			<!-- Weekly Target Selector (shown when weekly is selected) -->
 			{#if frequencyType === 'weekly'}
 				<div class="ml-6">
-					<label for="frequency-target" class="mb-1 block text-sm text-gray-600">
+					<label for="frequency-target-weekly" class="mb-1 block text-sm text-gray-600">
 						How many times per week?
 					</label>
-					<select id="frequency-target" bind:value={frequencyTarget} class="input-field w-auto">
+					<select
+						id="frequency-target-weekly"
+						bind:value={frequencyTarget}
+						class="input-field w-auto"
+					>
 						{#each weeklyTargetOptions as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}

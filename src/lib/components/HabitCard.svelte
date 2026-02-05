@@ -15,8 +15,17 @@
 	// Determine if this is a weekly frequency habit
 	const isWeekly = $derived(habit.frequencyType === 'weekly');
 
-	// Check if weekly target is met this week
-	const weeklyTargetMet = $derived(isWeekly && habit.periodProgress >= habit.periodTarget);
+	// Determine if this is a multi-completion daily habit (frequencyTarget > 1)
+	const isMultiDaily = $derived(habit.frequencyType === 'daily' && habit.frequencyTarget > 1);
+
+	// Check if target is met for the current period
+	const periodTargetMet = $derived(habit.periodProgress >= habit.periodTarget);
+
+	// Check if weekly target is met this week (for weekly habits)
+	const weeklyTargetMet = $derived(isWeekly && periodTargetMet);
+
+	// Check if daily target is met today (for multi-daily habits)
+	const dailyTargetMet = $derived(isMultiDaily && periodTargetMet);
 
 	function handleToggle(event: MouseEvent) {
 		if (habit.id !== undefined) {
@@ -83,9 +92,11 @@
 			>
 				{habit.name}
 			</p>
-			<!-- Subtitle: reminder time for daily, frequency for weekly -->
+			<!-- Subtitle: reminder time for single-daily, frequency for multi-daily/weekly -->
 			{#if isWeekly}
 				<p class="text-sm text-gray-400">{habit.frequencyTarget}x per week</p>
+			{:else if isMultiDaily}
+				<p class="text-sm text-gray-400">{habit.frequencyTarget}x per day</p>
 			{:else if habit.reminderTime}
 				<p class="text-sm text-gray-400">{habit.reminderTime}</p>
 			{/if}
@@ -132,8 +143,44 @@
 				{habit.totalCompletions} total
 			</div>
 		</div>
+	{:else if isMultiDaily}
+		<!-- MULTI-COMPLETION DAILY HABIT: Progress today + streak -->
+		<div class="flex flex-col items-end gap-0.5">
+			<!-- Row 1: Today's progress (PRIMARY) -->
+			<div
+				class="flex items-center gap-1 rounded-lg px-2 py-0.5 text-sm font-semibold"
+				class:bg-green-100={dailyTargetMet}
+				class:text-green-700={dailyTargetMet}
+				class:bg-blue-100={!dailyTargetMet}
+				class:text-blue-700={!dailyTargetMet}
+				aria-label="Daily progress: {habit.periodProgress} of {habit.periodTarget} completed today"
+			>
+				<span>{habit.periodProgress}/{habit.periodTarget}</span>
+				<span class="text-xs font-normal opacity-75">today</span>
+			</div>
+
+			<!-- Row 2: Consecutive days streak -->
+			<div
+				class="flex items-center gap-1 text-xs"
+				class:text-orange-600={habit.streak > 0}
+				class:text-gray-400={habit.streak === 0}
+				aria-label="Streak: {habit.streak} consecutive days"
+			>
+				<span>{habit.streak > 0 ? '🔥' : ''}</span>
+				<span class="font-medium">{habit.streak}</span>
+				<span>day{habit.streak !== 1 ? 's' : ''}</span>
+			</div>
+
+			<!-- Row 3: Lifetime total completions (secondary) -->
+			<div
+				class="text-xs text-gray-400"
+				aria-label="Total: {habit.totalCompletions} completions all time"
+			>
+				{habit.totalCompletions} total
+			</div>
+		</div>
 	{:else}
-		<!-- DAILY HABIT: Single streak badge (existing behavior) -->
+		<!-- SINGLE-COMPLETION DAILY HABIT: Simple streak badge (existing behavior) -->
 		<div
 			class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium"
 			class:bg-orange-100={habit.streak > 0}

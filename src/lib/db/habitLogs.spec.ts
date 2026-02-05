@@ -16,7 +16,10 @@ import {
 	getHabitLogsInRange,
 	calculateStreak,
 	calculateStreaksForHabits,
-	getCompletedTodayMap
+	getCompletedTodayMap,
+	getCompletionsForDate,
+	calculateDayStreak,
+	calculateFlexibleStreak
 } from './habitLogs';
 
 describe('HabitLog Operations', () => {
@@ -246,6 +249,367 @@ describe('Streak Calculation', () => {
 
 			expect(completedMap.get(habitId)).toBe(true);
 			expect(completedMap.get(habitId2)).toBe(false);
+		});
+	});
+});
+
+// ============================================================================
+// Multi-Completion Daily Habits Tests
+// ============================================================================
+
+describe('Multi-Completion Daily Habits', () => {
+	// Helper to get date string relative to today
+	function daysAgo(days: number): string {
+		const date = new Date();
+		date.setDate(date.getDate() - days);
+		return date.toISOString().split('T')[0];
+	}
+
+	beforeEach(async () => {
+		await db.habits.clear();
+		await db.logs.clear();
+		await db.syncQueue.clear();
+	});
+
+	afterEach(async () => {
+		await db.habits.clear();
+		await db.logs.clear();
+		await db.syncQueue.clear();
+	});
+
+	describe('getCompletionsForDate', () => {
+		it('should return 0 when no completions exist', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 8
+			});
+
+			const count = await getCompletionsForDate(habitId, daysAgo(0));
+
+			expect(count).toBe(0);
+		});
+
+		it('should count multiple completions on the same date', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 8
+			});
+
+			// Log 5 completions for today
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			const count = await getCompletionsForDate(habitId, daysAgo(0));
+
+			expect(count).toBe(5);
+		});
+
+		it('should only count completions for the specified date', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 8
+			});
+
+			// Log completions on different days
+			await logHabitCompletion(habitId, daysAgo(0)); // today
+			await logHabitCompletion(habitId, daysAgo(0)); // today
+			await logHabitCompletion(habitId, daysAgo(1)); // yesterday
+
+			const todayCount = await getCompletionsForDate(habitId, daysAgo(0));
+			const yesterdayCount = await getCompletionsForDate(habitId, daysAgo(1));
+
+			expect(todayCount).toBe(2);
+			expect(yesterdayCount).toBe(1);
+		});
+	});
+
+	describe('calculateDayStreak', () => {
+		it('should return 0 when no completions exist', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+
+			const streak = await calculateDayStreak(habitId, 3);
+
+			expect(streak).toBe(0);
+		});
+
+		it('should return 0 when target not met today or yesterday', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+
+			// Only 2 completions today (target is 3)
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			const streak = await calculateDayStreak(habitId, 3);
+
+			expect(streak).toBe(0);
+		});
+
+		it('should return 1 when target met only today', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+
+			// 3 completions today (target met)
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			const streak = await calculateDayStreak(habitId, 3);
+
+			expect(streak).toBe(1);
+		});
+
+		it('should count consecutive days where target was met', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 2
+			});
+
+			// Day 0 (today): 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			// Day 1 (yesterday): 3 completions (target exceeded)
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+
+			// Day 2: 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(2));
+			await logHabitCompletion(habitId, daysAgo(2));
+
+			const streak = await calculateDayStreak(habitId, 2);
+
+			expect(streak).toBe(3);
+		});
+
+		it('should break streak when target not met on a day', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+
+			// Day 0 (today): 3 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			// Day 1 (yesterday): only 1 completion (target NOT met - breaks streak)
+			await logHabitCompletion(habitId, daysAgo(1));
+
+			// Day 2: 3 completions (target met, but streak already broken)
+			await logHabitCompletion(habitId, daysAgo(2));
+			await logHabitCompletion(habitId, daysAgo(2));
+			await logHabitCompletion(habitId, daysAgo(2));
+
+			const streak = await calculateDayStreak(habitId, 3);
+
+			expect(streak).toBe(1); // Only today counts
+		});
+
+		it('should start from yesterday if today target not met', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 2
+			});
+
+			// Day 0 (today): only 1 completion (target NOT met)
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			// Day 1 (yesterday): 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+
+			// Day 2: 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(2));
+			await logHabitCompletion(habitId, daysAgo(2));
+
+			const streak = await calculateDayStreak(habitId, 2);
+
+			expect(streak).toBe(2); // Yesterday and day before
+		});
+	});
+
+	describe('toggleHabitCompletion for multi-daily habits', () => {
+		it('should add completions up to target', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+			const today = daysAgo(0);
+
+			// First toggle: 1/3
+			const result1 = await toggleHabitCompletion(habitId, today);
+			expect(result1).toBe(false); // Target not met yet
+			expect(await getCompletionsForDate(habitId, today)).toBe(1);
+
+			// Second toggle: 2/3
+			const result2 = await toggleHabitCompletion(habitId, today);
+			expect(result2).toBe(false); // Target not met yet
+			expect(await getCompletionsForDate(habitId, today)).toBe(2);
+
+			// Third toggle: 3/3
+			const result3 = await toggleHabitCompletion(habitId, today);
+			expect(result3).toBe(true); // Target met!
+			expect(await getCompletionsForDate(habitId, today)).toBe(3);
+		});
+
+		it('should remove completion when target already met', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 2
+			});
+			const today = daysAgo(0);
+
+			// Add 2 completions to meet target
+			await toggleHabitCompletion(habitId, today);
+			await toggleHabitCompletion(habitId, today);
+			expect(await getCompletionsForDate(habitId, today)).toBe(2);
+
+			// Toggle again should remove one
+			const result = await toggleHabitCompletion(habitId, today);
+			expect(result).toBe(false); // Target no longer met
+			expect(await getCompletionsForDate(habitId, today)).toBe(1);
+		});
+
+		it('should allow re-adding after removing', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 2
+			});
+			const today = daysAgo(0);
+
+			// Meet target
+			await toggleHabitCompletion(habitId, today);
+			await toggleHabitCompletion(habitId, today);
+
+			// Remove one
+			await toggleHabitCompletion(habitId, today);
+			expect(await getCompletionsForDate(habitId, today)).toBe(1);
+
+			// Add back
+			const result = await toggleHabitCompletion(habitId, today);
+			expect(result).toBe(true); // Target met again
+			expect(await getCompletionsForDate(habitId, today)).toBe(2);
+		});
+	});
+
+	describe('calculateFlexibleStreak for multi-daily habits', () => {
+		it('should return correct periodProgress for today', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 5
+			});
+
+			// Add 3 completions today
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			const habit = await db.habits.get(habitId);
+			const result = await calculateFlexibleStreak(habit!);
+
+			expect(result.periodProgress).toBe(3);
+			expect(result.periodTarget).toBe(5);
+			expect(result.periodType).toBe('day');
+			expect(result.streak).toBe(0); // Target not met today
+		});
+
+		it('should calculate streak based on days where target was met', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 2
+			});
+
+			// Today: 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+
+			// Yesterday: 2 completions (target met)
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+
+			const habit = await db.habits.get(habitId);
+			const result = await calculateFlexibleStreak(habit!);
+
+			expect(result.streak).toBe(2);
+			expect(result.periodProgress).toBe(2);
+			expect(result.periodTarget).toBe(2);
+		});
+
+		it('should count total completions correctly', async () => {
+			const habitId = await createHabit({
+				name: 'Water',
+				emoji: '💧',
+				color: '#00f',
+				frequencyType: 'daily',
+				frequencyTarget: 3
+			});
+
+			// Add completions across multiple days
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(0));
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(1));
+			await logHabitCompletion(habitId, daysAgo(2));
+
+			const habit = await db.habits.get(habitId);
+			const result = await calculateFlexibleStreak(habit!);
+
+			expect(result.totalCompletions).toBe(6);
 		});
 	});
 });

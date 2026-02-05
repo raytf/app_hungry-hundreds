@@ -31,7 +31,13 @@ export interface Habit {
 	reminderTime?: string; // HH:MM format (24-hour)
 	// Frequency configuration (Phase 1: Flexible Streaks)
 	frequencyType: FrequencyType; // 'daily' or 'weekly'
-	frequencyTarget: number; // 1-7 (times per week for weekly, always 1 for daily)
+	/**
+	 * Target completions per period:
+	 * - For 'daily': 1-10 times per day (e.g., "Drink water 8 times per day")
+	 * - For 'weekly': 1-7 times per week (e.g., "Gym 3 times per week")
+	 * Default: 1
+	 */
+	frequencyTarget: number;
 	weekStartsOn: 0 | 1; // 0 = Sunday, 1 = Monday
 	createdAt: number; // Unix timestamp
 	updatedAt: number; // Unix timestamp

@@ -15,10 +15,12 @@ ALTER TABLE habits
   ADD CONSTRAINT habits_frequency_type_check 
     CHECK (frequency_type IN ('daily', 'weekly'));
 
--- frequency_target must be between 1 and 7 (days per week)
-ALTER TABLE habits 
-  ADD CONSTRAINT habits_frequency_target_check 
-    CHECK (frequency_target BETWEEN 1 AND 7);
+-- frequency_target must be between 1 and 10
+-- For daily habits: 1-10 times per day
+-- For weekly habits: 1-7 times per week (values 8-10 are technically allowed but uncommon)
+ALTER TABLE habits
+  ADD CONSTRAINT habits_frequency_target_check
+    CHECK (frequency_target BETWEEN 1 AND 10);
 
 -- week_starts_on: 0 = Sunday, 1 = Monday
 ALTER TABLE habits 

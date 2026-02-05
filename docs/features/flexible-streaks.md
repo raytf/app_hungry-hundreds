@@ -175,29 +175,46 @@ After analysis, the **Frequency-Based approach with optional rest days** provide
 
 #### Secondary User Stories
 
-1. **Daily habit user:**
+1. **Daily habit user (single completion):**
 
    > As a user with a daily meditation habit, I want my existing streak behavior unchanged so that my current streak of 45 days continues to work.
 
-2. **Weekly target user:**
+2. **Daily habit user (multiple completions):**
+
+   > As a user tracking water intake, I want to set my habit to "8 times per day" so that I can track drinking water throughout the day without losing my streak for partial completion.
+
+3. **Weekly target user:**
 
    > As a gym-goer, I want to see my "weeks streak" (consecutive weeks hitting my 3x target) so that I feel motivated by longer-term consistency.
 
-3. **Progress visibility user:**
-   > As a user, I want to see "2/3 this week" on my habit card so that I know how many more times I need to complete it this period.
+4. **Progress visibility user:**
+   > As a user, I want to see "5/8 today" or "2/3 this week" on my habit card so that I know how many more times I need to complete it this period.
 
 ### 3.2 UI/UX Design
 
 #### HabitForm Changes
 
-Add a "Frequency" section to the habit creation/edit form:
+Add a "Frequency" section to the habit creation/edit form with target selectors for both daily and weekly:
 
 ```
+Daily frequency (with multi-completion support):
 ┌─────────────────────────────────────────────────┐
 │ Frequency                                        │
 │ ┌───────────────────────────────────────────┐   │
-│ │ ○ Daily (every day)                       │   │
+│ │ ● Every day                               │   │
+│ │   How many times per day?                 │   │
+│ │   [ 8 ▼ ] times per day                   │   │
+│ │ ○ Weekly target                           │   │
+│ └───────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────┘
+
+Weekly frequency:
+┌─────────────────────────────────────────────────┐
+│ Frequency                                        │
+│ ┌───────────────────────────────────────────┐   │
+│ │ ○ Every day                               │   │
 │ │ ● Weekly target                           │   │
+│ │   How many times per week?                │   │
 │ │   [ 3 ▼ ] times per week                  │   │
 │ └───────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────┘
@@ -207,11 +224,23 @@ Add a "Frequency" section to the habit creation/edit form:
 
 Update the streak display to show period progress:
 
-**Daily habit (unchanged):**
+**Single-completion daily habit (frequencyTarget = 1):**
 
 ```
 ┌─────────────────────────────────────┐
 │ 🏃 Morning Run          🔥 12       │
+│                         ^^^^ ^^^    │
+│                       flame days    │
+└─────────────────────────────────────┘
+```
+
+**Multi-completion daily habit (frequencyTarget > 1):**
+
+```
+┌─────────────────────────────────────┐
+│ 💧 Drink Water         5/8 today    │
+│    8x per day          🔥 12 days   │
+│                        45 total     │
 └─────────────────────────────────────┘
 ```
 
@@ -219,9 +248,9 @@ Update the streak display to show period progress:
 
 ```
 ┌─────────────────────────────────────┐
-│ 🏋️ Gym                  2/3 🔥 5   │
-│                         ^^^^ ^^^^   │
-│                     progress weeks  │
+│ 🏋️ Gym                 2/3 this wk  │
+│    3x per week         📅 5 weeks   │
+│                        45 total     │
 └─────────────────────────────────────┘
 ```
 
@@ -238,9 +267,14 @@ export interface Habit {
   color: string;
   reminderTime?: string;
 
-  // NEW: Frequency configuration
+  // Frequency configuration
   frequencyType: 'daily' | 'weekly';  // Period type
-  frequencyTarget: number;             // How many times per period (1-7)
+  /**
+   * Target completions per period:
+   * - For 'daily': 1-10 times per day (e.g., "Drink water 8 times per day")
+   * - For 'weekly': 1-7 times per week (e.g., "Gym 3 times per week")
+   */
+  frequencyTarget: number;
   weekStartsOn: 0 | 1;                 // 0 = Sunday, 1 = Monday (user preference)
 
   createdAt: number;
@@ -251,7 +285,7 @@ export interface Habit {
 **Default values for backward compatibility:**
 
 - `frequencyType`: `'daily'`
-- `frequencyTarget`: `1`
+- `frequencyTarget`: `1` (single completion per day)
 - `weekStartsOn`: `1` (Monday)
 
 #### Supabase Schema Migration (`supabase/migrations/20260205_flexible_streaks.sql`)
@@ -270,8 +304,9 @@ ALTER TABLE habits
 ALTER TABLE habits
   ADD CONSTRAINT habits_frequency_type_check
     CHECK (frequency_type IN ('daily', 'weekly')),
+  -- frequency_target: 1-10 for daily habits, 1-7 for weekly (10 max for daily)
   ADD CONSTRAINT habits_frequency_target_check
-    CHECK (frequency_target BETWEEN 1 AND 7),
+    CHECK (frequency_target BETWEEN 1 AND 10),
   ADD CONSTRAINT habits_week_starts_on_check
     CHECK (week_starts_on IN (0, 1));
 

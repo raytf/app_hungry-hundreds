@@ -41,30 +41,63 @@ export async function removeHabitCompletion(habitId: number, date?: string): Pro
 
 /**
  * Toggle habit completion for a date
- * If completed, removes it. If not completed, adds it.
- * @returns Whether the habit is now completed
+ * Behavior depends on the habit's frequency configuration:
+ * - Single-completion daily habits (frequencyTarget = 1): toggle on/off
+ * - Multi-completion daily habits (frequencyTarget > 1): add completion up to target, then toggle off
+ * - Weekly habits: add completion (allows multiple per day)
+ * @returns Whether the habit's target is now met for the period
  */
 export async function toggleHabitCompletion(habitId: number, date?: string): Promise<boolean> {
 	const logDate = date ?? getTodayDate();
-	const existing = await db.logs.where('[habitId+date]').equals([habitId, logDate]).first();
 
-	// Get the habit to access serverId for sync queue
+	// Get the habit to access frequencyTarget and serverId
 	const habit = await db.habits.get(habitId);
+	if (!habit) return false;
 
-	if (existing) {
-		await db.logs.delete(existing.id!);
+	const target = habit.frequencyType === 'daily' ? habit.frequencyTarget : 1;
+	const existingLogs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
+	const currentCount = existingLogs.length;
 
-		// Queue deletion for sync to Supabase
-		await queueLogDelete(existing.id!, existing.serverId, habitId, habit?.serverId, logDate);
-
-		return false;
+	if (habit.frequencyType === 'daily' && target === 1) {
+		// Single-completion daily habit: simple toggle
+		if (currentCount > 0) {
+			// Remove the existing log
+			const existing = existingLogs[0];
+			await db.logs.delete(existing.id!);
+			await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
+			return false;
+		} else {
+			// Add a new log
+			const logId = await logHabitCompletion(habitId, logDate);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			return true;
+		}
+	} else if (habit.frequencyType === 'daily' && target > 1) {
+		// Multi-completion daily habit
+		if (currentCount >= target) {
+			// Target already met - remove the most recent log to allow toggle off
+			const mostRecent = existingLogs.sort((a, b) => b.completedAt - a.completedAt)[0];
+			await db.logs.delete(mostRecent.id!);
+			await queueLogDelete(mostRecent.id!, mostRecent.serverId, habitId, habit.serverId, logDate);
+			return currentCount - 1 >= target;
+		} else {
+			// Add another completion
+			const logId = await logHabitCompletion(habitId, logDate);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			return currentCount + 1 >= target;
+		}
 	} else {
-		const logId = await logHabitCompletion(habitId, logDate);
-
-		// Queue creation for sync to Supabase
-		await queueLogCreate(logId, habitId, habit?.serverId, logDate);
-
-		return true;
+		// Weekly habit: simple toggle for individual completions
+		if (currentCount > 0) {
+			const existing = existingLogs[0];
+			await db.logs.delete(existing.id!);
+			await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
+			return false;
+		} else {
+			const logId = await logHabitCompletion(habitId, logDate);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			return true;
+		}
 	}
 }
 
@@ -181,8 +214,8 @@ export async function getCompletedTodayMap(habitIds: number[]): Promise<Map<numb
  */
 export interface FlexibleStreakResult {
 	streak: number; // Consecutive days (daily) or consecutive successful weeks (weekly)
-	periodProgress: number; // Completions in current period (0/1 for daily, 0-7 for weekly)
-	periodTarget: number; // Target for current period (1 for daily, user-configured for weekly)
+	periodProgress: number; // Completions in current period (0-N for daily, 0-7 for weekly)
+	periodTarget: number; // Target for current period (1-10 for daily, 1-7 for weekly)
 	periodType: 'day' | 'week';
 	totalCompletions: number; // Lifetime completion count
 }
@@ -229,6 +262,55 @@ export async function getCompletionsInRange(
  */
 export async function getTotalCompletions(habitId: number): Promise<number> {
 	return await db.logs.where('habitId').equals(habitId).count();
+}
+
+/**
+ * Get completions count for a specific date
+ */
+export async function getCompletionsForDate(habitId: number, date: string): Promise<number> {
+	return await db.logs
+		.where('habitId')
+		.equals(habitId)
+		.filter((log) => log.date === date)
+		.count();
+}
+
+/**
+ * Calculate consecutive successful days for a daily habit with multi-completion support
+ * A day is "successful" if completions >= target
+ */
+export async function calculateDayStreak(habitId: number, target: number): Promise<number> {
+	const today = getTodayDate();
+	let streak = 0;
+	const checkDate = new Date(today + 'T00:00:00');
+
+	// Get completions for today
+	const todayCompletions = await getCompletionsForDate(habitId, today);
+	const isTodayMet = todayCompletions >= target;
+
+	// If today's target is met, count today; otherwise start from yesterday
+	if (isTodayMet) {
+		streak = 1;
+		checkDate.setDate(checkDate.getDate() - 1);
+	} else {
+		// Today not met yet - check yesterday
+		checkDate.setDate(checkDate.getDate() - 1);
+	}
+
+	// Count consecutive successful previous days
+	while (true) {
+		const dateStr = formatDateLocal(checkDate);
+		const completions = await getCompletionsForDate(habitId, dateStr);
+
+		if (completions >= target) {
+			streak++;
+			checkDate.setDate(checkDate.getDate() - 1);
+		} else {
+			break;
+		}
+	}
+
+	return streak;
 }
 
 /**
@@ -285,27 +367,45 @@ export async function calculateWeekStreak(
  */
 export async function calculateFlexibleStreak(habit: Habit): Promise<FlexibleStreakResult> {
 	const habitId = habit.id!;
+	const target = habit.frequencyTarget;
 
 	// Get total completions (works for both daily and weekly)
 	const totalCompletions = await getTotalCompletions(habitId);
 
 	if (habit.frequencyType === 'daily') {
-		// Daily habits: use existing consecutive day streak
-		const streak = await calculateStreak(habitId);
 		const today = getTodayDate();
-		const completedToday = await isHabitCompletedOnDate(habitId, today);
 
-		return {
-			streak,
-			periodProgress: completedToday ? 1 : 0,
-			periodTarget: 1,
-			periodType: 'day',
-			totalCompletions
-		};
+		// For multi-completion daily habits (target > 1)
+		if (target > 1) {
+			// Get completions for today
+			const periodProgress = await getCompletionsForDate(habitId, today);
+
+			// Calculate consecutive successful days (where target was met)
+			const streak = await calculateDayStreak(habitId, target);
+
+			return {
+				streak,
+				periodProgress,
+				periodTarget: target,
+				periodType: 'day',
+				totalCompletions
+			};
+		} else {
+			// Single-completion daily habits (backward compatible behavior)
+			const streak = await calculateStreak(habitId);
+			const completedToday = await isHabitCompletedOnDate(habitId, today);
+
+			return {
+				streak,
+				periodProgress: completedToday ? 1 : 0,
+				periodTarget: 1,
+				periodType: 'day',
+				totalCompletions
+			};
+		}
 	} else {
 		// Weekly habits: consecutive successful weeks
 		const weekStartsOn = habit.weekStartsOn;
-		const target = habit.frequencyTarget;
 
 		// Get current week progress
 		const today = new Date();
