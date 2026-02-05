@@ -16,7 +16,8 @@ export {
 	clearAllUserData,
 	type Habit,
 	type HabitLog,
-	type SyncQueue
+	type SyncQueue,
+	type FrequencyType
 } from './db';
 
 // Habit CRUD operations
@@ -42,5 +43,13 @@ export {
 	getHabitLogsInRange,
 	calculateStreak,
 	calculateStreaksForHabits,
-	getCompletedTodayMap
+	getCompletedTodayMap,
+	// Flexible streak calculation (Phase 1)
+	calculateFlexibleStreak,
+	calculateFlexibleStreaksForHabits,
+	getWeekBounds,
+	getCompletionsInRange,
+	getTotalCompletions,
+	calculateWeekStreak,
+	type FlexibleStreakResult
 } from './habitLogs';

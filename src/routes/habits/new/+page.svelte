@@ -3,18 +3,23 @@
 	import Header from '$lib/components/Header.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits } from '$lib/stores/habits';
+	import type { FrequencyType } from '$lib/db';
 
 	function handleSubmit(habit: {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
+		frequencyType: FrequencyType;
+		frequencyTarget: number;
 	}) {
 		habits.add({
 			name: habit.name,
 			emoji: habit.emoji,
 			color: habit.color,
-			reminderTime: habit.reminderTime ?? undefined
+			reminderTime: habit.reminderTime ?? undefined,
+			frequencyType: habit.frequencyType,
+			frequencyTarget: habit.frequencyTarget
 		});
 		goto('/habits');
 	}
@@ -28,7 +33,7 @@
 
 <main class="page-container pt-4">
 	<section class="mb-6">
-		<p class="text-center text-gray-500">Create a new habit to track daily</p>
+		<p class="text-center text-gray-500">Create a new habit to track</p>
 	</section>
 
 	<HabitForm onsubmit={handleSubmit} />

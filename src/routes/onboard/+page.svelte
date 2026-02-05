@@ -5,6 +5,7 @@
 	import { habits } from '$lib/stores/habits';
 	import { mockMonster, monsterStages } from '$lib/data/mockData';
 	import { isAuthenticated, userEmail } from '$lib/stores/auth';
+	import type { FrequencyType } from '$lib/db';
 
 	let step = $state<'welcome' | 'monster' | 'habit'>('welcome');
 	let monsterName = $state('Chompy');
@@ -29,13 +30,17 @@
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
+		frequencyType: FrequencyType;
+		frequencyTarget: number;
 	}) {
 		habits.reset(); // Start fresh
 		habits.add({
 			name: habit.name,
 			emoji: habit.emoji,
 			color: habit.color,
-			reminderTime: habit.reminderTime ?? undefined
+			reminderTime: habit.reminderTime ?? undefined,
+			frequencyType: habit.frequencyType,
+			frequencyTarget: habit.frequencyTarget
 		});
 		goto('/');
 	}

@@ -13,6 +13,13 @@ import Dexie, { type Table } from 'dexie';
 // ============================================================================
 
 /**
+ * Frequency type for habits
+ * - 'daily': Must be completed every day (traditional streak)
+ * - 'weekly': Target completions per week (e.g., 3x per week)
+ */
+export type FrequencyType = 'daily' | 'weekly';
+
+/**
  * Represents a user's habit stored locally in IndexedDB
  */
 export interface Habit {
@@ -22,6 +29,10 @@ export interface Habit {
 	emoji: string; // Emoji icon for the habit
 	color: string; // Hex color code (e.g., "#3498db")
 	reminderTime?: string; // HH:MM format (24-hour)
+	// Frequency configuration (Phase 1: Flexible Streaks)
+	frequencyType: FrequencyType; // 'daily' or 'weekly'
+	frequencyTarget: number; // 1-7 (times per week for weekly, always 1 for daily)
+	weekStartsOn: 0 | 1; // 0 = Sunday, 1 = Monday
 	createdAt: number; // Unix timestamp
 	updatedAt: number; // Unix timestamp
 }
@@ -62,6 +73,7 @@ export class HungryHundredsDB extends Dexie {
 	constructor() {
 		super('HungryHundreds');
 
+		// Version 1: Initial schema
 		this.version(1).stores({
 			// Primary key is ++id (auto-increment)
 			// Additional indexes for queries
@@ -70,6 +82,26 @@ export class HungryHundredsDB extends Dexie {
 			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
 			syncQueue: '++id, timestamp'
 		});
+
+		// Version 2: Add frequency fields for flexible streaks
+		this.version(2)
+			.stores({
+				// Schema unchanged - just adding fields to existing table
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+				syncQueue: '++id, timestamp'
+			})
+			.upgrade((tx) => {
+				// Migrate existing habits to use daily frequency by default
+				return tx
+					.table('habits')
+					.toCollection()
+					.modify((habit: Partial<Habit>) => {
+						habit.frequencyType = 'daily';
+						habit.frequencyTarget = 1;
+						habit.weekStartsOn = 1; // Default to Monday
+					});
+			});
 	}
 }
 

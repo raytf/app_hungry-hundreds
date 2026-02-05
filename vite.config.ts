@@ -6,7 +6,12 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
-
+	server: {
+		hmr: {
+			host: 'localhost', // Use your actual development host if not localhost
+			protocol: 'ws' // Or 'wss' if using HTTPS
+		}
+	},
 	test: {
 		expect: { requireAssertions: true },
 

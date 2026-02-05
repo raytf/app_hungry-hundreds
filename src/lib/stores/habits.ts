@@ -19,7 +19,7 @@ import {
 	updateHabit,
 	deleteHabit,
 	toggleHabitCompletion,
-	calculateStreaksForHabits,
+	calculateFlexibleStreaksForHabits,
 	getCompletedTodayMap,
 	type Habit,
 	type CreateHabitInput,
@@ -33,10 +33,17 @@ import {
 /**
  * Extended habit with computed streak and completion status
  * This is what components receive - includes streak/completedToday
+ *
+ * @see docs/features/flexible-streaks.md for field descriptions
  */
 export interface HabitWithStatus extends Habit {
-	streak: number;
+	streak: number; // Consecutive days (daily) or consecutive successful weeks (weekly)
 	completedToday: boolean;
+	// Flexible streak fields (Phase 1)
+	periodProgress: number; // Completions in current period (0/1 for daily, 0-7 for weekly)
+	periodTarget: number; // Target for current period (1 for daily, user-configured for weekly)
+	periodType: 'day' | 'week';
+	totalCompletions: number; // Lifetime completion count
 }
 
 // ============================================================================
@@ -44,22 +51,37 @@ export interface HabitWithStatus extends Habit {
 // ============================================================================
 
 /**
+ * Track whether habits have been loaded from IndexedDB
+ * This helps distinguish between "still loading" and "no habits exist"
+ */
+const habitsLoadedInternal = writable(false);
+
+/**
  * Raw habits from IndexedDB, updated reactively via liveQuery
  */
 const rawHabits = readable<Habit[]>([], (set) => {
 	// Only run in browser - IndexedDB is not available during SSR
 	if (!browser) {
-		return () => { };
+		return () => {};
 	}
 
 	// Subscribe to Dexie liveQuery for reactive updates
 	const subscription = liveQuery(() => getAllHabits()).subscribe({
-		next: (habits) => set(habits),
+		next: (habits) => {
+			habitsLoadedInternal.set(true);
+			set(habits);
+		},
 		error: (err) => console.error('[habits] LiveQuery error:', err)
 	});
 
 	return () => subscription.unsubscribe();
 });
+
+/**
+ * Whether habits have been loaded from IndexedDB (read-only)
+ * Use this to show loading states and distinguish "loading" from "empty"
+ */
+export const habitsLoaded = derived(habitsLoadedInternal, ($loaded) => $loaded);
 
 // Note: habitStatus was removed as it's superseded by habitStatusWithTrigger below
 
@@ -81,10 +103,22 @@ export function refreshStatus() {
 	statusRefreshTrigger.update((n) => n + 1);
 }
 
-// Derived store that fetches streaks and completion status
+/**
+ * Status result for a single habit including flexible streak data
+ */
+interface HabitStatusResult {
+	streak: number;
+	completedToday: boolean;
+	periodProgress: number;
+	periodTarget: number;
+	periodType: 'day' | 'week';
+	totalCompletions: number;
+}
+
+// Derived store that fetches flexible streaks and completion status
 const habitStatusWithTrigger = derived<
 	[typeof rawHabits, typeof statusRefreshTrigger],
-	Map<number, { streak: number; completedToday: boolean }>
+	Map<number, HabitStatusResult>
 >(
 	[rawHabits, statusRefreshTrigger],
 	([$rawHabits], set) => {
@@ -94,16 +128,38 @@ const habitStatusWithTrigger = derived<
 			return;
 		}
 
-		const habitIds = $rawHabits.map((h) => h.id!);
+		// Use flexible streak calculation which handles both daily and weekly habits
+		Promise.all([
+			calculateFlexibleStreaksForHabits($rawHabits),
+			getCompletedTodayMap($rawHabits.map((h) => h.id!))
+		])
+			.then(([flexibleStreaks, completedTodayMap]) => {
+				const statusMap = new Map<number, HabitStatusResult>();
+				for (const habit of $rawHabits) {
+					const id = habit.id!;
+					const flexResult = flexibleStreaks.get(id);
+					const completedToday = completedTodayMap.get(id) ?? false;
 
-		Promise.all([calculateStreaksForHabits(habitIds), getCompletedTodayMap(habitIds)])
-			.then(([streaks, completed]) => {
-				const statusMap = new Map<number, { streak: number; completedToday: boolean }>();
-				for (const id of habitIds) {
-					statusMap.set(id, {
-						streak: streaks.get(id) ?? 0,
-						completedToday: completed.get(id) ?? false
-					});
+					if (flexResult) {
+						statusMap.set(id, {
+							streak: flexResult.streak,
+							completedToday,
+							periodProgress: flexResult.periodProgress,
+							periodTarget: flexResult.periodTarget,
+							periodType: flexResult.periodType,
+							totalCompletions: flexResult.totalCompletions
+						});
+					} else {
+						// Fallback for edge cases
+						statusMap.set(id, {
+							streak: 0,
+							completedToday,
+							periodProgress: 0,
+							periodTarget: 1,
+							periodType: 'day',
+							totalCompletions: 0
+						});
+					}
 				}
 				set(statusMap);
 			})
@@ -120,11 +176,22 @@ const habitsWithStatusFinal = derived<
 	HabitWithStatus[]
 >([rawHabits, habitStatusWithTrigger], ([$rawHabits, $habitStatus]) => {
 	return $rawHabits.map((habit) => {
-		const status = $habitStatus.get(habit.id!) ?? { streak: 0, completedToday: false };
+		const status = $habitStatus.get(habit.id!) ?? {
+			streak: 0,
+			completedToday: false,
+			periodProgress: 0,
+			periodTarget: 1,
+			periodType: 'day' as const,
+			totalCompletions: 0
+		};
 		return {
 			...habit,
 			streak: status.streak,
-			completedToday: status.completedToday
+			completedToday: status.completedToday,
+			periodProgress: status.periodProgress,
+			periodTarget: status.periodTarget,
+			periodType: status.periodType,
+			totalCompletions: status.totalCompletions
 		};
 	});
 });

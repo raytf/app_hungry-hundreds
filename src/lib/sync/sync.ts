@@ -68,6 +68,7 @@ function createSyncStore() {
 	});
 
 	let syncInProgress = false;
+	let needsResync = false; // Track if we need to sync again after current sync completes
 	let autoSyncUnsubscribe: (() => void) | null = null;
 	let authUnsubscribe: (() => void) | null = null;
 	let queueChangeUnsubscribe: (() => void) | null = null;
@@ -111,7 +112,6 @@ function createSyncStore() {
 			// Listen for auth state changes - sync when user signs in
 			authUnsubscribe = onAuthStateChange(async (event, session) => {
 				if (event === 'SIGNED_IN' && session) {
-					console.log('[sync] User signed in, triggering debounced sync');
 					// Use debounced sync to prevent rapid fire during auth flow
 					this.debouncedSync();
 				}
@@ -165,8 +165,11 @@ function createSyncStore() {
 		 * Perform a full sync operation
 		 */
 		async sync(): Promise<boolean> {
-			// Guard against concurrent syncs
-			if (syncInProgress) return false;
+			// Guard against concurrent syncs - but mark that we need to resync
+			if (syncInProgress) {
+				needsResync = true;
+				return false;
+			}
 
 			// Check if online and authenticated
 			if (!connection.isOnline()) {
@@ -181,6 +184,7 @@ function createSyncStore() {
 			}
 
 			syncInProgress = true;
+			needsResync = false; // Reset the flag at start of sync
 			update((s) => ({ ...s, status: 'syncing', error: null }));
 
 			try {
@@ -203,11 +207,17 @@ function createSyncStore() {
 				await this.updatePendingCount();
 				return true;
 			} catch (error) {
+				console.error('[sync] Sync error:', error);
 				const message = error instanceof Error ? error.message : 'Sync failed';
 				update((s) => ({ ...s, status: 'error', error: message }));
 				return false;
 			} finally {
 				syncInProgress = false;
+				// If changes were queued during sync, trigger another sync
+				if (needsResync) {
+					needsResync = false;
+					this.debouncedSync();
+				}
 			}
 		},
 
@@ -217,10 +227,6 @@ function createSyncStore() {
 		 */
 		async queueUnsyncedHabits(): Promise<void> {
 			const habits = await db.habits.filter((h) => !h.serverId).toArray();
-
-			if (habits.length > 0) {
-				console.log(`[sync] Found ${habits.length} unsynced habits, queueing for sync`);
-			}
 
 			for (const habit of habits) {
 				// Check if already queued
@@ -247,14 +253,11 @@ function createSyncStore() {
 		 */
 		async processQueue(currentUserId: string): Promise<void> {
 			const operations = await getPendingOperations();
-			console.log(`[sync] Processing ${operations.length} queued operations`);
 
 			for (const op of operations) {
 				try {
-					console.log(`[sync] Processing:`, op.action, op.table, op.payload);
 					await this.processOperation(op, currentUserId);
 					if (op.id) await removeFromQueue(op.id);
-					console.log(`[sync] Completed:`, op.action, op.table);
 				} catch (error) {
 					console.error('[sync] Operation failed:', op, error);
 					if (op.id) await incrementRetry(op.id);
@@ -282,17 +285,19 @@ function createSyncStore() {
 			if (op.action === 'create') {
 				const habit = await db.habits.get(payload.localId);
 				if (!habit) {
-					console.log('[sync] Habit already deleted locally, skipping');
+					// Habit was deleted locally before sync completed
 					return;
 				}
 
-				console.log('[sync] Creating habit on server:', habit.name);
 				const { data, error } = await createRemoteHabit(
 					{
 						name: habit.name,
 						emoji: habit.emoji,
 						color: habit.color,
-						reminder_time: habit.reminderTime
+						reminder_time: habit.reminderTime,
+						frequency_type: habit.frequencyType,
+						frequency_target: habit.frequencyTarget,
+						week_starts_on: habit.weekStartsOn
 					},
 					userId
 				);
@@ -302,7 +307,6 @@ function createSyncStore() {
 					throw error;
 				}
 				if (data) {
-					console.log('[sync] Habit created with serverId:', data.id);
 					// Update local record with server ID
 					await db.habits.update(payload.localId, { serverId: data.id });
 				}
@@ -312,12 +316,22 @@ function createSyncStore() {
 					return;
 				}
 
-				const { error } = await updateRemoteHabit(payload.serverId, {
-					name: payload.data?.name,
-					emoji: payload.data?.emoji,
-					color: payload.data?.color,
-					reminder_time: payload.data?.reminderTime
-				});
+				// Build update object with only defined fields
+				// (payload.data only contains the changed fields)
+				const updateData: Parameters<typeof updateRemoteHabit>[1] = {};
+				if (payload.data?.name !== undefined) updateData.name = payload.data.name;
+				if (payload.data?.emoji !== undefined) updateData.emoji = payload.data.emoji;
+				if (payload.data?.color !== undefined) updateData.color = payload.data.color;
+				if (payload.data?.reminderTime !== undefined)
+					updateData.reminder_time = payload.data.reminderTime;
+				if (payload.data?.frequencyType !== undefined)
+					updateData.frequency_type = payload.data.frequencyType;
+				if (payload.data?.frequencyTarget !== undefined)
+					updateData.frequency_target = payload.data.frequencyTarget;
+				if (payload.data?.weekStartsOn !== undefined)
+					updateData.week_starts_on = payload.data.weekStartsOn;
+
+				const { error } = await updateRemoteHabit(payload.serverId, updateData);
 
 				if (error) throw error;
 			} else if (op.action === 'delete') {

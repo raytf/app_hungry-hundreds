@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { db, now, type Habit } from './db';
+import { db, now, type Habit, type FrequencyType } from './db';
 import { queueHabitCreate, queueHabitUpdate, queueHabitDelete } from '$lib/sync/queue';
 
 // ============================================================================
@@ -14,7 +14,7 @@ import { queueHabitCreate, queueHabitUpdate, queueHabitDelete } from '$lib/sync/
 // ============================================================================
 
 export type CreateHabitInput = Pick<Habit, 'name' | 'emoji' | 'color'> &
-	Partial<Pick<Habit, 'reminderTime'>>;
+	Partial<Pick<Habit, 'reminderTime' | 'frequencyType' | 'frequencyTarget' | 'weekStartsOn'>>;
 
 /**
  * Create a new habit
@@ -27,6 +27,10 @@ export async function createHabit(input: CreateHabitInput): Promise<number> {
 		emoji: input.emoji,
 		color: input.color,
 		reminderTime: input.reminderTime,
+		// Frequency configuration with defaults
+		frequencyType: input.frequencyType ?? 'daily',
+		frequencyTarget: input.frequencyTarget ?? 1,
+		weekStartsOn: input.weekStartsOn ?? 1, // Default to Monday
 		createdAt: timestamp,
 		updatedAt: timestamp
 	};
@@ -68,7 +72,18 @@ export async function getHabitCount(): Promise<number> {
 // Update Operations
 // ============================================================================
 
-export type UpdateHabitInput = Partial<Pick<Habit, 'name' | 'emoji' | 'color' | 'reminderTime'>>;
+export type UpdateHabitInput = Partial<
+	Pick<
+		Habit,
+		| 'name'
+		| 'emoji'
+		| 'color'
+		| 'reminderTime'
+		| 'frequencyType'
+		| 'frequencyTarget'
+		| 'weekStartsOn'
+	>
+>;
 
 /**
  * Update an existing habit
@@ -137,6 +152,10 @@ export async function seedHabitsIfEmpty(
 		emoji: h.emoji,
 		color: h.color,
 		reminderTime: h.reminderTime,
+		// Frequency configuration with defaults
+		frequencyType: h.frequencyType ?? 'daily',
+		frequencyTarget: h.frequencyTarget ?? 1,
+		weekStartsOn: h.weekStartsOn ?? 1,
 		createdAt: timestamp,
 		updatedAt: timestamp
 	}));

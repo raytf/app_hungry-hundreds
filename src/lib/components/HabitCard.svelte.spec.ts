@@ -30,15 +30,23 @@ const mockHabit: HabitWithStatus = {
 	name: 'Morning Run',
 	emoji: '🏃',
 	color: '#22c55e',
+	frequencyType: 'daily',
+	frequencyTarget: 1,
+	weekStartsOn: 1,
 	createdAt: Date.now(),
 	updatedAt: Date.now(),
 	streak: 5,
-	completedToday: false
+	completedToday: false,
+	periodProgress: 0,
+	periodTarget: 1,
+	periodType: 'day',
+	totalCompletions: 5
 };
 
 const completedHabit: HabitWithStatus = {
 	...mockHabit,
-	completedToday: true
+	completedToday: true,
+	periodProgress: 1
 };
 
 describe('HabitCard Component', () => {
@@ -137,4 +145,3 @@ describe('HabitCard Component', () => {
 		});
 	});
 });
-

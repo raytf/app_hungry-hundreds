@@ -37,7 +37,8 @@ export function resolveHabitConflict(
 	const remoteUpdatedAt = new Date(remote.updated_at).getTime();
 
 	// Last-write-wins: use whichever was updated more recently
-	if (localUpdatedAt > remoteUpdatedAt) {
+	// When timestamps are equal, prefer local to avoid unnecessary overwrites
+	if (localUpdatedAt >= remoteUpdatedAt) {
 		return {
 			resolution: 'local',
 			data: {
@@ -45,6 +46,10 @@ export function resolveHabitConflict(
 				emoji: local.emoji,
 				color: local.color,
 				reminderTime: local.reminderTime,
+				// Include frequency fields in conflict resolution
+				frequencyType: local.frequencyType,
+				frequencyTarget: local.frequencyTarget,
+				weekStartsOn: local.weekStartsOn,
 				updatedAt: localUpdatedAt
 			},
 			localUpdatedAt,
@@ -58,6 +63,10 @@ export function resolveHabitConflict(
 				emoji: remote.emoji,
 				color: remote.color,
 				reminderTime: remote.reminder_time ?? undefined,
+				// Include frequency fields in conflict resolution
+				frequencyType: remote.frequency_type,
+				frequencyTarget: remote.frequency_target,
+				weekStartsOn: remote.week_starts_on as 0 | 1,
 				updatedAt: remoteUpdatedAt,
 				serverId: remote.id
 			},
@@ -70,15 +79,16 @@ export function resolveHabitConflict(
 /**
  * Apply remote habit data to local database
  */
-export async function applyRemoteHabit(
-	localId: number,
-	remote: HabitRow
-): Promise<void> {
+export async function applyRemoteHabit(localId: number, remote: HabitRow): Promise<void> {
 	await db.habits.update(localId, {
 		name: remote.name,
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
+		// Include frequency fields
+		frequencyType: remote.frequency_type,
+		frequencyTarget: remote.frequency_target,
+		weekStartsOn: remote.week_starts_on as 0 | 1,
 		serverId: remote.id,
 		updatedAt: new Date(remote.updated_at).getTime()
 	});
@@ -93,6 +103,10 @@ export async function createLocalHabitFromRemote(remote: HabitRow): Promise<numb
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
+		// Include frequency fields
+		frequencyType: remote.frequency_type,
+		frequencyTarget: remote.frequency_target,
+		weekStartsOn: remote.week_starts_on as 0 | 1,
 		serverId: remote.id,
 		createdAt: new Date(remote.created_at).getTime(),
 		updatedAt: new Date(remote.updated_at).getTime()
@@ -173,4 +187,3 @@ export async function handleRemoteHabitDeletion(localId: number): Promise<void> 
 export async function handleRemoteLogDeletion(localId: number): Promise<void> {
 	await db.logs.delete(localId);
 }
-

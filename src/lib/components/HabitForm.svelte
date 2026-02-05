@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { habitColors, habitEmojis } from '$lib/data/mockData';
+	import type { FrequencyType } from '$lib/db';
 
 	interface HabitFormData {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
+		frequencyType: FrequencyType;
+		frequencyTarget: number;
 	}
 
 	interface Props {
@@ -19,6 +22,10 @@
 		initialColor?: string;
 		/** Initial reminder time for editing an existing habit */
 		initialReminderTime?: string | null;
+		/** Initial frequency type for editing an existing habit */
+		initialFrequencyType?: FrequencyType;
+		/** Initial frequency target for editing an existing habit */
+		initialFrequencyTarget?: number;
 		/** Mode determines button text: 'create' or 'edit' */
 		mode?: 'create' | 'edit';
 		/** Whether the form is submitting (shows loading state) */
@@ -31,6 +38,8 @@
 		initialEmoji = habitEmojis[0],
 		initialColor = habitColors[0],
 		initialReminderTime = '',
+		initialFrequencyType = 'daily' as FrequencyType,
+		initialFrequencyTarget = 1,
 		mode = 'create',
 		isSubmitting = false
 	}: Props = $props();
@@ -41,6 +50,19 @@
 	let emoji = $state(untrack(() => initialEmoji));
 	let color = $state(untrack(() => initialColor));
 	let reminderTime = $state(untrack(() => initialReminderTime ?? ''));
+	let frequencyType = $state<FrequencyType>(untrack(() => initialFrequencyType));
+	let frequencyTarget = $state(untrack(() => initialFrequencyTarget));
+
+	// Options for weekly frequency target
+	const weeklyTargetOptions = [
+		{ value: 1, label: '1 time per week' },
+		{ value: 2, label: '2 times per week' },
+		{ value: 3, label: '3 times per week' },
+		{ value: 4, label: '4 times per week' },
+		{ value: 5, label: '5 times per week' },
+		{ value: 6, label: '6 times per week' },
+		{ value: 7, label: '7 times per week' }
+	];
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -50,7 +72,9 @@
 			name: name.trim(),
 			emoji,
 			color,
-			reminderTime: reminderTime || null
+			reminderTime: reminderTime || null,
+			frequencyType,
+			frequencyTarget: frequencyType === 'weekly' ? frequencyTarget : 1
 		});
 	}
 </script>
@@ -107,6 +131,52 @@
 					aria-pressed={color === c}
 				></button>
 			{/each}
+		</div>
+	</fieldset>
+
+	<!-- Frequency Selection -->
+	<fieldset>
+		<legend class="mb-2 block text-sm font-medium text-gray-700">Frequency</legend>
+		<div class="space-y-3">
+			<!-- Frequency Type Radio Buttons -->
+			<div class="flex gap-4" role="radiogroup" aria-label="Select frequency type">
+				<label class="flex cursor-pointer items-center gap-2">
+					<input
+						type="radio"
+						name="frequencyType"
+						value="daily"
+						checked={frequencyType === 'daily'}
+						onchange={() => (frequencyType = 'daily')}
+						class="h-4 w-4 text-hungry-500 focus:ring-hungry-500"
+					/>
+					<span class="text-sm">Every day</span>
+				</label>
+				<label class="flex cursor-pointer items-center gap-2">
+					<input
+						type="radio"
+						name="frequencyType"
+						value="weekly"
+						checked={frequencyType === 'weekly'}
+						onchange={() => (frequencyType = 'weekly')}
+						class="h-4 w-4 text-hungry-500 focus:ring-hungry-500"
+					/>
+					<span class="text-sm">Weekly target</span>
+				</label>
+			</div>
+
+			<!-- Weekly Target Selector (shown only when weekly is selected) -->
+			{#if frequencyType === 'weekly'}
+				<div class="ml-6">
+					<label for="frequency-target" class="mb-1 block text-sm text-gray-600">
+						How many times per week?
+					</label>
+					<select id="frequency-target" bind:value={frequencyTarget} class="input-field w-auto">
+						{#each weeklyTargetOptions as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
 		</div>
 	</fieldset>
 

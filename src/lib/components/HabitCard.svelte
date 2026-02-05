@@ -12,6 +12,12 @@
 
 	let { habit, showEdit = false, onComplete }: Props = $props();
 
+	// Determine if this is a weekly frequency habit
+	const isWeekly = $derived(habit.frequencyType === 'weekly');
+
+	// Check if weekly target is met this week
+	const weeklyTargetMet = $derived(isWeekly && habit.periodProgress >= habit.periodTarget);
+
 	function handleToggle(event: MouseEvent) {
 		if (habit.id !== undefined) {
 			// Animate the button
@@ -77,25 +83,72 @@
 			>
 				{habit.name}
 			</p>
-			{#if habit.reminderTime}
+			<!-- Subtitle: reminder time for daily, frequency for weekly -->
+			{#if isWeekly}
+				<p class="text-sm text-gray-400">{habit.frequencyTarget}x per week</p>
+			{:else if habit.reminderTime}
 				<p class="text-sm text-gray-400">{habit.reminderTime}</p>
 			{/if}
 		</div>
 	</button>
 
-	<!-- Streak badge -->
-	<div
-		class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium"
-		class:bg-orange-100={habit.streak > 0}
-		class:text-orange-600={habit.streak > 0}
-		class:bg-gray-100={habit.streak === 0}
-		class:text-gray-500={habit.streak === 0}
-	>
-		{#if habit.streak > 0}
-			<span>🔥</span>
-		{/if}
-		<span>{habit.streak}</span>
-	</div>
+	<!-- ============================================================ -->
+	<!-- METRICS AREA: Different layout for daily vs weekly habits    -->
+	<!-- ============================================================ -->
+
+	{#if isWeekly}
+		<!-- WEEKLY HABIT: Stacked metrics -->
+		<div class="flex flex-col items-end gap-0.5">
+			<!-- Row 1: Current week progress (PRIMARY) -->
+			<div
+				class="flex items-center gap-1 rounded-lg px-2 py-0.5 text-sm font-semibold"
+				class:bg-green-100={weeklyTargetMet}
+				class:text-green-700={weeklyTargetMet}
+				class:bg-blue-100={!weeklyTargetMet}
+				class:text-blue-700={!weeklyTargetMet}
+				aria-label="Weekly progress: {habit.periodProgress} of {habit.periodTarget} completed this week"
+			>
+				<span>{habit.periodProgress}/{habit.periodTarget}</span>
+				<span class="text-xs font-normal opacity-75">this week</span>
+			</div>
+
+			<!-- Row 2: Consecutive weeks streak -->
+			<div
+				class="flex items-center gap-1 text-xs"
+				class:text-orange-600={habit.streak > 0}
+				class:text-gray-400={habit.streak === 0}
+				aria-label="Streak: {habit.streak} consecutive weeks"
+			>
+				<span>{habit.streak > 0 ? '📅' : ''}</span>
+				<span class="font-medium">{habit.streak}</span>
+				<span>week{habit.streak !== 1 ? 's' : ''}</span>
+			</div>
+
+			<!-- Row 3: Lifetime total days (secondary) -->
+			<div
+				class="text-xs text-gray-400"
+				aria-label="Total: {habit.totalCompletions} days completed all time"
+			>
+				{habit.totalCompletions} total
+			</div>
+		</div>
+	{:else}
+		<!-- DAILY HABIT: Single streak badge (existing behavior) -->
+		<div
+			class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium"
+			class:bg-orange-100={habit.streak > 0}
+			class:text-orange-600={habit.streak > 0}
+			class:bg-gray-100={habit.streak === 0}
+			class:text-gray-500={habit.streak === 0}
+			aria-label="Streak: {habit.streak} consecutive days"
+		>
+			{#if habit.streak > 0}
+				<span>🔥</span>
+			{/if}
+			<span>{habit.streak}</span>
+			<span class="text-xs font-normal opacity-75">day{habit.streak !== 1 ? 's' : ''}</span>
+		</div>
+	{/if}
 
 	<!-- Edit button -->
 	{#if showEdit && habit.id !== undefined}

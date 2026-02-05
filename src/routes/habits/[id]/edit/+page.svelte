@@ -3,8 +3,9 @@
 	import { page } from '$app/state';
 	import Header from '$lib/components/Header.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
-	import { habits } from '$lib/stores/habits';
+	import { habits, habitsLoaded } from '$lib/stores/habits';
 	import { browser } from '$app/environment';
+	import type { FrequencyType } from '$lib/db';
 
 	// Get habit ID from URL params
 	const habitId = $derived(parseInt(page.params.id ?? '', 10));
@@ -21,6 +22,8 @@
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
+		frequencyType: FrequencyType;
+		frequencyTarget: number;
 	}) {
 		if (!habit?.id) return;
 
@@ -32,7 +35,9 @@
 				name: data.name,
 				emoji: data.emoji,
 				color: data.color,
-				reminderTime: data.reminderTime ?? undefined
+				reminderTime: data.reminderTime ?? undefined,
+				frequencyType: data.frequencyType,
+				frequencyTarget: data.frequencyTarget
 			});
 			goto('/habits');
 		} catch (e) {
@@ -49,9 +54,12 @@
 <Header title="Edit Habit" showBack />
 
 <main class="page-container pt-4">
-	{#if !browser}
-		<!-- SSR fallback -->
+	{#if !browser || !$habitsLoaded}
+		<!-- SSR fallback or loading state -->
 		<div class="card py-12 text-center">
+			<div
+				class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-hungry-500 border-t-transparent"
+			></div>
 			<p class="text-gray-500">Loading...</p>
 		</div>
 	{:else if !habit}
@@ -78,6 +86,8 @@
 			initialEmoji={habit.emoji}
 			initialColor={habit.color}
 			initialReminderTime={habit.reminderTime ?? null}
+			initialFrequencyType={habit.frequencyType}
+			initialFrequencyTarget={habit.frequencyTarget}
 			mode="edit"
 			{isSubmitting}
 		/>

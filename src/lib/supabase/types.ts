@@ -23,6 +23,10 @@ export interface Database {
 					emoji: string;
 					color: string;
 					reminder_time: string | null;
+					// Frequency configuration (Phase 1: Flexible Streaks)
+					frequency_type: 'daily' | 'weekly';
+					frequency_target: number;
+					week_starts_on: number;
 					created_at: string;
 					updated_at: string;
 				};
@@ -33,6 +37,10 @@ export interface Database {
 					emoji?: string;
 					color?: string;
 					reminder_time?: string | null;
+					// Frequency configuration (defaults provided by database)
+					frequency_type?: 'daily' | 'weekly';
+					frequency_target?: number;
+					week_starts_on?: number;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -43,6 +51,10 @@ export interface Database {
 					emoji?: string;
 					color?: string;
 					reminder_time?: string | null;
+					// Frequency configuration
+					frequency_type?: 'daily' | 'weekly';
+					frequency_target?: number;
+					week_starts_on?: number;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -120,4 +132,3 @@ export type HabitLogUpdate = UpdateDto<'habit_logs'>;
 export type PushSubscriptionRow = Tables<'push_subscriptions'>;
 export type PushSubscriptionInsert = InsertDto<'push_subscriptions'>;
 export type PushSubscriptionUpdate = UpdateDto<'push_subscriptions'>;
-
