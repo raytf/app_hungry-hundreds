@@ -103,10 +103,7 @@
 	<link rel="apple-touch-icon" href="/icon-192.png" />
 
 	<!-- Viewport with iOS safe areas -->
-	<meta
-		name="viewport"
-		content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover"
-	/>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<!-- Theme colors -->
 	<meta name="theme-color" content="#22c55e" media="(prefers-color-scheme: light)" />
@@ -128,10 +125,10 @@
 </svelte:head>
 
 <AuthGuard requireAuth={requiresAuth}>
-	<div class="min-h-screen bg-gray-50">
+	<div class="min-h-screen overflow-x-hidden bg-gray-50">
 		<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
 		<!-- Always mounted but only visible on homepage -->
-		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
+		<div class="pointer-events-none fixed inset-0 z-40 overflow-hidden" class:hidden={!showMonster}>
 			<MonsterDisplay monster={$monster} isHappy={$isMonsterHappy} />
 		</div>
 

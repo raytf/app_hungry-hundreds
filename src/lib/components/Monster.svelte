@@ -124,9 +124,10 @@
 <!-- Rive Canvas (hidden if not loaded or error) -->
 <canvas
 	bind:this={canvas}
-	class="h-full w-full {className}"
+	class="h-full w-full max-w-full {className}"
 	class:hidden={!showRive}
 	aria-label="Animated monster companion"
+	style="max-width: 100vw;"
 ></canvas>
 
 <!-- Emoji Fallback -->
