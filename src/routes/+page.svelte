@@ -31,19 +31,18 @@
 	</Header>
 
 	<!-- Scrollable main content area - takes remaining space -->
-	<div class="relative h-[65%]">
-		<main class="scrollable-main h-full overflow-y-auto overscroll-contain">
-			<div class="scrollable-content mx-auto w-full max-w-lg px-4 pt-4 pb-4">
-				<!-- Progress Summary -->
-				<section class="card mb-6 flex items-center justify-between">
-					<div>
-						<p class="text-sm text-gray-500">Today's Progress</p>
-						<p class="text-xl font-bold text-gray-900">
-							{$todaysProgress.completed} of {$todaysProgress.total} habits
-						</p>
-					</div>
-					<ProgressRing pct={$todaysProgress.pct} size={64} />
-				</section>
+	<main class="scrollable-main overflow-y-auto overscroll-contain">
+		<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
+			<!-- Progress Summary -->
+			<section class="card mb-6 flex items-center justify-between">
+				<div>
+					<p class="text-sm text-gray-500">Today's Progress</p>
+					<p class="text-xl font-bold text-gray-900">
+						{$todaysProgress.completed} of {$todaysProgress.total} habits
+					</p>
+				</div>
+				<ProgressRing pct={$todaysProgress.pct} size={64} />
+			</section>
 
 				<!-- Habits List -->
 				<section>
