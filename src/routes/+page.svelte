@@ -61,7 +61,7 @@
 	</Header>
 
 	<!-- Scrollable main content area - takes remaining space -->
-	<main class="scrollable-main overflow-y-auto overscroll-contain">
+	<main class="scrollable-main h-[65%] overflow-y-auto overscroll-contain">
 		<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
 			<!-- Progress Summary -->
 			<section class="card mb-6 flex items-center justify-between">
