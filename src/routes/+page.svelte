@@ -44,39 +44,35 @@
 				<ProgressRing pct={$todaysProgress.pct} size={64} />
 			</section>
 
-				<!-- Habits List -->
-				<section>
-					{#if $sortedHabits.length > 0}
-						<div class="mb-3 flex items-center justify-between">
-							<h3 class="font-semibold text-gray-700">Your Habits</h3>
-							<a
-								href="/habits/new"
-								class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
-							>
-								+ Add New
-							</a>
-						</div>
-						<div class="space-y-3">
-							{#each $sortedHabits as habit (habit.id)}
-								<HabitCardCompact {habit} />
-							{/each}
-						</div>
-					{:else}
-						<!-- Empty state with habit suggestions -->
-						<div class="card py-6">
-							<HabitSuggestions maxSuggestions={4} />
-						</div>
-					{/if}
-				</section>
-			</div>
-		</main>
-		<!-- Fixed gradient overlay at bottom -->
-		<div class="fade-gradient"></div>
-	</div>
-
-	<!-- Spacer for BottomNav -->
-	<div class="h-16"></div>
+			<!-- Habits List -->
+			<section>
+				{#if $sortedHabits.length > 0}
+					<div class="mb-3 flex items-center justify-between">
+						<h3 class="font-semibold text-gray-700">Your Habits</h3>
+						<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
+							+ Add New
+						</a>
+					</div>
+					<div class="space-y-3">
+						{#each $sortedHabits as habit (habit.id)}
+							<HabitCardCompact {habit} />
+						{/each}
+					</div>
+				{:else}
+					<!-- Empty state with habit suggestions -->
+					<div class="card py-6">
+						<HabitSuggestions maxSuggestions={4} />
+					</div>
+				{/if}
+			</section>
+		</div>
+	</main>
+	<!-- Fixed gradient overlay at bottom -->
+	<div class="fade-gradient"></div>
 </div>
+
+<!-- Spacer for BottomNav -->
+<div class="h-16"></div>
 
 <style>
 	/* Fixed fade-out gradient at bottom */
