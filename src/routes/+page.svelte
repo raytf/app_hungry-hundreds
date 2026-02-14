@@ -80,11 +80,6 @@
 </div>
 
 <style>
-	/* Force scrollbar to always be visible */
-	.scrollable-main {
-		scrollbar-gutter: stable;
-	}
-
 	/* Fixed fade-out gradient at bottom */
 	/* .fade-gradient {
 		position: absolute;
@@ -97,31 +92,50 @@
 		z-index: 10;
 	} */
 
-	/* WebKit browsers (Chrome, Safari, Edge) - always show scrollbar */
-	.scrollable-main::-webkit-scrollbar {
-		width: 8px;
-		background-color: transparent;
-	}
-
-	.scrollable-main::-webkit-scrollbar-track {
-		background-color: rgba(0, 0, 0, 0.05);
-		border-radius: 4px;
-	}
-
-	.scrollable-main::-webkit-scrollbar-thumb {
-		background-color: rgba(0, 0, 0, 0.2);
-		border-radius: 4px;
-	}
-
-	.scrollable-main::-webkit-scrollbar-thumb:hover {
-		background-color: rgba(0, 0, 0, 0.3);
-	}
-
-	/* Firefox - always show scrollbar */
-	@supports (scrollbar-width: thin) {
+	/* Desktop scrollbar styling - hidden on mobile */
+	@media (min-width: 768px) {
 		.scrollable-main {
-			scrollbar-width: thin;
-			scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+			scrollbar-gutter: stable;
+		}
+
+		/* WebKit browsers (Chrome, Safari, Edge) */
+		.scrollable-main::-webkit-scrollbar {
+			width: 8px;
+			background-color: transparent;
+		}
+
+		.scrollable-main::-webkit-scrollbar-track {
+			background-color: rgba(0, 0, 0, 0.05);
+			border-radius: 4px;
+		}
+
+		.scrollable-main::-webkit-scrollbar-thumb {
+			background-color: rgba(0, 0, 0, 0.2);
+			border-radius: 4px;
+		}
+
+		.scrollable-main::-webkit-scrollbar-thumb:hover {
+			background-color: rgba(0, 0, 0, 0.3);
+		}
+
+		/* Firefox */
+		@supports (scrollbar-width: thin) {
+			.scrollable-main {
+				scrollbar-width: thin;
+				scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+			}
+		}
+	}
+
+	/* Mobile - hide scrollbar completely */
+	@media (max-width: 767px) {
+		.scrollable-main::-webkit-scrollbar {
+			display: none;
+		}
+
+		.scrollable-main {
+			-ms-overflow-style: none; /* IE and Edge */
+			scrollbar-width: none; /* Firefox */
 		}
 	}
 </style>
