@@ -103,7 +103,10 @@
 	<link rel="apple-touch-icon" href="/icon-192.png" />
 
 	<!-- Viewport with iOS safe areas -->
-	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<meta
+		name="viewport"
+		content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5, viewport-fit=cover"
+	/>
 
 	<!-- Theme colors -->
 	<meta name="theme-color" content="#22c55e" media="(prefers-color-scheme: light)" />

@@ -22,7 +22,7 @@
 <!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
 <div
 	class="relative grid"
-	style="height: calc(100dvh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
+	style="height: calc(100vh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
 >
 	<Header title={formattedDate} showSyncStatus>
 		{#snippet right()}
