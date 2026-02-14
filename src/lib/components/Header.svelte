@@ -13,7 +13,7 @@
 	let { title = '', showBack = false, showSyncStatus = false, right }: Props = $props();
 </script>
 
-<header class="sticky top-0 z-10 border-b border-gray-100 bg-gray-50/80 backdrop-blur-lg">
+<header class="sticky top-0 z-50 border-b border-gray-100 bg-gray-50/80 backdrop-blur-lg">
 	<div class="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
 		{#if showBack}
 			<a

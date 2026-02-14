@@ -26,7 +26,7 @@
 </script>
 
 <nav
-	class="fixed right-0 bottom-0 left-0 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)]"
+	class="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)]"
 >
 	<div class="mx-auto flex h-16 max-w-lg justify-around">
 		{#each items as item}

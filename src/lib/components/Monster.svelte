@@ -56,13 +56,20 @@
 			// Dynamic import to handle CommonJS module in Vite
 			const RiveModule = await import('@rive-app/canvas');
 			const Rive = RiveModule.Rive || RiveModule.default?.Rive || RiveModule.default;
+			const Layout = RiveModule.Layout || RiveModule.default?.Layout;
+			const Fit = RiveModule.Fit || RiveModule.default?.Fit;
+			const Alignment = RiveModule.Alignment || RiveModule.default?.Alignment;
 
 			riveInstance = new Rive({
-				src: '/animations/cat-treat.riv',
+				src: '/animations/monster_hatchling.riv',
 				canvas,
 				autoplay: true,
 				stateMachines: 'State Machine 1',
 				useOffscreenRenderer: true,
+				layout: new Layout({
+					fit: Fit.Cover,
+					alignment: Alignment.Center
+				}),
 				onLoad: () => {
 					riveLoaded = true;
 
@@ -117,7 +124,7 @@
 <!-- Rive Canvas (hidden if not loaded or error) -->
 <canvas
 	bind:this={canvas}
-	class="aspect-square w-full {className}"
+	class="h-full w-full {className}"
 	class:hidden={!showRive}
 	aria-label="Animated monster companion"
 ></canvas>
@@ -125,7 +132,7 @@
 <!-- Emoji Fallback -->
 {#if showEmoji}
 	<div
-		class="flex aspect-square w-full items-center justify-center {className}"
+		class="flex h-full w-full items-center justify-center {className}"
 		aria-label="Monster companion"
 	>
 		<span class="animate-bounce text-7xl">{stageConfig.emoji}</span>

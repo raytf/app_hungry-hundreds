@@ -22,11 +22,11 @@
 </script>
 
 <div
-	class="relative flex w-full items-end justify-center"
+	class="relative flex h-full w-full items-end justify-center"
 	style="background: linear-gradient(to top, {stageConfig.color}40, transparent)"
 >
-	<!-- Monster container - centered with visual "looking up" effect -->
-	<div class="relative flex items-end justify-center">
+	<!-- Monster container - full height and width -->
+	<div class="relative flex h-full w-full items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
 		<Monster stage={monster.stage} {isHappy} />
 		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">

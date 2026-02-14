@@ -44,10 +44,15 @@
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
 
-<!-- Full page grid layout: Header (auto) | Main (1fr) | Monster (auto) | BottomNav spacer (auto) -->
+<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
+<div class="pointer-events-none fixed inset-0 z-40">
+	<MonsterDisplay monster={$monster} isHappy={isMonsterHappy} />
+</div>
+
+<!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
 <div
-	class="grid"
-	style="height: calc(100dvh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto auto;"
+	class="relative grid"
+	style="height: calc(100dvh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
 >
 	<Header title={formattedDate} showSyncStatus>
 		{#snippet right()}
@@ -93,34 +98,11 @@
 		</div>
 	</main>
 
-	<!-- Monster Display - part of grid flow, constrained height -->
-	<section class="monster-section mx-auto w-full max-w-lg">
-		<MonsterDisplay monster={$monster} isHappy={isMonsterHappy} />
-	</section>
-
 	<!-- Spacer for BottomNav -->
 	<div class="h-16"></div>
 </div>
 
 <style>
-	/* Constrain monster height to prevent it from taking too much space */
-	.monster-section {
-		max-height: 40vh;
-		overflow: hidden;
-	}
-
-	/* Ensure monster content scales properly within constrained height */
-	.monster-section :global(> div) {
-		max-height: 40vh;
-	}
-
-	.monster-section :global(.aspect-square) {
-		aspect-ratio: auto;
-		max-height: 40vh;
-		width: auto;
-		margin: 0 auto;
-	}
-
 	/* Force scrollbar to always be visible */
 	.scrollable-main {
 		scrollbar-gutter: stable;
