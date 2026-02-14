@@ -50,6 +50,8 @@ export function resolveHabitConflict(
 				frequencyType: local.frequencyType,
 				frequencyTarget: local.frequencyTarget,
 				weekStartsOn: local.weekStartsOn,
+				// Include partial criteria
+				partialCriteria: local.partialCriteria,
 				updatedAt: localUpdatedAt
 			},
 			localUpdatedAt,
@@ -67,6 +69,8 @@ export function resolveHabitConflict(
 				frequencyType: remote.frequency_type,
 				frequencyTarget: remote.frequency_target,
 				weekStartsOn: remote.week_starts_on as 0 | 1,
+				// Include partial criteria
+				partialCriteria: remote.partial_criteria ?? undefined,
 				updatedAt: remoteUpdatedAt,
 				serverId: remote.id
 			},
@@ -89,6 +93,8 @@ export async function applyRemoteHabit(localId: number, remote: HabitRow): Promi
 		frequencyType: remote.frequency_type,
 		frequencyTarget: remote.frequency_target,
 		weekStartsOn: remote.week_starts_on as 0 | 1,
+		// Include partial criteria
+		partialCriteria: remote.partial_criteria ?? undefined,
 		serverId: remote.id,
 		updatedAt: new Date(remote.updated_at).getTime()
 	});
@@ -107,6 +113,8 @@ export async function createLocalHabitFromRemote(remote: HabitRow): Promise<numb
 		frequencyType: remote.frequency_type,
 		frequencyTarget: remote.frequency_target,
 		weekStartsOn: remote.week_starts_on as 0 | 1,
+		// Include partial criteria
+		partialCriteria: remote.partial_criteria ?? undefined,
 		serverId: remote.id,
 		createdAt: new Date(remote.created_at).getTime(),
 		updatedAt: new Date(remote.updated_at).getTime()

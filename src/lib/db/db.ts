@@ -46,6 +46,11 @@ export interface Habit {
 	 */
 	frequencyTarget: number;
 	weekStartsOn: 0 | 1; // 0 = Sunday, 1 = Monday
+	/**
+	 * User-defined criteria for what constitutes a partial completion
+	 * e.g., "20 pushups instead of full gym session" or "10 minutes instead of 30"
+	 */
+	partialCriteria?: string;
 	createdAt: number; // Unix timestamp
 	updatedAt: number; // Unix timestamp
 }
@@ -132,6 +137,25 @@ export class HungryHundredsDB extends Dexie {
 					.toCollection()
 					.modify((log: Partial<HabitLog>) => {
 						log.completionType = 'full';
+					});
+			});
+
+		// Version 4: Add partialCriteria field for customizable partial completion descriptions
+		this.version(4)
+			.stores({
+				// Schema unchanged - just adding field to habits table
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+				syncQueue: '++id, timestamp'
+			})
+			.upgrade((tx) => {
+				// Existing habits don't need migration - partialCriteria is optional
+				return tx
+					.table('habits')
+					.toCollection()
+					.modify((habit: Partial<Habit>) => {
+						// Set to undefined (optional field)
+						habit.partialCriteria = undefined;
 					});
 			});
 	}

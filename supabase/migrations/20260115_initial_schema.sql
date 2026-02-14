@@ -61,14 +61,17 @@ ALTER TABLE habit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Users can only access their own habits
+DROP POLICY IF EXISTS "Users manage own habits" ON habits;
 CREATE POLICY "Users manage own habits" ON habits
   FOR ALL USING (auth.uid() = user_id);
 
 -- Users can only access their own logs
+DROP POLICY IF EXISTS "Users manage own logs" ON habit_logs;
 CREATE POLICY "Users manage own logs" ON habit_logs
   FOR ALL USING (auth.uid() = user_id);
 
 -- Users can only access their own subscriptions
+DROP POLICY IF EXISTS "Users manage own subscriptions" ON push_subscriptions;
 CREATE POLICY "Users manage own subscriptions" ON push_subscriptions
   FOR ALL USING (auth.uid() = user_id);
 
@@ -86,6 +89,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to auto-update habits.updated_at
+DROP TRIGGER IF EXISTS habits_updated_at ON habits;
 CREATE TRIGGER habits_updated_at
   BEFORE UPDATE ON habits
   FOR EACH ROW

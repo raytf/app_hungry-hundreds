@@ -14,7 +14,12 @@ import { queueHabitCreate, queueHabitUpdate, queueHabitDelete } from '$lib/sync/
 // ============================================================================
 
 export type CreateHabitInput = Pick<Habit, 'name' | 'emoji' | 'color'> &
-	Partial<Pick<Habit, 'reminderTime' | 'frequencyType' | 'frequencyTarget' | 'weekStartsOn'>>;
+	Partial<
+		Pick<
+			Habit,
+			'reminderTime' | 'frequencyType' | 'frequencyTarget' | 'weekStartsOn' | 'partialCriteria'
+		>
+	>;
 
 /**
  * Create a new habit
@@ -31,6 +36,8 @@ export async function createHabit(input: CreateHabitInput): Promise<number> {
 		frequencyType: input.frequencyType ?? 'daily',
 		frequencyTarget: input.frequencyTarget ?? 1,
 		weekStartsOn: input.weekStartsOn ?? 1, // Default to Monday
+		// Partial completion criteria (optional)
+		partialCriteria: input.partialCriteria,
 		createdAt: timestamp,
 		updatedAt: timestamp
 	};
@@ -82,6 +89,7 @@ export type UpdateHabitInput = Partial<
 		| 'frequencyType'
 		| 'frequencyTarget'
 		| 'weekStartsOn'
+		| 'partialCriteria'
 	>
 >;
 
@@ -156,6 +164,8 @@ export async function seedHabitsIfEmpty(
 		frequencyType: h.frequencyType ?? 'daily',
 		frequencyTarget: h.frequencyTarget ?? 1,
 		weekStartsOn: h.weekStartsOn ?? 1,
+		// Partial completion criteria (optional)
+		partialCriteria: h.partialCriteria,
 		createdAt: timestamp,
 		updatedAt: timestamp
 	}));

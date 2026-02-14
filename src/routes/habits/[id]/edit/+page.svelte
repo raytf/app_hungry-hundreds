@@ -24,6 +24,7 @@
 		reminderTime: string | null;
 		frequencyType: FrequencyType;
 		frequencyTarget: number;
+		partialCriteria: string | null;
 	}) {
 		if (!habit?.id) return;
 
@@ -37,7 +38,8 @@
 				color: data.color,
 				reminderTime: data.reminderTime ?? undefined,
 				frequencyType: data.frequencyType,
-				frequencyTarget: data.frequencyTarget
+				frequencyTarget: data.frequencyTarget,
+				partialCriteria: data.partialCriteria ?? undefined
 			});
 			goto('/habits');
 		} catch (e) {
@@ -88,6 +90,7 @@
 			initialReminderTime={habit.reminderTime ?? null}
 			initialFrequencyType={habit.frequencyType}
 			initialFrequencyTarget={habit.frequencyTarget}
+			initialPartialCriteria={habit.partialCriteria ?? null}
 			mode="edit"
 			{isSubmitting}
 		/>

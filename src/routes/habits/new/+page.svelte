@@ -12,6 +12,7 @@
 		reminderTime: string | null;
 		frequencyType: FrequencyType;
 		frequencyTarget: number;
+		partialCriteria: string | null;
 	}) {
 		habits.add({
 			name: habit.name,
@@ -19,7 +20,8 @@
 			color: habit.color,
 			reminderTime: habit.reminderTime ?? undefined,
 			frequencyType: habit.frequencyType,
-			frequencyTarget: habit.frequencyTarget
+			frequencyTarget: habit.frequencyTarget,
+			partialCriteria: habit.partialCriteria ?? undefined
 		});
 		goto('/habits');
 	}

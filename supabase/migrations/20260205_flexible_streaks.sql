@@ -11,21 +11,33 @@ ALTER TABLE habits
 
 -- Step 2: Add constraints for data integrity
 -- frequency_type must be 'daily' or 'weekly'
-ALTER TABLE habits 
-  ADD CONSTRAINT habits_frequency_type_check 
-    CHECK (frequency_type IN ('daily', 'weekly'));
+DO $$ BEGIN
+  ALTER TABLE habits
+    ADD CONSTRAINT habits_frequency_type_check
+      CHECK (frequency_type IN ('daily', 'weekly'));
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- frequency_target must be between 1 and 10
 -- For daily habits: 1-10 times per day
 -- For weekly habits: 1-7 times per week (values 8-10 are technically allowed but uncommon)
-ALTER TABLE habits
-  ADD CONSTRAINT habits_frequency_target_check
-    CHECK (frequency_target BETWEEN 1 AND 10);
+DO $$ BEGIN
+  ALTER TABLE habits
+    ADD CONSTRAINT habits_frequency_target_check
+      CHECK (frequency_target BETWEEN 1 AND 10);
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- week_starts_on: 0 = Sunday, 1 = Monday
-ALTER TABLE habits 
-  ADD CONSTRAINT habits_week_starts_on_check 
-    CHECK (week_starts_on IN (0, 1));
+DO $$ BEGIN
+  ALTER TABLE habits
+    ADD CONSTRAINT habits_week_starts_on_check
+      CHECK (week_starts_on IN (0, 1));
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- Step 3: Backfill any NULL values (safety measure)
 UPDATE habits 

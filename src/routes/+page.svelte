@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
-	import HabitCard from '$lib/components/HabitCard.svelte';
+	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
@@ -80,7 +80,7 @@
 					</div>
 					<div class="space-y-3">
 						{#each $sortedHabits as habit (habit.id)}
-							<HabitCard {habit} onComplete={triggerMonsterHappy} />
+							<HabitCardCompact {habit} onComplete={triggerMonsterHappy} />
 						{/each}
 					</div>
 				{:else}

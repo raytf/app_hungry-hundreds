@@ -297,7 +297,8 @@ function createSyncStore() {
 						reminder_time: habit.reminderTime,
 						frequency_type: habit.frequencyType,
 						frequency_target: habit.frequencyTarget,
-						week_starts_on: habit.weekStartsOn
+						week_starts_on: habit.weekStartsOn,
+						partial_criteria: habit.partialCriteria ?? null
 					},
 					userId
 				);
@@ -330,6 +331,8 @@ function createSyncStore() {
 					updateData.frequency_target = payload.data.frequencyTarget;
 				if (payload.data?.weekStartsOn !== undefined)
 					updateData.week_starts_on = payload.data.weekStartsOn;
+				if (payload.data?.partialCriteria !== undefined)
+					updateData.partial_criteria = payload.data.partialCriteria ?? null;
 
 				const { error } = await updateRemoteHabit(payload.serverId, updateData);
 

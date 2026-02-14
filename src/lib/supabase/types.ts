@@ -27,6 +27,8 @@ export interface Database {
 					frequency_type: 'daily' | 'weekly';
 					frequency_target: number;
 					week_starts_on: number;
+					// Partial completion criteria (optional user-defined description)
+					partial_criteria: string | null;
 					created_at: string;
 					updated_at: string;
 				};
@@ -41,6 +43,8 @@ export interface Database {
 					frequency_type?: 'daily' | 'weekly';
 					frequency_target?: number;
 					week_starts_on?: number;
+					// Partial completion criteria (optional)
+					partial_criteria?: string | null;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -55,6 +59,8 @@ export interface Database {
 					frequency_type?: 'daily' | 'weekly';
 					frequency_target?: number;
 					week_starts_on?: number;
+					// Partial completion criteria (optional)
+					partial_criteria?: string | null;
 					created_at?: string;
 					updated_at?: string;
 				};

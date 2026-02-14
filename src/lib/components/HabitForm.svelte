@@ -10,6 +10,7 @@
 		reminderTime: string | null;
 		frequencyType: FrequencyType;
 		frequencyTarget: number;
+		partialCriteria: string | null;
 	}
 
 	interface Props {
@@ -26,6 +27,8 @@
 		initialFrequencyType?: FrequencyType;
 		/** Initial frequency target for editing an existing habit */
 		initialFrequencyTarget?: number;
+		/** Initial partial completion criteria for editing an existing habit */
+		initialPartialCriteria?: string | null;
 		/** Mode determines button text: 'create' or 'edit' */
 		mode?: 'create' | 'edit';
 		/** Whether the form is submitting (shows loading state) */
@@ -40,6 +43,7 @@
 		initialReminderTime = '',
 		initialFrequencyType = 'daily' as FrequencyType,
 		initialFrequencyTarget = 1,
+		initialPartialCriteria = '',
 		mode = 'create',
 		isSubmitting = false
 	}: Props = $props();
@@ -52,6 +56,7 @@
 	let reminderTime = $state(untrack(() => initialReminderTime ?? ''));
 	let frequencyType = $state<FrequencyType>(untrack(() => initialFrequencyType));
 	let frequencyTarget = $state(untrack(() => initialFrequencyTarget));
+	let partialCriteria = $state(untrack(() => initialPartialCriteria ?? ''));
 
 	// Options for daily frequency target (1-10 times per day)
 	const dailyTargetOptions = [
@@ -88,7 +93,8 @@
 			color,
 			reminderTime: reminderTime || null,
 			frequencyType,
-			frequencyTarget
+			frequencyTarget,
+			partialCriteria: partialCriteria.trim() || null
 		});
 	}
 </script>
@@ -222,6 +228,21 @@
 			Reminder Time <span class="text-gray-400">(optional)</span>
 		</label>
 		<input id="reminder-time" type="time" bind:value={reminderTime} class="input-field" />
+	</div>
+
+	<!-- Partial Completion Criteria -->
+	<div>
+		<label for="partial-criteria" class="mb-2 block text-sm font-medium text-gray-700">
+			Partial Completion Criteria <span class="text-gray-400">(optional)</span>
+		</label>
+		<input
+			id="partial-criteria"
+			type="text"
+			bind:value={partialCriteria}
+			placeholder="e.g., 20 pushups instead of full gym session"
+			class="input-field"
+		/>
+		<p class="mt-1 text-xs text-gray-500">What counts as a partial completion on busy days?</p>
 	</div>
 
 	<!-- Preview -->
