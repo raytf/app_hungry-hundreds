@@ -849,15 +849,19 @@ Based on the roadmap phases and current implementation:
 - [x] **Micro-interactions** - Button springs on HabitCard, icon taps on BottomNav
 - [x] **Milestone celebrations** - Celebrate animation on streak milestones
 - [x] **Animation utilities** - `transitions.ts` and `rive-utils.ts`
-- [ ] **Celebration effects** - Confetti/particles on habit completion
+- [x] **Rive utilities** - WebGL detection, visibility observers, state machine helpers
+- [ ] **Custom monster.riv** - Replace placeholder with custom monster asset
 - [ ] **Page transitions** - Smooth route transitions with Motion One
+- [ ] **Confetti effects** - Particles on habit completion
 
-#### Phase 6: PWA
+#### Phase 6: PWA (Complete)
 
-- [ ] **Install prompt** - Custom UI for PWA installation
-- [ ] **Offline indicator** - Enhanced offline mode banner
-- [ ] **Push notification permissions** - Request UI
-- [ ] **Update available** - Service worker update prompt
+- [x] **Service worker** - Offline caching, push notifications, background sync
+- [x] **PWA manifest** - App metadata, icons, shortcuts
+- [x] **Install prompt** - Custom UI for PWA installation (`InstallPrompt.svelte`)
+- [x] **Push notification system** - FCM integration, permission handling
+- [ ] **Offline indicator** - Enhanced offline mode banner (optional)
+- [ ] **Update available** - Service worker update prompt (optional)
 
 #### Future Enhancements
 
@@ -878,16 +882,16 @@ Based on the roadmap phases and current implementation:
 
 #### Recommended New Components
 
-| Component        | Purpose                  | Phase  | Status      |
-| ---------------- | ------------------------ | ------ | ----------- |
-| `Monster.svelte` | Rive animation wrapper   | 5      | ✅ Complete |
-| `Toast.svelte`   | Toast notifications      | 5      | 📋 Planned  |
-| `Modal.svelte`   | Reusable modal dialog    | 5      | 📋 Planned  |
-| `ConfettiEffect` | Celebration animation    | 5      | 📋 Planned  |
-| `InstallPrompt`  | PWA install UI           | 6      | ✅ Complete |
-| `OfflineBanner`  | Offline mode indicator   | 6      | 📋 Planned  |
-| `StreakCalendar` | Calendar view component  | Future | 📋 Planned  |
-| `DragHandle`     | Drag-and-drop reordering | Future | 📋 Planned  |
+| Component              | Purpose                  | Phase  | Status      |
+| ---------------------- | ------------------------ | ------ | ----------- |
+| `Monster.svelte`       | Rive animation wrapper   | 5      | ✅ Complete |
+| `InstallPrompt.svelte` | PWA install UI           | 6      | ✅ Complete |
+| `Toast.svelte`         | Toast notifications      | 5      | 📋 Planned  |
+| `Modal.svelte`         | Reusable modal dialog    | 5      | 📋 Planned  |
+| `ConfettiEffect`       | Celebration animation    | 5      | 📋 Planned  |
+| `OfflineBanner`        | Offline mode indicator   | 6      | 📋 Planned  |
+| `StreakCalendar`       | Calendar view component  | Future | 📋 Planned  |
+| `DragHandle`           | Drag-and-drop reordering | Future | 📋 Planned  |
 
 > **Note:** `HabitEditForm` is no longer needed - `HabitForm` now supports both create and edit modes via the `mode` and `initialValues` props.
 

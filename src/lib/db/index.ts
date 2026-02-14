@@ -17,7 +17,8 @@ export {
 	type Habit,
 	type HabitLog,
 	type SyncQueue,
-	type FrequencyType
+	type FrequencyType,
+	type CompletionType
 } from './db';
 
 // Habit CRUD operations
@@ -51,5 +52,11 @@ export {
 	getCompletionsInRange,
 	getTotalCompletions,
 	calculateWeekStreak,
-	type FlexibleStreakResult
+	type FlexibleStreakResult,
+	// Partial completion (Phase 2)
+	markPartialCompletion,
+	hasPartialCompletionOnDate,
+	getCompletionTypeForDate,
+	getFullCompletionsForDate,
+	getFullCompletionsInRange
 } from './habitLogs';

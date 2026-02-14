@@ -40,7 +40,8 @@ const mockHabit: HabitWithStatus = {
 	periodProgress: 0,
 	periodTarget: 1,
 	periodType: 'day',
-	totalCompletions: 5
+	totalCompletions: 5,
+	completionType: null
 };
 
 const completedHabit: HabitWithStatus = {

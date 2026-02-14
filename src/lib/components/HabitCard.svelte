@@ -27,6 +27,11 @@
 	// Check if daily target is met today (for multi-daily habits)
 	const dailyTargetMet = $derived(isMultiDaily && periodTargetMet);
 
+	// Completion type states
+	const isFullyCompleted = $derived(habit.completionType === 'full');
+	const isPartiallyCompleted = $derived(habit.completionType === 'partial');
+	const hasAnyCompletion = $derived(habit.completionType !== null);
+
 	function handleToggle(event: MouseEvent) {
 		if (habit.id !== undefined) {
 			// Animate the button
@@ -49,6 +54,17 @@
 		}
 	}
 
+	function handlePartialToggle(event: MouseEvent) {
+		event.stopPropagation();
+		if (habit.id !== undefined) {
+			// Animate the button
+			const target = event.currentTarget as HTMLElement;
+			buttonSpring(target);
+
+			habits.togglePartial(habit.id);
+		}
+	}
+
 	function handleEditClick(e: MouseEvent) {
 		// Prevent the toggle from firing when clicking edit
 		e.stopPropagation();
@@ -57,26 +73,34 @@
 
 <div
 	class="card flex w-full items-center gap-4 overflow-hidden transition-all"
-	class:ring-2={habit.completedToday}
-	class:ring-hungry-500={habit.completedToday}
-	class:bg-hungry-50={habit.completedToday}
+	class:ring-2={hasAnyCompletion}
+	class:ring-hungry-500={isFullyCompleted}
+	class:ring-amber-400={isPartiallyCompleted}
+	class:bg-hungry-50={isFullyCompleted}
+	class:bg-amber-50={isPartiallyCompleted}
 >
-	<!-- Toggle button area -->
+	<!-- Toggle button area (full completion) -->
 	<button
 		type="button"
 		onclick={handleToggle}
 		class="flex min-w-0 flex-1 cursor-pointer items-center gap-4 text-left active:scale-[0.98]"
-		aria-label={habit.completedToday
+		aria-label={isFullyCompleted
 			? `Mark ${habit.name} as incomplete`
-			: `Mark ${habit.name} as complete`}
+			: `Mark ${habit.name} as fully complete`}
 	>
 		<!-- Toggle indicator -->
 		<div
 			class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform"
-			style="background-color: {habit.completedToday ? habit.color : habit.color + '20'}"
+			style="background-color: {isFullyCompleted
+				? habit.color
+				: isPartiallyCompleted
+					? habit.color + '70'
+					: habit.color + '20'}"
 		>
-			{#if habit.completedToday}
+			{#if isFullyCompleted}
 				<span class="text-lg text-white">✓</span>
+			{:else if isPartiallyCompleted}
+				<span class="text-lg text-white">½</span>
 			{:else}
 				<span class="text-lg">{habit.emoji}</span>
 			{/if}
@@ -86,8 +110,9 @@
 		<div class="min-w-0 flex-1">
 			<p
 				class="truncate font-medium"
-				class:line-through={habit.completedToday}
-				class:text-gray-500={habit.completedToday}
+				class:line-through={isFullyCompleted}
+				class:text-gray-500={isFullyCompleted}
+				class:text-amber-700={isPartiallyCompleted}
 				title={habit.name}
 			>
 				{habit.name}
@@ -97,6 +122,8 @@
 				<p class="text-sm text-gray-400">{habit.frequencyTarget}x per week</p>
 			{:else if isMultiDaily}
 				<p class="text-sm text-gray-400">{habit.frequencyTarget}x per day</p>
+			{:else if isPartiallyCompleted}
+				<p class="text-sm text-amber-600">Partially completed</p>
 			{:else if habit.reminderTime}
 				<p class="text-sm text-gray-400">{habit.reminderTime}</p>
 			{/if}
@@ -195,6 +222,26 @@
 			<span>{habit.streak}</span>
 			<span class="text-xs font-normal opacity-75">day{habit.streak !== 1 ? 's' : ''}</span>
 		</div>
+	{/if}
+
+	<!-- Partial completion button (for single-daily habits when not fully completed) -->
+	{#if !isMultiDaily && !isWeekly && habit.id !== undefined && !isFullyCompleted}
+		<button
+			type="button"
+			onclick={handlePartialToggle}
+			class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+			class:bg-amber-100={isPartiallyCompleted}
+			class:text-amber-600={isPartiallyCompleted}
+			class:text-gray-400={!isPartiallyCompleted}
+			class:hover:bg-amber-50={!isPartiallyCompleted}
+			class:hover:text-amber-500={!isPartiallyCompleted}
+			aria-label={isPartiallyCompleted
+				? `Remove partial completion for ${habit.name}`
+				: `Mark ${habit.name} as partially complete`}
+			title={isPartiallyCompleted ? 'Partial (tap main button for full)' : 'Mark as partial'}
+		>
+			<span class="text-lg">½</span>
+		</button>
 	{/if}
 
 	<!-- Edit button -->

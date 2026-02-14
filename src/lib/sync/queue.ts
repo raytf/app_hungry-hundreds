@@ -7,7 +7,14 @@
  * @see docs/API.md for sync documentation
  */
 // Import directly from db.ts to avoid circular dependency with habits.ts/habitLogs.ts
-import { db, now, type SyncQueue, type Habit, type HabitLog } from '$lib/db/db';
+import {
+	db,
+	now,
+	type SyncQueue,
+	type Habit,
+	type HabitLog,
+	type CompletionType
+} from '$lib/db/db';
 
 // ============================================================================
 // Types
@@ -28,6 +35,7 @@ export interface QueuedLogPayload {
 	habitLocalId: number;
 	habitServerId?: string;
 	date: string;
+	completionType?: CompletionType;
 }
 
 export type SyncPayload = QueuedHabitPayload | QueuedLogPayload;
@@ -133,13 +141,15 @@ export async function queueLogCreate(
 	localId: number,
 	habitLocalId: number,
 	habitServerId: string | undefined,
-	date: string
+	date: string,
+	completionType: CompletionType = 'full'
 ): Promise<number> {
 	return await queueOperation('create', 'logs', {
 		localId,
 		habitLocalId,
 		habitServerId,
-		date
+		date,
+		completionType
 	});
 }
 

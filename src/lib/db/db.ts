@@ -20,6 +20,13 @@ import Dexie, { type Table } from 'dexie';
 export type FrequencyType = 'daily' | 'weekly';
 
 /**
+ * Completion type for habit logs
+ * - 'full': Standard completion - increments streak
+ * - 'partial': Reduced completion - preserves streak but doesn't increment
+ */
+export type CompletionType = 'full' | 'partial';
+
+/**
  * Represents a user's habit stored locally in IndexedDB
  */
 export interface Habit {
@@ -52,6 +59,7 @@ export interface HabitLog {
 	habitId: number; // Local habit ID
 	date: string; // YYYY-MM-DD format
 	completedAt: number; // Unix timestamp
+	completionType: CompletionType; // 'full' or 'partial' completion
 	synced: boolean; // Whether synced to Supabase
 }
 
@@ -106,6 +114,24 @@ export class HungryHundredsDB extends Dexie {
 						habit.frequencyType = 'daily';
 						habit.frequencyTarget = 1;
 						habit.weekStartsOn = 1; // Default to Monday
+					});
+			});
+
+		// Version 3: Add completionType field for partial completions
+		this.version(3)
+			.stores({
+				// Schema unchanged - just adding field to logs table
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+				syncQueue: '++id, timestamp'
+			})
+			.upgrade((tx) => {
+				// Migrate existing logs to use 'full' completion type by default
+				return tx
+					.table('logs')
+					.toCollection()
+					.modify((log: Partial<HabitLog>) => {
+						log.completionType = 'full';
 					});
 			});
 	}

@@ -10,8 +10,8 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 | 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | ✅ Complete |
 | 3     | Backend       | Supabase, auth, database, Edge Functions           | ✅ Complete |
 | 4     | Sync          | Offline queue, conflict resolution, reconnect      | ✅ Complete |
-| 5     | Animation     | Rive integration, monster evolution, Motion One    | 📋 Planned  |
-| 6     | PWA           | Service worker, push notifications, installability | 📋 Planned  |
+| 5     | Animation     | Rive integration, monster evolution, Motion One    | 🚧 Active   |
+| 6     | PWA           | Service worker, push notifications, installability | ✅ Complete |
 
 ---
 
@@ -138,28 +138,36 @@ src/lib/sync/
 
 ---
 
-## Phase 5: Animation 📋
+## Phase 5: Animation 🚧
 
 **Goal:** Integrate Rive for monster animations and Motion One for micro-interactions.
 
-| Task                              | Status | Dependencies               | Effort |
-| --------------------------------- | ------ | -------------------------- | ------ |
-| Install @rive-app/canvas          | 📋     | Phase 1 complete           | S      |
-| Create monster.riv asset          | 📋     | Rive installed             | L      |
-| Implement Monster component       | 📋     | Asset created              | M      |
-| Add evolution logic               | 📋     | Monster component, Phase 2 | M      |
-| Add Motion One micro-interactions | 📋     | Phase 1 complete           | M      |
+| Task                            | Status | Dependencies         | Effort |
+| ------------------------------- | ------ | -------------------- | ------ |
+| Install @rive-app/canvas        | ✅     | Phase 1 complete     | S      |
+| Install Motion One              | ✅     | Phase 1 complete     | S      |
+| Create Monster.svelte component | ✅     | Rive installed       | M      |
+| Add animation utilities         | ✅     | Motion One installed | M      |
+| Add Rive utilities              | ✅     | Rive installed       | M      |
+| Integrate HabitCard animations  | ✅     | Animation utilities  | M      |
+| Integrate BottomNav animations  | ✅     | Animation utilities  | S      |
+| Configure Vite lazy loading     | ✅     | Rive installed       | S      |
+| Create custom monster.riv asset | 📋     | Rive installed       | L      |
+| Add page transitions            | 📋     | Animation utilities  | M      |
+| Add confetti effects            | 📋     | Animation utilities  | M      |
 
-**Key Files to Create:**
+**Key Files Created:**
 
 ```
 src/lib/components/
-├── Monster.svelte  # Rive canvas wrapper
-└── animations/
-    └── transitions.ts  # Motion One utilities
+├── Monster.svelte           # Rive canvas wrapper with emoji fallback ✅
+
+src/lib/animations/
+├── transitions.ts           # Motion One utilities (buttonSpring, celebrate, iconTap) ✅
+└── rive-utils.ts            # Rive helpers (WebGL detection, visibility observers) ✅
 
 static/animations/
-└── monster.riv     # Rive animation file
+└── cat-treat.riv            # Placeholder Rive asset (pending custom monster.riv)
 ```
 
 **Monster Evolution Stages:**
@@ -173,43 +181,57 @@ static/animations/
 
 **Acceptance Criteria:**
 
-- [ ] Monster displays with correct evolution stage
-- [ ] Feeding animation plays on habit completion
-- [ ] Smooth transitions between stages
-- [ ] Performs well on mobile (60fps)
+- [x] Monster component with Rive canvas and emoji fallback
+- [x] Button spring animation on habit toggle
+- [x] Celebrate animation on streak milestones (7/30/100)
+- [x] Icon tap animation on BottomNav
+- [x] Reduced motion support
+- [ ] Custom monster.riv asset created
+- [ ] Page transitions implemented
+- [ ] Confetti effects implemented
 
 ---
 
-## Phase 6: PWA 📋
+## Phase 6: PWA ✅
 
 **Goal:** Full PWA functionality with offline support and push notifications.
 
 | Task                            | Status | Dependencies     | Effort |
 | ------------------------------- | ------ | ---------------- | ------ |
-| Create service worker           | 📋     | Phase 4 complete | M      |
-| Create manifest.json            | 📋     | None             | S      |
-| Create app icons                | 📋     | None             | S      |
-| Set up Firebase Cloud Messaging | 📋     | Phase 3 auth     | M      |
-| Implement push notifications    | 📋     | FCM configured   | L      |
+| Create service worker           | ✅     | Phase 4 complete | M      |
+| Create manifest.json            | ✅     | None             | S      |
+| Create app icons                | ✅     | None             | S      |
+| Set up Firebase Cloud Messaging | ✅     | Phase 3 auth     | M      |
+| Implement push notifications    | ✅     | FCM configured   | L      |
+| Create PWA install store        | ✅     | None             | S      |
+| Create InstallPrompt component  | ✅     | PWA store        | M      |
+| Integrate PWA in layout         | ✅     | All above        | S      |
 
-**Key Files to Create:**
+**Key Files Created:**
 
 ```
-src/service-worker.ts    # SvelteKit service worker
-static/manifest.json     # PWA manifest
-static/icon-192.png      # App icon
-static/icon-512.png      # App icon
+src/service-worker.ts             # SvelteKit service worker ✅
+static/manifest.json              # PWA manifest ✅
+static/icon-192.png               # App icon (placeholder) ✅
+static/icon-512.png               # App icon (placeholder) ✅
+static/icon-192-maskable.png      # Maskable icon ✅
+static/icon-512-maskable.png      # Maskable icon ✅
 src/lib/notifications/
-├── firebase.ts          # FCM initialization
-└── push.ts              # Push notification handlers
+├── firebase.ts                   # FCM initialization ✅
+└── push.ts                       # Push notification store ✅
+src/lib/stores/
+└── pwa.ts                        # PWA install prompt store ✅
+src/lib/components/
+└── InstallPrompt.svelte          # Install banner component ✅
 ```
 
 **Acceptance Criteria:**
 
-- [ ] App is installable on mobile
-- [ ] Works fully offline
-- [ ] Push notifications for daily reminders
-- [ ] Lighthouse PWA score > 90
+- [x] App is installable on mobile
+- [x] Works fully offline with service worker
+- [x] Push notification system with FCM
+- [x] Install prompt detection and UI
+- [ ] Lighthouse PWA score > 90 (needs testing)
 
 ---
 
@@ -225,14 +247,14 @@ flowchart TD
         P1E[Tailwind Styling]
     end
 
-    subgraph Phase2["Phase 2: Data Layer"]
+    subgraph Phase2["Phase 2: Data Layer ✅"]
         P2A[Dexie.js Setup]
         P2B[Local Habit CRUD]
         P2C[Local HabitLog Storage]
         P2D[Streak Calculation]
     end
 
-    subgraph Phase3["Phase 3: Backend"]
+    subgraph Phase3["Phase 3: Backend ✅"]
         P3A[Supabase Project]
         P3B[Database Schema]
         P3C[Row Level Security]
@@ -240,21 +262,22 @@ flowchart TD
         P3E[Edge Functions]
     end
 
-    subgraph Phase4["Phase 4: Sync"]
+    subgraph Phase4["Phase 4: Sync ✅"]
         P4A[SyncQueue Implementation]
         P4B[Online/Offline Detection]
         P4C[Conflict Resolution]
         P4D[Full Sync on Reconnect]
     end
 
-    subgraph Phase5["Phase 5: Animation"]
-        P5A[Rive Integration]
-        P5B[Monster State Machine]
-        P5C[Evolution Logic]
-        P5D[Motion One Micro-interactions]
+    subgraph Phase5["Phase 5: Animation 🚧"]
+        P5A[Rive Integration ✅]
+        P5B[Monster Component ✅]
+        P5C[Motion One Utils ✅]
+        P5D[Custom Monster Asset 📋]
+        P5E[Page Transitions 📋]
     end
 
-    subgraph Phase6["Phase 6: PWA"]
+    subgraph Phase6["Phase 6: PWA ✅"]
         P6A[Service Worker]
         P6B[Manifest & Icons]
         P6C[Firebase Setup]
@@ -273,9 +296,9 @@ flowchart TD
     P2C --> P4A
     P3E --> P4A --> P4B --> P4C --> P4D
 
-    P1B --> P5A --> P5B --> P5C
-    P2D --> P5C
-    P1B --> P5D
+    P1B --> P5A --> P5B --> P5D
+    P1B --> P5C --> P5E
+    P2D --> P5B
 
     P4D --> P6A --> P6B --> P6E
     P3D --> P6C --> P6D

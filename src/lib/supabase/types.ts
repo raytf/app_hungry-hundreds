@@ -66,6 +66,7 @@ export interface Database {
 					habit_id: string;
 					logged_date: string;
 					logged_at: string;
+					completion_type: 'full' | 'partial';
 				};
 				Insert: {
 					id?: string;
@@ -73,6 +74,7 @@ export interface Database {
 					habit_id: string;
 					logged_date: string;
 					logged_at?: string;
+					completion_type?: 'full' | 'partial';
 				};
 				Update: {
 					id?: string;
@@ -80,6 +82,7 @@ export interface Database {
 					habit_id?: string;
 					logged_date?: string;
 					logged_at?: string;
+					completion_type?: 'full' | 'partial';
 				};
 			};
 			push_subscriptions: {

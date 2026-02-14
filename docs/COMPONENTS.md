@@ -199,7 +199,7 @@ interface Events {
 
 **Location**: `src/lib/components/MonsterDisplay.svelte`
 
-**Current Implementation**: Emoji placeholder (to be replaced with Rive animation)
+**Current Implementation**: Uses `Monster.svelte` component with Rive animation and emoji fallback.
 
 **Monster Stages**:
 
@@ -213,11 +213,41 @@ interface Events {
 
 - Stage indicator badge
 - Evolution progress bar
-- Bounce animation
+- Rive animation (when WebGL available)
+- Emoji fallback (when Rive unavailable)
 - Responsive sizing (192px × 192px)
 
-**Future Enhancement**:
-Replace with `@rive-app/canvas` for animated monster graphics.
+---
+
+### Monster.svelte
+
+**Purpose**: Render the monster companion using Rive animations with emoji fallback.
+
+**Location**: `src/lib/components/Monster.svelte`
+
+**Props**:
+
+```typescript
+interface Props {
+  stage: MonsterStage;  // Current evolution stage
+  isHappy?: boolean;    // Trigger happy animation
+  class?: string;       // Additional CSS classes
+}
+```
+
+**Features**:
+
+- Rive canvas animation (when WebGL available)
+- Automatic emoji fallback (when Rive fails or WebGL unavailable)
+- Visibility-based pause/play (saves battery when off-screen)
+- Tab visibility handling (pauses when tab hidden)
+- Reduced motion support
+
+**Fallback Strategy**:
+
+1. Check WebGL support on mount
+2. Attempt to load Rive animation
+3. On error → display emoji with bounce animation
 
 ---
 

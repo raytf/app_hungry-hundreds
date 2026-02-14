@@ -19,11 +19,14 @@ import {
 	updateHabit,
 	deleteHabit,
 	toggleHabitCompletion,
+	markPartialCompletion,
+	getCompletionTypeForDate,
 	calculateFlexibleStreaksForHabits,
 	getCompletedTodayMap,
 	type Habit,
 	type CreateHabitInput,
-	type UpdateHabitInput
+	type UpdateHabitInput,
+	type CompletionType
 } from '$lib/db';
 
 // ============================================================================
@@ -44,6 +47,8 @@ export interface HabitWithStatus extends Habit {
 	periodTarget: number; // Target for current period (1 for daily, user-configured for weekly)
 	periodType: 'day' | 'week';
 	totalCompletions: number; // Lifetime completion count
+	// Partial completion fields (Phase 2)
+	completionType: CompletionType | null; // 'full' | 'partial' | null (no completion today)
 }
 
 // ============================================================================
@@ -113,6 +118,7 @@ interface HabitStatusResult {
 	periodTarget: number;
 	periodType: 'day' | 'week';
 	totalCompletions: number;
+	completionType: CompletionType | null;
 }
 
 // Derived store that fetches flexible streaks and completion status
@@ -128,14 +134,22 @@ const habitStatusWithTrigger = derived<
 			return;
 		}
 
-		// Get flexible streaks and actual today completion status in parallel
+		// Get flexible streaks, completion status, and completion types in parallel
 		const habitIds = $rawHabits.map((h) => h.id!);
-		Promise.all([calculateFlexibleStreaksForHabits($rawHabits), getCompletedTodayMap(habitIds)])
-			.then(([flexibleStreaks, completedTodayMap]) => {
+		const completionTypePromises = habitIds.map((id) => getCompletionTypeForDate(id));
+
+		Promise.all([
+			calculateFlexibleStreaksForHabits($rawHabits),
+			getCompletedTodayMap(habitIds),
+			Promise.all(completionTypePromises)
+		])
+			.then(([flexibleStreaks, completedTodayMap, completionTypes]) => {
 				const statusMap = new Map<number, HabitStatusResult>();
-				for (const habit of $rawHabits) {
+				for (let i = 0; i < $rawHabits.length; i++) {
+					const habit = $rawHabits[i];
 					const id = habit.id!;
 					const flexResult = flexibleStreaks.get(id);
+					const completionType = completionTypes[i];
 
 					if (flexResult) {
 						// For daily habits: completedToday = target met for the day
@@ -152,7 +166,8 @@ const habitStatusWithTrigger = derived<
 							periodProgress: flexResult.periodProgress,
 							periodTarget: flexResult.periodTarget,
 							periodType: flexResult.periodType,
-							totalCompletions: flexResult.totalCompletions
+							totalCompletions: flexResult.totalCompletions,
+							completionType
 						});
 					} else {
 						// Fallback for edge cases
@@ -162,7 +177,8 @@ const habitStatusWithTrigger = derived<
 							periodProgress: 0,
 							periodTarget: 1,
 							periodType: 'day',
-							totalCompletions: 0
+							totalCompletions: 0,
+							completionType: null
 						});
 					}
 				}
@@ -187,7 +203,8 @@ const habitsWithStatusFinal = derived<
 			periodProgress: 0,
 			periodTarget: 1,
 			periodType: 'day' as const,
-			totalCompletions: 0
+			totalCompletions: 0,
+			completionType: null
 		};
 		return {
 			...habit,
@@ -196,7 +213,8 @@ const habitsWithStatusFinal = derived<
 			periodProgress: status.periodProgress,
 			periodTarget: status.periodTarget,
 			periodType: status.periodType,
-			totalCompletions: status.totalCompletions
+			totalCompletions: status.totalCompletions,
+			completionType: status.completionType
 		};
 	});
 });
@@ -213,11 +231,23 @@ export const habits = {
 	subscribe: habitsWithStatusFinal.subscribe,
 
 	/**
-	 * Toggle habit completion for today
+	 * Toggle habit completion for today (full completion)
 	 */
 	toggle: async (id: number): Promise<void> => {
 		if (!browser) return;
 		await toggleHabitCompletion(id);
+		refreshStatus();
+	},
+
+	/**
+	 * Mark habit as partially completed for today
+	 * - If no completion exists, adds partial
+	 * - If partial exists, no change
+	 * - If full exists, no change (won't downgrade)
+	 */
+	togglePartial: async (id: number): Promise<void> => {
+		if (!browser) return;
+		await markPartialCompletion(id);
 		refreshStatus();
 	},
 

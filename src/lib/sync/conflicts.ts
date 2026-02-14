@@ -151,6 +151,7 @@ export async function createLocalLogFromRemote(
 		habitId: habitLocalId,
 		date: remote.logged_date,
 		completedAt: new Date(remote.logged_at).getTime(),
+		completionType: remote.completion_type ?? 'full',
 		serverId: remote.id,
 		synced: true
 	});

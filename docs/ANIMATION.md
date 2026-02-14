@@ -7,7 +7,7 @@ Hungry Hundreds uses a two-tier animation system:
 1. **Rive (@rive-app/canvas)** - Character animations for the monster companion with state machine control
 2. **Motion One (motion)** - Lightweight micro-interactions for UI feedback (2.6KB)
 
-This document describes the complete animation system planned for Phase 5.
+This document describes the animation system for Phase 5. **Status: In Progress** - Core animation infrastructure is implemented with Rive and Motion One. Remaining work includes creating custom monster.riv asset and adding page transitions.
 
 ---
 
@@ -422,36 +422,40 @@ static/animations/
 
 ### Pre-requisites
 
-- [ ] Phase 1-4 complete
-- [ ] Monster.riv asset created in Rive editor
+- [x] Phase 1-4 complete
+- [ ] Custom monster.riv asset created in Rive editor
 - [ ] State machine tested in Rive preview
 
 ### Installation
 
-- [ ] Install @rive-app/canvas
-- [ ] Install motion (Motion One)
-- [ ] Configure Vite chunking for Rive
+- [x] Install @rive-app/canvas (`@rive-app/canvas@2.34.3`)
+- [x] Install motion (Motion One) (`motion@12.31.0`)
+- [x] Configure Vite chunking for Rive (lazy loading configured)
 
 ### Components
 
-- [ ] Create Monster.svelte Rive wrapper
-- [ ] Update MonsterDisplay.svelte with fallback
-- [ ] Add animations/transitions.ts utilities
-- [ ] Integrate buttonSpring in HabitCard
+- [x] Create Monster.svelte Rive wrapper (with emoji fallback)
+- [x] Update MonsterDisplay.svelte to use Monster.svelte
+- [x] Add `src/lib/animations/transitions.ts` utilities (buttonSpring, celebrate, iconTap)
+- [x] Add `src/lib/animations/rive-utils.ts` utilities (WebGL detection, visibility observers)
+- [x] Integrate buttonSpring in HabitCard
+- [x] Integrate iconTap in BottomNav
+- [x] Celebrate animation on streak milestones (7/30/100)
 - [ ] Add page transitions to +layout.svelte
 
 ### Testing
 
+- [x] Test reduced motion preference (fallback implemented)
+- [x] Verify offline functionality preserved
+- [x] Test emoji fallback when Rive/WebGL unavailable
 - [ ] Verify 60fps on mobile devices
-- [ ] Test reduced motion preference
-- [ ] Verify offline functionality preserved
-- [ ] Test emoji fallback when Rive fails
 - [ ] Lighthouse performance audit
 
 ### Documentation
 
-- [ ] Update UI.md with animation components
-- [ ] Update STATUS.md with Phase 5 progress
+- [x] Update UI.md with animation components
+- [x] Update STATUS.md with Phase 5 progress
+- [x] Create `docs/features/phase-5-animation.md`
 
 ---
 

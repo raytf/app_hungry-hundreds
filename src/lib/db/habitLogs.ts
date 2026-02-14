@@ -7,7 +7,15 @@
  * @see docs/API.md for data model documentation
  * @see docs/features/flexible-streaks.md for flexible streak feature
  */
-import { db, formatDateLocal, getTodayDate, now, type Habit, type HabitLog } from './db';
+import {
+	db,
+	formatDateLocal,
+	getTodayDate,
+	now,
+	type Habit,
+	type HabitLog,
+	type CompletionType
+} from './db';
 import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
 
 // ============================================================================
@@ -16,14 +24,22 @@ import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
 
 /**
  * Log a habit completion for a specific date
+ * @param habitId - The ID of the habit
+ * @param date - Optional date in YYYY-MM-DD format (defaults to today)
+ * @param completionType - 'full' or 'partial' completion (defaults to 'full')
  * @returns The ID of the created log
  */
-export async function logHabitCompletion(habitId: number, date?: string): Promise<number> {
+export async function logHabitCompletion(
+	habitId: number,
+	date?: string,
+	completionType: CompletionType = 'full'
+): Promise<number> {
 	const logDate = date ?? getTodayDate();
 	const log: HabitLog = {
 		habitId,
 		date: logDate,
 		completedAt: now(),
+		completionType,
 		synced: false
 	};
 
@@ -45,9 +61,16 @@ export async function removeHabitCompletion(habitId: number, date?: string): Pro
  * - Single-completion daily habits (frequencyTarget = 1): toggle on/off
  * - Multi-completion daily habits (frequencyTarget > 1): add completion up to target, then toggle off
  * - Weekly habits: add completion (allows multiple per day)
+ * @param habitId - The ID of the habit
+ * @param date - Optional date in YYYY-MM-DD format (defaults to today)
+ * @param completionType - 'full' or 'partial' completion (defaults to 'full')
  * @returns Whether the habit's target is now met for the period
  */
-export async function toggleHabitCompletion(habitId: number, date?: string): Promise<boolean> {
+export async function toggleHabitCompletion(
+	habitId: number,
+	date?: string,
+	completionType: CompletionType = 'full'
+): Promise<boolean> {
 	const logDate = date ?? getTodayDate();
 
 	// Get the habit to access frequencyTarget and serverId
@@ -58,18 +81,35 @@ export async function toggleHabitCompletion(habitId: number, date?: string): Pro
 	const existingLogs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
 	const currentCount = existingLogs.length;
 
+	// Check if already has a full completion today (for partial completion upgrade logic)
+	const hasFullCompletion = existingLogs.some((log) => log.completionType === 'full');
+
 	if (habit.frequencyType === 'daily' && target === 1) {
 		// Single-completion daily habit: simple toggle
 		if (currentCount > 0) {
-			// Remove the existing log
+			// If adding partial but already have full, don't downgrade
+			if (completionType === 'partial' && hasFullCompletion) {
+				return true; // Already fully completed, don't add partial
+			}
+			// If adding full and have partial, upgrade to full
+			if (completionType === 'full' && !hasFullCompletion) {
+				// Remove partial and add full
+				const existing = existingLogs[0];
+				await db.logs.delete(existing.id!);
+				await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
+				const logId = await logHabitCompletion(habitId, logDate, 'full');
+				await queueLogCreate(logId, habitId, habit.serverId, logDate, 'full');
+				return true;
+			}
+			// Remove the existing log (toggle off)
 			const existing = existingLogs[0];
 			await db.logs.delete(existing.id!);
 			await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
 			return false;
 		} else {
 			// Add a new log
-			const logId = await logHabitCompletion(habitId, logDate);
-			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			const logId = await logHabitCompletion(habitId, logDate, completionType);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate, completionType);
 			return true;
 		}
 	} else if (habit.frequencyType === 'daily' && target > 1) {
@@ -82,8 +122,8 @@ export async function toggleHabitCompletion(habitId: number, date?: string): Pro
 			return currentCount - 1 >= target;
 		} else {
 			// Add another completion
-			const logId = await logHabitCompletion(habitId, logDate);
-			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			const logId = await logHabitCompletion(habitId, logDate, completionType);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate, completionType);
 			return currentCount + 1 >= target;
 		}
 	} else {
@@ -94,11 +134,48 @@ export async function toggleHabitCompletion(habitId: number, date?: string): Pro
 			await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
 			return false;
 		} else {
-			const logId = await logHabitCompletion(habitId, logDate);
-			await queueLogCreate(logId, habitId, habit.serverId, logDate);
+			const logId = await logHabitCompletion(habitId, logDate, completionType);
+			await queueLogCreate(logId, habitId, habit.serverId, logDate, completionType);
 			return true;
 		}
 	}
+}
+
+/**
+ * Mark a habit as partially completed for a date
+ * If the habit already has a full completion, this does nothing.
+ * If the habit has no completion, it adds a partial completion.
+ * @param habitId - The ID of the habit
+ * @param date - Optional date in YYYY-MM-DD format (defaults to today)
+ * @returns Whether the habit now has any completion (full or partial)
+ */
+export async function markPartialCompletion(habitId: number, date?: string): Promise<boolean> {
+	return toggleHabitCompletion(habitId, date, 'partial');
+}
+
+/**
+ * Check if a habit has a partial completion on a specific date
+ */
+export async function hasPartialCompletionOnDate(habitId: number, date?: string): Promise<boolean> {
+	const logDate = date ?? getTodayDate();
+	const logs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
+	return logs.some((log) => log.completionType === 'partial');
+}
+
+/**
+ * Get the completion type for a habit on a specific date
+ * Returns 'full' if any full completion exists, 'partial' if only partial, or null if none
+ */
+export async function getCompletionTypeForDate(
+	habitId: number,
+	date?: string
+): Promise<CompletionType | null> {
+	const logDate = date ?? getTodayDate();
+	const logs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
+	if (logs.length === 0) return null;
+	// If any log is full, return full (full takes priority)
+	if (logs.some((log) => log.completionType === 'full')) return 'full';
+	return 'partial';
 }
 
 // ============================================================================
@@ -142,32 +219,63 @@ export async function getHabitLogsInRange(
 // ============================================================================
 
 /**
+ * Get all completion logs for a habit with their completion types
+ * Returns a map of date -> CompletionType ('full' takes priority over 'partial')
+ */
+async function getCompletionTypesByDate(habitId: number): Promise<Map<string, CompletionType>> {
+	const logs = await db.logs.where('habitId').equals(habitId).toArray();
+	const dateTypeMap = new Map<string, CompletionType>();
+
+	for (const log of logs) {
+		const existing = dateTypeMap.get(log.date);
+		// Full takes priority over partial
+		if (!existing || log.completionType === 'full') {
+			dateTypeMap.set(log.date, log.completionType);
+		}
+	}
+
+	return dateTypeMap;
+}
+
+/**
  * Calculate the current streak for a habit
- * Streak = consecutive days completed ending today (or yesterday if not done today)
+ *
+ * Streak calculation with partial completions:
+ * - Consecutive days with ANY completion (full OR partial) maintain the streak
+ * - Only FULL completions increment the streak counter
+ * - Partial completions prevent streak breaks but do NOT add to the count
+ *
+ * Example:
+ * Day 1: Full    → Streak = 1
+ * Day 2: Partial → Streak = 1 (preserved, not incremented)
+ * Day 3: Full    → Streak = 2
+ * Day 4: None    → Streak = 0 (broken)
  */
 export async function calculateStreak(habitId: number): Promise<number> {
-	const dates = await getHabitCompletionDates(habitId);
-	if (dates.length === 0) return 0;
+	const dateTypeMap = await getCompletionTypesByDate(habitId);
+	if (dateTypeMap.size === 0) return 0;
 
 	const today = getTodayDate();
-	const dateSet = new Set(dates);
-
-	// Start from today and count backwards
-	let streak = 0;
 	const checkDate = new Date(today + 'T00:00:00'); // Parse as local time, not UTC
 
-	// If not completed today, start checking from yesterday
-	if (!dateSet.has(today)) {
+	// If not completed today (neither full nor partial), start checking from yesterday
+	if (!dateTypeMap.has(today)) {
 		checkDate.setDate(checkDate.getDate() - 1);
 		// If yesterday also not done, streak is 0
-		if (!dateSet.has(formatDateLocal(checkDate))) {
+		if (!dateTypeMap.has(formatDateLocal(checkDate))) {
 			return 0;
 		}
 	}
 
-	// Count consecutive days
-	while (dateSet.has(formatDateLocal(checkDate))) {
-		streak++;
+	// Count full completions in consecutive days (including partials for continuity)
+	let streak = 0;
+	while (dateTypeMap.has(formatDateLocal(checkDate))) {
+		const completionType = dateTypeMap.get(formatDateLocal(checkDate));
+		// Only full completions increment the streak counter
+		if (completionType === 'full') {
+			streak++;
+		}
+		// Both full and partial maintain continuity - keep checking
 		checkDate.setDate(checkDate.getDate() - 1);
 	}
 
@@ -258,6 +366,33 @@ export async function getCompletionsInRange(
 }
 
 /**
+ * Get full completions count within a date range (excludes partial)
+ */
+export async function getFullCompletionsInRange(
+	habitId: number,
+	startDate: string,
+	endDate: string
+): Promise<number> {
+	return await db.logs
+		.where('habitId')
+		.equals(habitId)
+		.filter((log) => log.date >= startDate && log.date <= endDate && log.completionType === 'full')
+		.count();
+}
+
+/**
+ * Check if a date range has any completion (full or partial) for continuity
+ */
+async function hasAnyCompletionInRange(
+	habitId: number,
+	startDate: string,
+	endDate: string
+): Promise<boolean> {
+	const count = await getCompletionsInRange(habitId, startDate, endDate);
+	return count > 0;
+}
+
+/**
  * Get total lifetime completions for a habit
  */
 export async function getTotalCompletions(habitId: number): Promise<number> {
@@ -276,38 +411,62 @@ export async function getCompletionsForDate(habitId: number, date: string): Prom
 }
 
 /**
+ * Get full completions count for a specific date (excludes partial)
+ */
+export async function getFullCompletionsForDate(habitId: number, date: string): Promise<number> {
+	return await db.logs
+		.where('habitId')
+		.equals(habitId)
+		.filter((log) => log.date === date && log.completionType === 'full')
+		.count();
+}
+
+/**
+ * Check if a date has any completion (full or partial) for continuity
+ */
+async function hasAnyCompletionForDate(habitId: number, date: string): Promise<boolean> {
+	const count = await db.logs
+		.where('habitId')
+		.equals(habitId)
+		.filter((log) => log.date === date)
+		.count();
+	return count > 0;
+}
+
+/**
  * Calculate consecutive successful days for a daily habit with multi-completion support
- * A day is "successful" if completions >= target
+ *
+ * For partial completion support:
+ * - A day with ANY completion (full or partial) maintains streak continuity
+ * - Only days where FULL completions >= target increment the streak
+ * - Partial completions prevent streak breaks but don't count toward target
  */
 export async function calculateDayStreak(habitId: number, target: number): Promise<number> {
 	const today = getTodayDate();
 	let streak = 0;
 	const checkDate = new Date(today + 'T00:00:00');
 
-	// Get completions for today
-	const todayCompletions = await getCompletionsForDate(habitId, today);
-	const isTodayMet = todayCompletions >= target;
+	// Check if today has any completion for continuity
+	const hasTodayCompletion = await hasAnyCompletionForDate(habitId, today);
 
-	// If today's target is met, count today; otherwise start from yesterday
-	if (isTodayMet) {
-		streak = 1;
+	// If no completion today, start from yesterday
+	if (!hasTodayCompletion) {
 		checkDate.setDate(checkDate.getDate() - 1);
-	} else {
-		// Today not met yet - check yesterday
-		checkDate.setDate(checkDate.getDate() - 1);
+		// Check if yesterday has any completion
+		if (!(await hasAnyCompletionForDate(habitId, formatDateLocal(checkDate)))) {
+			return 0; // No continuity - streak is broken
+		}
 	}
 
-	// Count consecutive successful previous days
-	while (true) {
-		const dateStr = formatDateLocal(checkDate);
-		const completions = await getCompletionsForDate(habitId, dateStr);
-
-		if (completions >= target) {
+	// Count consecutive days with completions, but only count full completion days toward streak
+	while (await hasAnyCompletionForDate(habitId, formatDateLocal(checkDate))) {
+		// Only count if full completions meet target
+		const fullCompletions = await getFullCompletionsForDate(habitId, formatDateLocal(checkDate));
+		if (fullCompletions >= target) {
 			streak++;
-			checkDate.setDate(checkDate.getDate() - 1);
-		} else {
-			break;
 		}
+		// Continue checking for continuity regardless
+		checkDate.setDate(checkDate.getDate() - 1);
 	}
 
 	return streak;
@@ -315,7 +474,11 @@ export async function calculateDayStreak(habitId: number, target: number): Promi
 
 /**
  * Calculate consecutive successful weeks for a weekly habit
- * A week is "successful" if completions >= target
+ *
+ * For partial completion support:
+ * - A week with ANY completion (full or partial) maintains streak continuity
+ * - Only weeks where FULL completions >= target increment the streak
+ * - Partial completions prevent streak breaks but don't count toward target
  */
 export async function calculateWeekStreak(
 	habitId: number,
@@ -328,33 +491,38 @@ export async function calculateWeekStreak(
 
 	// Get current week bounds
 	let weekBounds = getWeekBounds(currentWeek, weekStartsOn);
-	let completions = await getCompletionsInRange(habitId, weekBounds.start, weekBounds.end);
 
-	// Check if current week target is met
-	const isCurrentWeekMet = completions >= target;
+	// Check if current week has any completion for continuity
+	const hasCurrentWeekCompletion = await hasAnyCompletionInRange(
+		habitId,
+		weekBounds.start,
+		weekBounds.end
+	);
 
-	// If current week isn't met yet, that's okay - check if we're still in progress
-	// We'll still count previous weeks' streak
-	if (isCurrentWeekMet) {
-		streak = 1;
-		// Move to previous week
+	// If no completion this week, start from previous week
+	if (!hasCurrentWeekCompletion) {
 		currentWeek.setDate(currentWeek.getDate() - 7);
-	} else {
-		// Current week not met yet - check previous week
-		currentWeek.setDate(currentWeek.getDate() - 7);
+		weekBounds = getWeekBounds(currentWeek, weekStartsOn);
+		// Check if previous week has any completion
+		if (!(await hasAnyCompletionInRange(habitId, weekBounds.start, weekBounds.end))) {
+			return 0; // No continuity - streak is broken
+		}
 	}
 
-	// Count consecutive successful previous weeks
-	while (true) {
-		weekBounds = getWeekBounds(currentWeek, weekStartsOn);
-		completions = await getCompletionsInRange(habitId, weekBounds.start, weekBounds.end);
-
-		if (completions >= target) {
+	// Count consecutive weeks with completions, but only count full completion weeks toward streak
+	while (await hasAnyCompletionInRange(habitId, weekBounds.start, weekBounds.end)) {
+		// Only count if full completions meet target
+		const fullCompletions = await getFullCompletionsInRange(
+			habitId,
+			weekBounds.start,
+			weekBounds.end
+		);
+		if (fullCompletions >= target) {
 			streak++;
-			currentWeek.setDate(currentWeek.getDate() - 7);
-		} else {
-			break;
 		}
+		// Continue checking for continuity regardless
+		currentWeek.setDate(currentWeek.getDate() - 7);
+		weekBounds = getWeekBounds(currentWeek, weekStartsOn);
 	}
 
 	return streak;

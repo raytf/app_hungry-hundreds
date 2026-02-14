@@ -17,7 +17,7 @@
 | 6     | PWA           | ✅ Complete | 5/5      |
 
 **Current Phase:** Phase 5 (Animation) - Rive Monster, Motion One Micro-interactions
-**Last Updated:** 2026-02-04
+**Last Updated:** 2026-02-14
 
 ---
 
@@ -82,6 +82,28 @@
 - ✅ **No Auto-Seeding** - All users start with empty habits list, create habits manually or via suggestions
 - ✅ **Sync Debouncing** - `debouncedSync()` prevents excessive sync calls during rapid auth changes (300ms)
 - 📄 **Fix Documentation** - `docs/fixes/multi-device-sync-fix.md` with full implementation plan
+
+### Flexible Streaks (Complete)
+
+- ✅ **Flexible Frequency Types** - Daily and weekly habits with configurable targets
+- ✅ **Multi-Completion Daily Habits** - Support for 1-10 completions per day (e.g., "Drink water 8x/day")
+- ✅ **Weekly Habits** - Support for 1-7 completions per week with configurable week start day
+- ✅ **FlexibleStreakResult** - Extended streak tracking with periodProgress, periodTarget, periodType
+- ✅ **HabitCard Updates** - Dynamic display for daily vs weekly habits with progress indicators
+- 📄 **Feature Documentation** - `docs/features/flexible-streaks.md`
+
+### Partial Completion (Complete)
+
+- ✅ **Partial Completion Support** - Mark habits as "partially completed" on busy days
+- ✅ **Streak Preservation** - Partial completions prevent streak breaks but don't increment counter
+- ✅ **Data Model** - `completionType: 'full' | 'partial'` field in HabitLog
+- ✅ **Dexie Migration** - Schema version 3 with upgrade handler for existing logs
+- ✅ **Streak Calculation** - Updated `calculateStreak()`, `calculateDayStreak()`, `calculateWeekStreak()`
+- ✅ **Sync Queue** - `completionType` included in `QueuedLogPayload`
+- ✅ **Habits Store** - `HabitWithStatus.completionType` field, `togglePartial()` method
+- ✅ **HabitCard UI** - Visual distinction (amber styling), partial completion button (½)
+- ✅ **Supabase Migration** - `20260214_partial_completion.sql` with enum type and indexes
+- 📄 **Feature Documentation** - `docs/features/partial-completion.md`
 
 ### UI Enhancements
 
@@ -148,23 +170,25 @@
 
 ### Features Documented but Not Built
 
-| Feature                 | Status         | Blocking                             |
-| ----------------------- | -------------- | ------------------------------------ |
-| IndexedDB persistence   | ✅ Implemented | Data persists in browser             |
-| Streak calculation      | ✅ Implemented | Computed from HabitLog entries       |
-| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready    |
-| User authentication     | ✅ Ready       | Supabase project configured in .env  |
-| Offline sync queue      | ✅ Implemented | Phase 4 complete                     |
-| Sync status UI          | ✅ Implemented | Visual feedback for sync state       |
-| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete               |
-| Rive monster animations | 🚧 In Progress | Using placeholder cat-treat.riv      |
-| Motion One animations   | ✅ Implemented | buttonSpring, celebrate, iconTap     |
-| Push notifications      | ✅ Implemented | Firebase project configured in .env  |
-| PWA installability      | ✅ Implemented | Manifest, icons, install prompt      |
-| Service worker          | ✅ Implemented | Offline caching, background sync     |
-| Custom monster.riv      | ❌ Not built   | Need to create/commission Rive asset |
-| Page transitions        | ❌ Not built   | Phase 5 - Planned                    |
-| Confetti effects        | ❌ Not built   | Phase 5 - Planned                    |
+| Feature                 | Status         | Blocking                               |
+| ----------------------- | -------------- | -------------------------------------- |
+| IndexedDB persistence   | ✅ Implemented | Data persists in browser               |
+| Streak calculation      | ✅ Implemented | Computed from HabitLog entries         |
+| Flexible streaks        | ✅ Implemented | Daily/weekly with configurable targets |
+| Partial completion      | ✅ Implemented | Preserve streak without incrementing   |
+| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready      |
+| User authentication     | ✅ Ready       | Supabase project configured in .env    |
+| Offline sync queue      | ✅ Implemented | Phase 4 complete                       |
+| Sync status UI          | ✅ Implemented | Visual feedback for sync state         |
+| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete                 |
+| Rive monster animations | 🚧 In Progress | Using placeholder cat-treat.riv        |
+| Motion One animations   | ✅ Implemented | buttonSpring, celebrate, iconTap       |
+| Push notifications      | ✅ Implemented | Firebase project configured in .env    |
+| PWA installability      | ✅ Implemented | Manifest, icons, install prompt        |
+| Service worker          | ✅ Implemented | Offline caching, background sync       |
+| Custom monster.riv      | ❌ Not built   | Need to create/commission Rive asset   |
+| Page transitions        | ❌ Not built   | Phase 5 - Planned                      |
+| Confetti effects        | ❌ Not built   | Phase 5 - Planned                      |
 
 ---
 
