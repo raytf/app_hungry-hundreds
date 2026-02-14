@@ -7,11 +7,13 @@
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
+	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
 	import { pushStore } from '$lib/notifications';
 	import { refreshStatus } from '$lib/stores/habits';
 	import { refreshStats } from '$lib/stores/stats';
+	import { monster, isMonsterHappy } from '$lib/stores/monster';
 
 	let { children } = $props();
 
@@ -26,6 +28,12 @@
 	const showNav = $derived.by(() => {
 		const path = page.url.pathname;
 		return !noNavRoutes.some((route) => path.startsWith(route));
+	});
+
+	// Check if current route should show monster (only homepage)
+	const showMonster = $derived.by(() => {
+		const path = page.url.pathname;
+		return path === '/';
 	});
 
 	// Check if current route requires auth
@@ -118,6 +126,12 @@
 
 <AuthGuard requireAuth={requiresAuth}>
 	<div class="min-h-screen bg-gray-50">
+		<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
+		<!-- Always mounted but only visible on homepage -->
+		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
+			<MonsterDisplay monster={$monster} isHappy={$isMonsterHappy} />
+		</div>
+
 		{@render children()}
 		{#if showNav}
 			<BottomNav />

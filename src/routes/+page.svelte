@@ -2,52 +2,22 @@
 	import Header from '$lib/components/Header.svelte';
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
-	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
-	import { monster } from '$lib/stores/monster';
 
-	// Get current date for greeting
+	// Get current date for header
 	const now = new Date();
-	const hour = now.getHours();
-	const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-
 	const dateOptions: Intl.DateTimeFormatOptions = {
 		weekday: 'long',
 		month: 'long',
 		day: 'numeric'
 	};
 	const formattedDate = now.toLocaleDateString('en-US', dateOptions);
-
-	// Monster happy state - triggered when a habit is completed
-	let isMonsterHappy = $state(false);
-	let happyTimeout: ReturnType<typeof setTimeout> | null = null;
-
-	function triggerMonsterHappy() {
-		// Clear any existing timeout
-		if (happyTimeout) {
-			clearTimeout(happyTimeout);
-		}
-
-		// Set happy state
-		isMonsterHappy = true;
-
-		// Reset after 2 seconds
-		happyTimeout = setTimeout(() => {
-			isMonsterHappy = false;
-			happyTimeout = null;
-		}, 2000);
-	}
 </script>
 
 <svelte:head>
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
-
-<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
-<div class="pointer-events-none fixed inset-0 z-40">
-	<MonsterDisplay monster={$monster} isHappy={isMonsterHappy} />
-</div>
 
 <!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
 <div
@@ -61,42 +31,49 @@
 	</Header>
 
 	<!-- Scrollable main content area - takes remaining space -->
-	<main class="scrollable-main h-[65%] overflow-y-auto overscroll-contain">
-		<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
-			<!-- Progress Summary -->
-			<section class="card mb-6 flex items-center justify-between">
-				<div>
-					<p class="text-sm text-gray-500">Today's Progress</p>
-					<p class="text-xl font-bold text-gray-900">
-						{$todaysProgress.completed} of {$todaysProgress.total} habits
-					</p>
-				</div>
-				<ProgressRing pct={$todaysProgress.pct} size={64} />
-			</section>
+	<div class="relative h-[65%]">
+		<main class="scrollable-main h-full overflow-y-auto overscroll-contain">
+			<div class="scrollable-content mx-auto w-full max-w-lg px-4 pt-4 pb-4">
+				<!-- Progress Summary -->
+				<section class="card mb-6 flex items-center justify-between">
+					<div>
+						<p class="text-sm text-gray-500">Today's Progress</p>
+						<p class="text-xl font-bold text-gray-900">
+							{$todaysProgress.completed} of {$todaysProgress.total} habits
+						</p>
+					</div>
+					<ProgressRing pct={$todaysProgress.pct} size={64} />
+				</section>
 
-			<!-- Habits List -->
-			<section>
-				{#if $sortedHabits.length > 0}
-					<div class="mb-3 flex items-center justify-between">
-						<h3 class="font-semibold text-gray-700">Your Habits</h3>
-						<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
-							+ Add New
-						</a>
-					</div>
-					<div class="space-y-3">
-						{#each $sortedHabits as habit (habit.id)}
-							<HabitCardCompact {habit} onComplete={triggerMonsterHappy} />
-						{/each}
-					</div>
-				{:else}
-					<!-- Empty state with habit suggestions -->
-					<div class="card py-6">
-						<HabitSuggestions maxSuggestions={4} />
-					</div>
-				{/if}
-			</section>
-		</div>
-	</main>
+				<!-- Habits List -->
+				<section>
+					{#if $sortedHabits.length > 0}
+						<div class="mb-3 flex items-center justify-between">
+							<h3 class="font-semibold text-gray-700">Your Habits</h3>
+							<a
+								href="/habits/new"
+								class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
+							>
+								+ Add New
+							</a>
+						</div>
+						<div class="space-y-3">
+							{#each $sortedHabits as habit (habit.id)}
+								<HabitCardCompact {habit} />
+							{/each}
+						</div>
+					{:else}
+						<!-- Empty state with habit suggestions -->
+						<div class="card py-6">
+							<HabitSuggestions maxSuggestions={4} />
+						</div>
+					{/if}
+				</section>
+			</div>
+		</main>
+		<!-- Fixed gradient overlay at bottom -->
+		<div class="fade-gradient"></div>
+	</div>
 
 	<!-- Spacer for BottomNav -->
 	<div class="h-16"></div>
@@ -107,6 +84,18 @@
 	.scrollable-main {
 		scrollbar-gutter: stable;
 	}
+
+	/* Fixed fade-out gradient at bottom */
+	/* .fade-gradient {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		height: 80px;
+		background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 1));
+		pointer-events: none;
+		z-index: 10;
+	} */
 
 	/* WebKit browsers (Chrome, Safari, Edge) - always show scrollbar */
 	.scrollable-main::-webkit-scrollbar {

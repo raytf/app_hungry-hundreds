@@ -21,10 +21,7 @@
 	let stageConfig = $derived(monsterStages[monster.stage]);
 </script>
 
-<div
-	class="relative flex h-full w-full items-end justify-center"
-	style="background: linear-gradient(to top, {stageConfig.color}40, transparent)"
->
+<div class="relative flex h-full w-full items-end justify-center" style="">
 	<!-- Monster container - full height and width -->
 	<div class="relative flex h-full w-full items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
