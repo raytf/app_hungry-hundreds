@@ -3,8 +3,12 @@
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import WeeklyChart from '$lib/components/WeeklyChart.svelte';
+	import ConsistencyGauge from '$lib/components/ConsistencyGauge.svelte';
+	import InsightCard from '$lib/components/InsightCard.svelte';
+	import DayPatternGrid from '$lib/components/DayPatternGrid.svelte';
 	import { habits, todaysProgress } from '$lib/stores/habits';
 	import { stats } from '$lib/stores/stats';
+	import { advancedStats } from '$lib/stores/advancedStats';
 
 	// Calculate additional stats
 	let totalStreak = $derived($habits.reduce((sum, h) => sum + h.streak, 0));
@@ -51,6 +55,89 @@
 		<StatsCard label="Total Streak Days" value={String(totalStreak)} icon="🔥" />
 		<StatsCard label="Longest Streak" value="{longestStreak} days" icon="🏆" />
 	</section>
+
+	<!-- Advanced Statistics -->
+	{#if !$advancedStats.isLoading}
+		<!-- Consistency Score -->
+		<section class="mb-6">
+			<ConsistencyGauge
+				score={$advancedStats.consistencyScore.score}
+				label={$advancedStats.consistencyScore.label}
+				breakdown={$advancedStats.consistencyScore.breakdown}
+			/>
+		</section>
+
+		<!-- Trend & Recovery -->
+		<section class="mb-6 grid grid-cols-2 gap-3">
+			<InsightCard
+				icon="📈"
+				label="Trend"
+				value="{$advancedStats.trendDirection.arrow} {$advancedStats.trendDirection.direction ===
+				'steady'
+					? 'Steady'
+					: $advancedStats.trendDirection.direction === 'improving'
+						? 'Improving'
+						: 'Declining'}"
+				subtitle="vs. previous 2 weeks"
+				trend={{
+					direction: $advancedStats.trendDirection.direction,
+					percentage: $advancedStats.trendDirection.percentageChange
+				}}
+			/>
+			<InsightCard
+				icon="🔄"
+				label="Recovery Speed"
+				value={$advancedStats.recoverySpeed.totalRecoveries === 0
+					? 'Perfect!'
+					: `${$advancedStats.recoverySpeed.averageRecoveryDays}d`}
+				subtitle={$advancedStats.recoverySpeed.totalRecoveries === 0
+					? 'No misses yet — keep it up!'
+					: `${$advancedStats.recoverySpeed.totalRecoveries} recoveries`}
+			/>
+		</section>
+
+		<!-- Day Patterns -->
+		{#if $advancedStats.hasEnoughData}
+			<section class="mb-6">
+				<DayPatternGrid
+					patterns={$advancedStats.dayPatterns.patterns}
+					insight={$advancedStats.dayPatterns.insight}
+				/>
+			</section>
+		{/if}
+
+		<!-- Never Miss Twice & Time to Complete -->
+		<section class="mb-6 grid grid-cols-2 gap-3">
+			<InsightCard
+				icon="🎯"
+				label="Never Miss Twice"
+				value="{$advancedStats.neverMissTwice.currentStreak}d"
+				subtitle="Best: {$advancedStats.neverMissTwice.bestStreak}d"
+			/>
+			{#if $advancedStats.timeToComplete.applicableHabits > 0}
+				<InsightCard
+					icon="⏱️"
+					label="Response Time"
+					value="{$advancedStats.timeToComplete.averageDelayMinutes}m"
+					subtitle="{$advancedStats.timeToComplete.applicableHabits} habit{$advancedStats
+						.timeToComplete.applicableHabits > 1
+						? 's'
+						: ''} with reminders"
+				/>
+			{/if}
+		</section>
+	{:else}
+		<!-- Loading skeleton -->
+		<section class="mb-6 space-y-3">
+			<div class="card animate-pulse">
+				<div class="h-24 rounded bg-gray-200"></div>
+			</div>
+			<div class="grid grid-cols-2 gap-3">
+				<div class="card animate-pulse"><div class="h-20 rounded bg-gray-200"></div></div>
+				<div class="card animate-pulse"><div class="h-20 rounded bg-gray-200"></div></div>
+			</div>
+		</section>
+	{/if}
 
 	<!-- Motivation Section -->
 	<section class="card bg-linear-to-br from-hungry-50 to-hungry-100">

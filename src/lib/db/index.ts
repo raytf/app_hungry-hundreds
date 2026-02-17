@@ -58,5 +58,8 @@ export {
 	hasPartialCompletionOnDate,
 	getCompletionTypeForDate,
 	getFullCompletionsForDate,
-	getFullCompletionsInRange
+	getFullCompletionsInRange,
+	// Advanced statistics query helpers
+	getAllLogsForHabit,
+	getLogsBetweenDates
 } from './habitLogs';

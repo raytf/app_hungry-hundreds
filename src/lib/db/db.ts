@@ -158,6 +158,16 @@ export class HungryHundredsDB extends Dexie {
 						habit.partialCriteria = undefined;
 					});
 			});
+
+		// Version 5: Add standalone date index on logs for efficient date-range queries
+		// Used by advanced statistics dashboard for cross-habit analytics
+		this.version(5).stores({
+			habits: '++id, serverId, createdAt',
+			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced, date',
+			syncQueue: '++id, timestamp'
+		});
+		// No .upgrade() needed — adding an index doesn't require data transformation
+		// Dexie automatically builds the new index from existing data
 	}
 }
 

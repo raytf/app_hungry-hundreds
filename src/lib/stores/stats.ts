@@ -34,7 +34,7 @@ export interface Stats {
 /**
  * Get the start of the current week (Monday)
  */
-function getWeekStart(): Date {
+export function getWeekStart(): Date {
 	const now = new Date();
 	const day = now.getDay();
 	const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
@@ -47,7 +47,7 @@ function getWeekStart(): Date {
 /**
  * Get array of dates for the current week (Mon-Sun)
  */
-function getWeekDates(): { date: Date; dayName: string }[] {
+export function getWeekDates(): { date: Date; dayName: string }[] {
 	const monday = getWeekStart();
 	const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 

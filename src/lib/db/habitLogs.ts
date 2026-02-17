@@ -214,6 +214,21 @@ export async function getHabitLogsInRange(
 		.toArray();
 }
 
+/**
+ * Get all logs for a habit, sorted by date ascending
+ */
+export async function getAllLogsForHabit(habitId: number): Promise<HabitLog[]> {
+	return db.logs.where('habitId').equals(habitId).sortBy('date');
+}
+
+/**
+ * Get all logs across all habits within a date range (inclusive)
+ * Uses the standalone date index added in Dexie v5
+ */
+export async function getLogsBetweenDates(startDate: string, endDate: string): Promise<HabitLog[]> {
+	return db.logs.where('date').between(startDate, endDate, true, true).toArray();
+}
+
 // ============================================================================
 // Streak Calculation
 // ============================================================================
