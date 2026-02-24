@@ -33,8 +33,10 @@ self.addEventListener('install', (event: ExtendableEvent) => {
 			// Cache all static assets
 			await cache.addAll(PRECACHE_ASSETS);
 
-			// Activate immediately
-			await self.skipWaiting();
+			// Do NOT call skipWaiting() here.
+			// The new SW enters the "waiting" state so the app can detect it
+			// and prompt the user to update, avoiding asset version mismatches.
+			// skipWaiting() is triggered via SKIP_WAITING message from the app.
 		})()
 	);
 });

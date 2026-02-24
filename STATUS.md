@@ -111,7 +111,7 @@
 - ✅ **Suggested Habits Data** - `src/lib/data/suggestedHabits.ts` provides curated habit suggestions
 - ✅ **Empty State UX** - Users see suggested habits they can click to add, plus link to create custom habits
 
-### Phase 6: PWA (In Progress)
+### Phase 6: PWA (Complete)
 
 - ✅ **Firebase SDK Installed** - `firebase@12.8.0` for Cloud Messaging
 - ✅ **Service Worker** - `src/service-worker.ts` with offline caching, push notifications, background sync
@@ -119,8 +119,10 @@
 - ✅ **App Icons** - Placeholder icons at 192x192 and 512x512 (regular and maskable)
 - ✅ **Firebase/FCM Module** - `src/lib/notifications/firebase.ts` for FCM initialization
 - ✅ **Push Notification Store** - `src/lib/notifications/push.ts` for permission and token management
-- ✅ **PWA Install Store** - `src/lib/stores/pwa.ts` for install prompt detection
+- ✅ **PWA Install Store** - `src/lib/stores/pwa.ts` for install prompt detection and update tracking
 - ✅ **Install Prompt Component** - `src/lib/components/InstallPrompt.svelte` for install banner
+- ✅ **Update Prompt Component** - `src/lib/components/UpdatePrompt.svelte` for SW update notification
+- ✅ **Predictable SW Update Flow** - Waiting SW detection, user-confirmed `SKIP_WAITING`, auto-reload on `controllerchange`
 - ✅ **Layout PWA Integration** - Manifest link, Apple meta tags, PWA initialization
 
 ### Phase 5: Animation (In Progress)
@@ -173,26 +175,27 @@
 
 ### Features Documented but Not Built
 
-| Feature                 | Status         | Blocking                               |
-| ----------------------- | -------------- | -------------------------------------- |
-| IndexedDB persistence   | ✅ Implemented | Data persists in browser               |
-| Streak calculation      | ✅ Implemented | Computed from HabitLog entries         |
-| Flexible streaks        | ✅ Implemented | Daily/weekly with configurable targets |
-| Partial completion      | ✅ Implemented | Preserve streak without incrementing   |
-| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready      |
-| User authentication     | ✅ Ready       | Supabase project configured in .env    |
-| Offline sync queue      | ✅ Implemented | Phase 4 complete                       |
-| Sync status UI          | ✅ Implemented | Visual feedback for sync state         |
-| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete                 |
-| Rive monster animations | ✅ Implemented | monster_hatchling.riv with CharacterVM |
-| Monster head tracking   | ✅ Implemented | lookAt() with smooth interpolation     |
-| Motion One animations   | ✅ Implemented | buttonSpring, celebrate, iconTap       |
-| Push notifications      | ✅ Implemented | Firebase project configured in .env    |
-| PWA installability      | ✅ Implemented | Manifest, icons, install prompt        |
-| Service worker          | ✅ Implemented | Offline caching, background sync       |
-| Custom monster.riv      | ✅ Implemented | monster_hatchling.riv with CharacterVM |
-| Page transitions        | ❌ Not built   | Phase 5 - Planned                      |
-| Confetti effects        | ❌ Not built   | Phase 5 - Planned                      |
+| Feature                 | Status         | Blocking                                          |
+| ----------------------- | -------------- | ------------------------------------------------- |
+| IndexedDB persistence   | ✅ Implemented | Data persists in browser                          |
+| Streak calculation      | ✅ Implemented | Computed from HabitLog entries                    |
+| Flexible streaks        | ✅ Implemented | Daily/weekly with configurable targets            |
+| Partial completion      | ✅ Implemented | Preserve streak without incrementing              |
+| Supabase client/types   | ✅ Implemented | Client, types, auth helpers ready                 |
+| User authentication     | ✅ Ready       | Supabase project configured in .env               |
+| Offline sync queue      | ✅ Implemented | Phase 4 complete                                  |
+| Sync status UI          | ✅ Implemented | Visual feedback for sync state                    |
+| Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete                            |
+| Rive monster animations | ✅ Implemented | monster_hatchling.riv with CharacterVM            |
+| Monster head tracking   | ✅ Implemented | lookAt() with smooth interpolation                |
+| Motion One animations   | ✅ Implemented | buttonSpring, celebrate, iconTap                  |
+| Push notifications      | ✅ Implemented | Firebase project configured in .env               |
+| PWA installability      | ✅ Implemented | Manifest, icons, install prompt                   |
+| Service worker          | ✅ Implemented | Offline caching, background sync                  |
+| PWA update flow         | ✅ Implemented | User-confirmed update prompt, no asset mismatches |
+| Custom monster.riv      | ✅ Implemented | monster_hatchling.riv with CharacterVM            |
+| Page transitions        | ❌ Not built   | Phase 5 - Planned                                 |
+| Confetti effects        | ❌ Not built   | Phase 5 - Planned                                 |
 
 ---
 
@@ -217,6 +220,7 @@ All Phase 6 tasks completed:
 3. ✅ **PWA manifest added** - App metadata, icons, shortcuts
 4. ✅ **Push notification system** - FCM integration, permission handling, token management
 5. ✅ **PWA installability** - Install prompt detection and banner component
+6. ✅ **Predictable SW updates** - Waiting SW detection, `UpdatePrompt.svelte` toast, user-confirmed reload
 
 ### Phase 5: Animation (In Progress)
 

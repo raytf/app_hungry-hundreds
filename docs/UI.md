@@ -876,7 +876,7 @@ Based on the roadmap phases and current implementation:
 - [x] **Install prompt** - Custom UI for PWA installation (`InstallPrompt.svelte`)
 - [x] **Push notification system** - FCM integration, permission handling
 - [ ] **Offline indicator** - Enhanced offline mode banner (optional)
-- [ ] **Update available** - Service worker update prompt (optional)
+- [x] **Update available** - Predictable SW update flow with user confirmation (`UpdatePrompt.svelte`)
 
 #### Future Enhancements
 
@@ -901,6 +901,7 @@ Based on the roadmap phases and current implementation:
 | ---------------------- | ------------------------ | ------ | ----------- |
 | `Monster.svelte`       | Rive animation wrapper   | 5      | ✅ Complete |
 | `InstallPrompt.svelte` | PWA install UI           | 6      | ✅ Complete |
+| `UpdatePrompt.svelte`  | PWA update notification  | 6      | ✅ Complete |
 | `Toast.svelte`         | Toast notifications      | 5      | 📋 Planned  |
 | `Modal.svelte`         | Reusable modal dialog    | 5      | 📋 Planned  |
 | `ConfettiEffect`       | Celebration animation    | 5      | 📋 Planned  |

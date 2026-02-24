@@ -301,11 +301,35 @@ On connectivity restored:
 
 The service worker (`src/service-worker.ts`) provides:
 
-- **Install**: Cache app shell assets
-- **Activate**: Clean old caches
-- **Fetch**: Cache-first for assets, network-first for API
-- **Push**: Handle push notification display
-- **Notification Click**: Open app to relevant page
+- **Install**: Cache app shell assets into a versioned `static-{version}` cache. Does **not** call `skipWaiting()` — the new SW enters the "waiting" state so the app can detect it and prompt the user.
+- **Activate**: Clean old `static-*` and `runtime-cache` caches, then call `clients.claim()`.
+- **Fetch**: Cache-first for static assets, network-first for HTML navigation.
+- **Push**: Handle push notification display.
+- **Notification Click**: Open app to relevant page.
+- **Message (`SKIP_WAITING`)**: Triggers `self.skipWaiting()` on demand — sent by `pwaStore.applyUpdate()` when the user confirms an update.
+
+### PWA Update Lifecycle
+
+New SW updates follow a user-confirmed flow to prevent asset version mismatches on installed PWAs:
+
+```
+Deploy new build
+  → Browser detects updated service-worker.ts
+  → New SW installs and enters "waiting" state
+  → pwaStore._detectUpdates() sees registration.waiting (or updatefound event)
+  → showUpdatePrompt becomes true → UpdatePrompt.svelte toast appears
+  → User taps "Update & Reload"
+  → pwaStore.applyUpdate() sends SKIP_WAITING message to waiting SW
+  → New SW calls skipWaiting() → becomes active controller
+  → controllerchange event fires → window.location.reload()
+  → Page reloads with fully fresh assets (no version mismatch)
+```
+
+Key files:
+
+- `src/service-worker.ts` — SW lifecycle; handles `SKIP_WAITING` message
+- `src/lib/stores/pwa.ts` — `updateAvailable` state, `_detectUpdates()`, `applyUpdate()`
+- `src/lib/components/UpdatePrompt.svelte` — Toast banner rendered in root layout
 
 ## Related Documentation
 

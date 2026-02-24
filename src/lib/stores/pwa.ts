@@ -1,10 +1,12 @@
 /**
- * PWA Install Store
+ * PWA Install & Update Store
  *
- * Manages PWA installability state and install prompt.
+ * Manages PWA installability state, install prompt, and app update detection.
  * Captures the beforeinstallprompt event and provides methods to trigger install.
+ * Detects when a new service worker is waiting and prompts the user to update.
  *
  * @see https://web.dev/learn/pwa/installation-prompt/
+ * @see https://web.dev/articles/service-worker-lifecycle
  */
 
 import { browser } from '$app/environment';
@@ -23,6 +25,8 @@ export interface PWAState {
 	isPrompting: boolean;
 	/** Whether user has dismissed the install banner */
 	isDismissed: boolean;
+	/** Whether a new service worker update is available and waiting */
+	updateAvailable: boolean;
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -39,11 +43,15 @@ const initialState: PWAState = {
 	canInstall: false,
 	isInstalled: false,
 	isPrompting: false,
-	isDismissed: false
+	isDismissed: false,
+	updateAvailable: false
 };
 
 // Store the deferred prompt event
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+// Store the waiting service worker so we can tell it to activate
+let waitingSW: ServiceWorker | null = null;
 
 function createPWAStore() {
 	const { subscribe, set, update } = writable<PWAState>(initialState);
@@ -100,6 +108,51 @@ function createPWAStore() {
 			window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
 				update((s) => ({ ...s, isInstalled: e.matches }));
 			});
+
+			// ----- Service Worker Update Detection -----
+			this._detectUpdates();
+		},
+
+		/**
+		 * Detect service worker updates.
+		 * Monitors registration for a new waiting worker and listens
+		 * for controllerchange to reload once the new SW takes over.
+		 */
+		_detectUpdates(): void {
+			if (!('serviceWorker' in navigator)) return;
+
+			navigator.serviceWorker.ready.then((registration) => {
+				// If a SW is already waiting (e.g. page was reloaded between update and activation)
+				if (registration.waiting) {
+					waitingSW = registration.waiting;
+					update((s) => ({ ...s, updateAvailable: true }));
+					console.log('[PWA] Update already waiting');
+				}
+
+				// When a new SW is installing, watch for it to enter the waiting state
+				registration.addEventListener('updatefound', () => {
+					const newSW = registration.installing;
+					if (!newSW) return;
+
+					newSW.addEventListener('statechange', () => {
+						if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+							// A new SW is installed but waiting — there's an update available
+							waitingSW = newSW;
+							update((s) => ({ ...s, updateAvailable: true }));
+							console.log('[PWA] New update available and waiting');
+						}
+					});
+				});
+			});
+
+			// When a new SW takes control, reload to load fresh assets
+			let refreshing = false;
+			navigator.serviceWorker.addEventListener('controllerchange', () => {
+				if (refreshing) return;
+				refreshing = true;
+				console.log('[PWA] New service worker activated, reloading...');
+				window.location.reload();
+			});
 		},
 
 		/**
@@ -151,6 +204,39 @@ function createPWAStore() {
 		resetDismissed(): void {
 			update((s) => ({ ...s, isDismissed: false }));
 			localStorage.removeItem('pwa-install-dismissed');
+		},
+
+		/**
+		 * Apply a waiting service worker update.
+		 * Sends SKIP_WAITING to the waiting SW, which triggers controllerchange → reload.
+		 */
+		applyUpdate(): void {
+			if (!waitingSW) {
+				console.warn('[PWA] No waiting service worker to activate');
+				return;
+			}
+
+			console.log('[PWA] Activating waiting service worker...');
+			waitingSW.postMessage({ type: 'SKIP_WAITING' });
+			// controllerchange listener in _detectUpdates() will reload the page
+		},
+
+		/**
+		 * Manually check for a service worker update.
+		 * Useful for a "Check for updates" action in settings.
+		 */
+		async checkForUpdate(): Promise<void> {
+			if (!browser || !('serviceWorker' in navigator)) return;
+
+			try {
+				const registration = await navigator.serviceWorker.getRegistration();
+				if (registration) {
+					await registration.update();
+					console.log('[PWA] Checked for updates');
+				}
+			} catch (error) {
+				console.error('[PWA] Update check failed:', error);
+			}
 		}
 	};
 }
@@ -166,3 +252,7 @@ export const showInstallBanner = derived(pwaStore, ($pwa) => {
 	return $pwa.canInstall && !$pwa.isInstalled && !$pwa.isDismissed && !$pwa.isPrompting;
 });
 
+/** Whether to show the update prompt */
+export const showUpdatePrompt = derived(pwaStore, ($pwa) => {
+	return $pwa.updateAvailable;
+});

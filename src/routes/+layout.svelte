@@ -7,6 +7,7 @@
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
+	import UpdatePrompt from '$lib/components/UpdatePrompt.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
@@ -140,4 +141,7 @@
 
 	<!-- PWA Install Prompt -->
 	<InstallPrompt />
+
+	<!-- PWA Update Prompt -->
+	<UpdatePrompt />
 </AuthGuard>
