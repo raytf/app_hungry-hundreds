@@ -2,8 +2,12 @@
 	/**
 	 * Monster Component
 	 *
-	 * Renders the monster companion using Rive animations.
+	 * Renders the monster companion using Rive animations with CharacterVM
+	 * view model data binding for head tracking (headX, headY).
 	 * Falls back to emoji display if Rive fails to load or WebGL is unavailable.
+	 *
+	 * Exports a `lookAt(targetX, targetY, duration?)` method for parent
+	 * components to smoothly animate the monster's gaze direction.
 	 *
 	 * @see docs/ANIMATION.md for animation system documentation
 	 */
@@ -15,6 +19,7 @@
 		createTabVisibilityHandler,
 		setBooleanInput
 	} from '$lib/animations/rive-utils';
+	import type { Rive as RiveType, ViewModelInstanceNumber } from '@rive-app/canvas';
 
 	interface Props {
 		/** Current evolution stage */
@@ -29,12 +34,21 @@
 
 	// State
 	let canvas: HTMLCanvasElement;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let riveInstance: any = null;
+	let riveInstance: RiveType | null = null;
 	let riveLoaded = $state(false);
 	let riveError = $state(false);
 	let cleanupVisibility: (() => void) | null = null;
 	let cleanupTabVisibility: (() => void) | null = null;
+	let cleanupResize: (() => void) | null = null;
+
+	// View Model number property handles
+	let headXProp: ViewModelInstanceNumber | null = null;
+	let headYProp: ViewModelInstanceNumber | null = null;
+
+	// Current interpolated values for smooth animation
+	let currentHeadX = 0;
+	let currentHeadY = 0;
+	let animationFrameId: number | null = null;
 
 	// Get emoji fallback config
 	let stageConfig = $derived(monsterStages[stage]);
@@ -53,12 +67,7 @@
 
 	async function initRive() {
 		try {
-			// Dynamic import to handle CommonJS module in Vite
-			const RiveModule = await import('@rive-app/canvas');
-			const Rive = RiveModule.Rive || RiveModule.default?.Rive || RiveModule.default;
-			const Layout = RiveModule.Layout || RiveModule.default?.Layout;
-			const Fit = RiveModule.Fit || RiveModule.default?.Fit;
-			const Alignment = RiveModule.Alignment || RiveModule.default?.Alignment;
+			const { Rive, Layout, Fit, Alignment } = await import('@rive-app/canvas');
 
 			riveInstance = new Rive({
 				src: '/animations/monster_hatchling.riv',
@@ -66,11 +75,18 @@
 				autoplay: true,
 				stateMachines: 'State Machine 1',
 				useOffscreenRenderer: true,
+				autoBind: true,
 				layout: new Layout({
 					fit: Fit.Cover,
 					alignment: Alignment.Center
 				}),
 				onLoad: () => {
+					// Scale the drawing surface for high-DPI / Retina displays
+					riveInstance?.resizeDrawingSurfaceToCanvas();
+
+					// Set up CharacterVM view model properties
+					initViewModel();
+
 					riveLoaded = true;
 
 					// Set up visibility observers for performance
@@ -78,6 +94,11 @@
 						cleanupVisibility = createVisibilityObserver(riveInstance, canvas);
 						cleanupTabVisibility = createTabVisibilityHandler(riveInstance);
 					}
+
+					// Handle window resize to keep drawing surface crisp
+					const onResize = () => riveInstance?.resizeDrawingSurfaceToCanvas();
+					window.addEventListener('resize', onResize);
+					cleanupResize = () => window.removeEventListener('resize', onResize);
 				},
 				onLoadError: (err: unknown) => {
 					console.warn('Rive load error:', err);
@@ -90,29 +111,102 @@
 		}
 	}
 
-	// React to isHappy changes - temporarily using cat-treat.riv's IsClose input
+	/**
+	 * Initialize the CharacterVM view model properties (headX, headY).
+	 * Called after Rive loads with autoBind enabled.
+	 */
+	function initViewModel() {
+		if (!riveInstance) return;
+
+		const vmInstance = riveInstance.viewModelInstance;
+		if (!vmInstance) {
+			console.warn('Monster: No view model instance found (autoBind may have failed)');
+			return;
+		}
+
+		headXProp = vmInstance.number('headX');
+		headYProp = vmInstance.number('headY');
+
+		if (!headXProp || !headYProp) {
+			console.warn('Monster: Could not find headX/headY properties on CharacterVM');
+		}
+	}
+
+	// ============================================================================
+	// Smooth Head Tracking (lookAt)
+	// ============================================================================
+
+	/**
+	 * Ease-out cubic easing function for natural-feeling deceleration.
+	 * Starts fast and gradually slows to a stop.
+	 */
+	function easeOutCubic(t: number): number {
+		return 1 - Math.pow(1 - t, 3);
+	}
+
+	/**
+	 * Smoothly animate the monster's gaze from its current position
+	 * to the given target coordinates.
+	 *
+	 * @param targetX - Target headX value (-1 to 1)
+	 * @param targetY - Target headY value (-1 to 1)
+	 * @param duration - Animation duration in ms (default: 300)
+	 */
+	export function lookAt(targetX: number, targetY: number, duration = 300): void {
+		// Clamp to valid range
+		targetX = Math.max(-1, Math.min(1, targetX));
+		targetY = Math.max(-1, Math.min(1, targetY));
+
+		// Cancel any in-progress animation
+		if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
+
+		// If view model props aren't available, bail out
+		if (!headXProp || !headYProp) return;
+
+		const startX = currentHeadX;
+		const startY = currentHeadY;
+		const startTime = performance.now();
+
+		function animate(now: number) {
+			const elapsed = now - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+			const eased = easeOutCubic(progress);
+
+			currentHeadX = startX + (targetX - startX) * eased;
+			currentHeadY = startY + (targetY - startY) * eased;
+
+			if (headXProp) headXProp.value = currentHeadX;
+			if (headYProp) headYProp.value = currentHeadY;
+
+			if (progress < 1) {
+				animationFrameId = requestAnimationFrame(animate);
+			} else {
+				animationFrameId = null;
+			}
+		}
+
+		animationFrameId = requestAnimationFrame(animate);
+	}
+
+	// React to isHappy changes
 	$effect(() => {
-		// Read isHappy at top level to ensure effect tracks it
 		const happy = isHappy;
-		console.log(
-			'[Monster] $effect - happy:',
-			happy,
-			'riveInstance:',
-			!!riveInstance,
-			'riveLoaded:',
-			riveLoaded
-		);
 		if (riveInstance && riveLoaded) {
-			// Map isHappy to IsClose for the placeholder animation
-			// TODO: Replace with 'MonsterController' and 'isHappy' when real monster.riv is ready
-			console.log('[Monster] Setting IsClose to:', happy);
 			setBooleanInput(riveInstance, 'State Machine 1', 'IsClose', happy);
 		}
 	});
 
 	onDestroy(() => {
+		// Cancel any in-progress lookAt animation
+		if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+		}
 		cleanupVisibility?.();
 		cleanupTabVisibility?.();
+		cleanupResize?.();
 		riveInstance?.cleanup();
 	});
 

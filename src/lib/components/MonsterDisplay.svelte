@@ -7,7 +7,12 @@
 	 *
 	 * @see docs/ANIMATION.md for animation system documentation
 	 */
-	import { monsterStages, type Monster as MonsterType } from '$lib/stores/monster';
+	import { onDestroy } from 'svelte';
+	import {
+		monsterStages,
+		registerMonsterLookAt,
+		type Monster as MonsterType
+	} from '$lib/stores/monster';
 	import Monster from './Monster.svelte';
 
 	interface Props {
@@ -19,13 +24,28 @@
 	let { monster, isHappy = false }: Props = $props();
 
 	let stageConfig = $derived(monsterStages[monster.stage]);
+
+	// Get a reference to the Monster component so we can register its lookAt method
+	let monsterRef: Monster | undefined = $state();
+
+	// Register the lookAt callback once the Monster component is bound
+	$effect(() => {
+		if (monsterRef) {
+			registerMonsterLookAt(monsterRef.lookAt);
+		}
+	});
+
+	// Unregister on destroy
+	onDestroy(() => {
+		registerMonsterLookAt(null);
+	});
 </script>
 
 <div class="relative flex h-full w-full items-end justify-center" style="">
 	<!-- Monster container - full height and width -->
 	<div class="relative flex h-full w-full items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
-		<Monster stage={monster.stage} {isHappy} />
+		<Monster bind:this={monsterRef} stage={monster.stage} {isHappy} />
 		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">
 			<div
 				class="h-full bg-white/80 transition-all duration-500"

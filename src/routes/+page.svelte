@@ -4,6 +4,7 @@
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
+	import { monsterLookAt } from '$lib/stores/monster';
 
 	// Get current date for header
 	const now = new Date();
@@ -13,6 +14,16 @@
 		day: 'numeric'
 	};
 	const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+
+	/**
+	 * Convert a pointer's viewport position to monster head coordinates (-1..1).
+	 * X maps left→right to -1→1, Y maps top→bottom to 1→-1 (inverted).
+	 */
+	function handlePageMouseMove(event: MouseEvent) {
+		const x = (event.clientX / window.innerWidth - 0.5) * 2;
+		const y = (event.clientY / window.innerHeight - 1) * 2;
+		monsterLookAt(x, y);
+	}
 </script>
 
 <svelte:head>
@@ -20,9 +31,11 @@
 </svelte:head>
 
 <!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="relative grid"
 	style="height: calc(100vh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
+	onmousemove={handlePageMouseMove}
 >
 	<Header title={formattedDate} showSyncStatus>
 		{#snippet right()}

@@ -156,3 +156,30 @@ export function triggerMonsterHappy() {
 		happyTimeout = null;
 	}, 2000);
 }
+
+// ============================================================================
+// Monster LookAt (Head Tracking)
+// ============================================================================
+
+type LookAtFn = (x: number, y: number, duration?: number) => void;
+let _lookAtFn: LookAtFn | null = null;
+
+/**
+ * Register the Monster component's lookAt function.
+ * Called by MonsterDisplay when the Monster component mounts.
+ */
+export function registerMonsterLookAt(fn: LookAtFn | null) {
+	_lookAtFn = fn;
+}
+
+/**
+ * Smoothly animate the monster's gaze toward the given coordinates.
+ * No-op if the Monster component hasn't registered its lookAt function.
+ *
+ * @param x - Target headX value (-1 to 1)
+ * @param y - Target headY value (-1 to 1)
+ * @param duration - Animation duration in ms (default: 300)
+ */
+export function monsterLookAt(x: number, y: number, duration?: number) {
+	_lookAtFn?.(x, y, duration);
+}
