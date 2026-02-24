@@ -17,7 +17,7 @@
 | 6     | PWA           | ✅ Complete | 5/5      |
 
 **Current Phase:** Phase 5 (Animation) - Rive Monster, Motion One Micro-interactions
-**Last Updated:** 2026-02-14
+**Last Updated:** 2026-02-24
 
 ---
 
@@ -127,14 +127,17 @@
 
 - ✅ **Rive Installed** - `@rive-app/canvas@2.34.3` for monster animations
 - ✅ **Motion One Installed** - `motion@12.31.0` for UI micro-interactions
-- ✅ **Monster.svelte** - Rive canvas wrapper with emoji fallback
-- ✅ **MonsterDisplay Updated** - Uses Monster.svelte with Rive animation
+- ✅ **Monster.svelte** - Rive canvas wrapper with emoji fallback, View Model data binding, and exported `lookAt()` method
+- ✅ **MonsterDisplay Updated** - Uses Monster.svelte with Rive animation, registers `lookAt` callback via store
+- ✅ **View Model Binding** - CharacterVM with `headX`/`headY` number properties (-1 to 1) for head tracking
+- ✅ **Head Tracking** - Monster gaze follows cursor on homepage via `onmousemove` → `monsterLookAt()` store API
+- ✅ **HiDPI Rendering** - `resizeDrawingSurfaceToCanvas()` on load and window resize for crisp Retina display
 - ✅ **Animation Utilities** - `src/lib/animations/transitions.ts` with buttonSpring, celebrate, iconTap
 - ✅ **Rive Utilities** - `src/lib/animations/rive-utils.ts` with WebGL detection, visibility observers
 - ✅ **HabitCard Animations** - Spring animation on toggle, celebrate on milestones
 - ✅ **BottomNav Animations** - Icon tap animation
 - ✅ **Vite Lazy Loading** - Rive chunk configured for lazy loading
-- 📋 **Placeholder Asset** - Using `cat-treat.riv` until custom monster.riv is created
+- ✅ **Monster Asset** - Using `monster_hatchling.riv` with CharacterVM view model
 - 📋 **Page Transitions** - Not yet implemented
 - 📋 **Confetti Effects** - Not yet implemented
 
@@ -181,12 +184,13 @@
 | Offline sync queue      | ✅ Implemented | Phase 4 complete                       |
 | Sync status UI          | ✅ Implemented | Visual feedback for sync state         |
 | Multi-device sync       | ✅ Implemented | Phase 4.6 fix complete                 |
-| Rive monster animations | 🚧 In Progress | Using placeholder cat-treat.riv        |
+| Rive monster animations | ✅ Implemented | monster_hatchling.riv with CharacterVM |
+| Monster head tracking   | ✅ Implemented | lookAt() with smooth interpolation     |
 | Motion One animations   | ✅ Implemented | buttonSpring, celebrate, iconTap       |
 | Push notifications      | ✅ Implemented | Firebase project configured in .env    |
 | PWA installability      | ✅ Implemented | Manifest, icons, install prompt        |
 | Service worker          | ✅ Implemented | Offline caching, background sync       |
-| Custom monster.riv      | ❌ Not built   | Need to create/commission Rive asset   |
+| Custom monster.riv      | ✅ Implemented | monster_hatchling.riv with CharacterVM |
 | Page transitions        | ❌ Not built   | Phase 5 - Planned                      |
 | Confetti effects        | ❌ Not built   | Phase 5 - Planned                      |
 
@@ -228,9 +232,8 @@ Completed tasks:
 
 Remaining tasks:
 
-1. 📋 **Create custom monster.riv** - Replace placeholder with custom monster asset
-2. 📋 **Add page transitions** - Smooth route transitions with Motion One
-3. 📋 **Add confetti effects** - Celebration particles on milestones
+1. 📋 **Add page transitions** - Smooth route transitions with Motion One
+2. 📋 **Add confetti effects** - Celebration particles on milestones
 
 See `docs/ANIMATION.md` and `docs/features/phase-5-animation.md` for documentation.
 

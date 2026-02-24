@@ -21,7 +21,7 @@ The monster is the emotional core of the app, evolving as users build habits. Ri
 
 ```
 static/animations/
-└── monster.riv     # Rive animation file (~50-100KB target)
+└── monster_hatchling.riv   # Rive animation file with CharacterVM view model
 ```
 
 #### Evolution Stages
@@ -36,26 +36,31 @@ static/animations/
 
 #### State Machine Inputs
 
-The Rive state machine accepts these inputs for runtime control:
+The Rive state machine (`State Machine 1`) accepts these boolean inputs:
+
+| Input     | Type    | Purpose                 |
+| --------- | ------- | ----------------------- |
+| `IsClose` | boolean | Trigger happy animation |
+
+#### View Model (CharacterVM)
+
+The `.riv` file contains a **View Model** called `CharacterVM` bound automatically via `autoBind: true`. It exposes number properties for head tracking:
+
+| Property | Type   | Range   | Purpose                   |
+| -------- | ------ | ------- | ------------------------- |
+| `headX`  | number | -1 to 1 | Horizontal gaze direction |
+| `headY`  | number | -1 to 1 | Vertical gaze direction   |
+
+These properties are accessed via the Rive View Model API:
 
 ```typescript
-interface MonsterStateMachineInputs {
-  // Evolution stage (0-4)
-  stage: number;
+const vmInstance = riveInstance.viewModelInstance;
+const headXProp = vmInstance.number('headX');  // ViewModelInstanceNumber
+const headYProp = vmInstance.number('headY');
 
-  // Emotional states
-  isHappy: boolean;      // true after habit completion
-  isHungry: boolean;     // true when habits incomplete today
-  isSleeping: boolean;   // true during quiet hours
-
-  // Action triggers
-  triggerFeed: boolean;  // Trigger feeding animation
-  triggerCelebrate: boolean; // Trigger celebration (milestones)
-  triggerEvolve: boolean; // Trigger evolution sequence
-
-  // Interaction
-  isTouched: boolean;    // User is touching/dragging monster
-}
+// Set values directly
+headXProp.value = 0.5;  // Look right
+headYProp.value = -0.8; // Look down
 ```
 
 #### Animation States per Stage
@@ -75,91 +80,99 @@ Each stage includes these animation loops:
 
 ### Monster.svelte Component
 
+**File:** `src/lib/components/Monster.svelte`
+
+Key implementation details:
+
+- **Dynamic import** of `@rive-app/canvas` to keep the main bundle small
+- **`autoBind: true`** for automatic CharacterVM view model binding
+- **`resizeDrawingSurfaceToCanvas()`** on load and window resize for HiDPI/Retina display
+- **Visibility observers** pause/resume the Rive instance when off-screen or tab-hidden
+- **Emoji fallback** when WebGL is unavailable or Rive fails to load
+- **Exported `lookAt()` method** for smooth head tracking animation
+
 ```typescript
-// src/lib/components/Monster.svelte
-<script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
-  import { Rive, type StateMachineInput } from '@rive-app/canvas';
-  import type { Monster } from '$lib/stores/monster';
+// Props
+interface Props {
+  stage: MonsterStage;   // Current evolution stage
+  isHappy?: boolean;     // Trigger happy animation
+  class?: string;        // Additional CSS classes
+}
 
-  interface Props {
-    monster: Monster;
-    onFeed?: () => void;
-  }
-
-  let { monster, onFeed }: Props = $props();
-
-  let canvas: HTMLCanvasElement;
-  let riveInstance: Rive | null = null;
-  let stageInput: StateMachineInput;
-  let isHappyInput: StateMachineInput;
-
-  // Map monster stage to numeric value
-  const stageMap: Record<string, number> = {
-    egg: 0, baby: 1, teen: 2, adult: 3, elder: 4
-  };
-
-  onMount(async () => {
-    riveInstance = new Rive({
-      src: '/animations/monster.riv',
-      canvas,
-      autoplay: true,
-      stateMachines: 'MonsterController',
-      onLoad: () => {
-        // Get state machine inputs
-        const inputs = riveInstance!.stateMachineInputs('MonsterController');
-        stageInput = inputs.find(i => i.name === 'stage')!;
-        isHappyInput = inputs.find(i => i.name === 'isHappy')!;
-
-        // Set initial stage
-        stageInput.value = stageMap[monster.stage];
-      }
-    });
-  });
-
-  // React to monster changes
-  $effect(() => {
-    if (stageInput) {
-      stageInput.value = stageMap[monster.stage];
-    }
-  });
-
-  // Trigger happy animation
-  export function triggerHappy() {
-    if (isHappyInput) {
-      isHappyInput.value = true;
-      setTimeout(() => { isHappyInput.value = false; }, 2000);
-    }
-  }
-
-  onDestroy(() => {
-    riveInstance?.cleanup();
-  });
-</script>
-
-<canvas
-  bind:this={canvas}
-  class="h-48 w-48"
-  aria-label="Animated monster companion"
-/>
+// Exported method for parent components
+export function lookAt(targetX: number, targetY: number, duration = 300): void;
 ```
+
+#### Head Tracking (`lookAt`)
+
+The `lookAt()` method smoothly interpolates the monster's gaze from its current position to a target using `requestAnimationFrame` and ease-out cubic easing:
+
+```typescript
+// Clamps to -1..1 range, then animates headX/headY over `duration` ms
+monsterRef.lookAt(0.5, -0.3, 300);
+```
+
+- Values are clamped to the -1 to 1 range
+- Uses `easeOutCubic` for natural deceleration
+- Cancels any in-progress animation before starting a new one
+- No-op if the view model properties aren't available
 
 ### Integration with MonsterDisplay.svelte
 
-The current `MonsterDisplay.svelte` uses emoji placeholders. The migration path:
+`MonsterDisplay.svelte` wraps `Monster.svelte` and registers its `lookAt` callback with the monster store for cross-component access:
 
-```diff
-- <!-- Monster emoji with bounce animation -->
-- <span class="animate-bounce text-7xl">{stageConfig.emoji}</span>
-+ <!-- Rive monster animation -->
-+ <Monster {monster} bind:this={monsterRef} />
+```svelte
+<script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { registerMonsterLookAt } from '$lib/stores/monster';
+
+	let monsterRef: Monster | undefined = $state();
+
+	// Register lookAt callback once Monster component is bound
+	$effect(() => {
+		if (monsterRef) {
+			registerMonsterLookAt(monsterRef.lookAt);
+		}
+	});
+
+	// Unregister on destroy
+	onDestroy(() => registerMonsterLookAt(null));
+</script>
+
+<Monster bind:this={monsterRef} stage={monster.stage} {isHappy} />
+```
+
+### Monster Store API (`src/lib/stores/monster.ts`)
+
+The monster store provides a public API for triggering head tracking from any component:
+
+```typescript
+import { monsterLookAt } from '$lib/stores/monster';
+
+// Smoothly animate the monster's gaze (-1 to 1 range)
+monsterLookAt(x, y, duration?);
+```
+
+This callback pattern bridges the layout → page boundary since `MonsterDisplay` lives in `+layout.svelte` as a fixed overlay.
+
+### Homepage Head Tracking
+
+On the homepage (`src/routes/+page.svelte`), the monster's gaze follows the cursor via a `mousemove` handler:
+
+```typescript
+function handlePageMouseMove(event: MouseEvent) {
+  const x = (event.clientX / window.innerWidth - 0.5) * 2;   // -1..1
+  const y = (event.clientY / window.innerHeight - 0.5) * -2;  // 1..-1 (inverted)
+  monsterLookAt(x, y);
+}
 ```
 
 **Fallback Strategy:**
 
-- If Rive fails to load, show emoji placeholder
-- Detect Rive support via `'WebGL' in window`
+- If Rive fails to load, show emoji placeholder with bounce animation
+- Detect Rive support via `supportsWebGL()` utility
 - Use intersection observer to pause off-screen animations
+- Tab visibility handler pauses when tab is hidden
 
 ---
 
@@ -286,13 +299,13 @@ export function celebrate(element: HTMLElement) {
 
 ### MonsterDisplay.svelte
 
-| Trigger         | Animation              | Package    |
-| --------------- | ---------------------- | ---------- |
-| Page load       | Idle loop              | Rive       |
-| Habit completed | Happy + feed animation | Rive       |
-| Stage evolution | Evolution transition   | Rive       |
-| User touch      | Touched response       | Rive       |
-| Container mount | Scale-in entrance      | Motion One |
+| Trigger         | Animation                            | Package    |
+| --------------- | ------------------------------------ | ---------- |
+| Page load       | Idle loop                            | Rive       |
+| Habit completed | Happy animation (IsClose)            | Rive       |
+| Stage evolution | Evolution transition                 | Rive       |
+| Cursor move     | Head tracking (lookAt → headX/headY) | Rive       |
+| Container mount | Scale-in entrance                    | Motion One |
 
 ### BottomNav.svelte
 
@@ -404,16 +417,19 @@ export function buttonSpring(element: HTMLElement) {
 ```
 src/lib/
 ├── components/
-│   ├── Monster.svelte           # Rive canvas wrapper (new)
-│   └── MonsterDisplay.svelte    # Updated to use Monster.svelte
+│   ├── Monster.svelte           # Rive canvas wrapper with lookAt() export
+│   └── MonsterDisplay.svelte    # Wraps Monster, registers lookAt callback
 ├── animations/
-│   ├── transitions.ts           # Motion One utilities (new)
-│   └── rive-utils.ts            # Rive helper functions (new)
+│   ├── transitions.ts           # Motion One utilities
+│   └── rive-utils.ts            # WebGL detection, visibility observers
 └── stores/
-    └── monster.ts               # Already exists
+    └── monster.ts               # Monster state + registerMonsterLookAt/monsterLookAt
+
+src/routes/
+└── +page.svelte                 # Homepage with onmousemove head tracking
 
 static/animations/
-└── monster.riv                  # Rive animation file (new)
+└── monster_hatchling.riv        # Rive animation file with CharacterVM
 ```
 
 ---
@@ -423,8 +439,8 @@ static/animations/
 ### Pre-requisites
 
 - [x] Phase 1-4 complete
-- [ ] Custom monster.riv asset created in Rive editor
-- [ ] State machine tested in Rive preview
+- [x] Custom monster_hatchling.riv asset with CharacterVM view model
+- [x] View model tested with headX/headY properties
 
 ### Installation
 
@@ -436,6 +452,11 @@ static/animations/
 
 - [x] Create Monster.svelte Rive wrapper (with emoji fallback)
 - [x] Update MonsterDisplay.svelte to use Monster.svelte
+- [x] Add View Model binding (CharacterVM headX/headY)
+- [x] Add lookAt() with smooth interpolation (requestAnimationFrame + easeOutCubic)
+- [x] Add store callback registration (registerMonsterLookAt/monsterLookAt)
+- [x] Add homepage cursor tracking (onmousemove → monsterLookAt)
+- [x] Add HiDPI support (resizeDrawingSurfaceToCanvas)
 - [x] Add `src/lib/animations/transitions.ts` utilities (buttonSpring, celebrate, iconTap)
 - [x] Add `src/lib/animations/rive-utils.ts` utilities (WebGL detection, visibility observers)
 - [x] Integrate buttonSpring in HabitCard

@@ -75,11 +75,13 @@ hungryhundreds/
 │   │   └── settings/+page.svelte  # User preferences
 │   ├── lib/
 │   │   ├── components/
-│   │   │   ├── Monster.svelte     # Rive character
+│   │   │   ├── Monster.svelte     # Rive character with lookAt() head tracking
+│   │   │   ├── MonsterDisplay.svelte # Monster wrapper, registers lookAt callback
 │   │   │   ├── HabitCard.svelte   # Individual habit item
 │   │   │   └── StreakBadge.svelte # Streak indicator
 │   │   ├── stores/
 │   │   │   ├── habits.ts          # Habit state management
+│   │   │   ├── monster.ts         # Monster state + registerMonsterLookAt/monsterLookAt
 │   │   │   └── auth.ts            # User session
 │   │   ├── db.ts                  # Dexie schema (local storage)
 │   │   ├── api.ts                 # Supabase client
@@ -90,7 +92,7 @@ hungryhundreds/
 │   ├── icon-192.png
 │   ├── icon-512.png
 │   └── animations/
-│       └── monster.riv
+│       └── monster_hatchling.riv  # Rive file with CharacterVM view model
 ├── supabase/
 │   └── functions/
 │       ├── complete-habit/        # Habit completion endpoint
@@ -181,9 +183,14 @@ interface SyncQueue {
 
 Rive state machine inputs:
 
-- `evolutionStage` (number 0-4)
-- `isHappy` (boolean, true on habit completion)
-- `triggerCelebrate` (trigger, on milestone)
+- `IsClose` (boolean, triggers happy animation on habit completion)
+
+Rive View Model (`CharacterVM`, bound via `autoBind: true`):
+
+- `headX` (number, -1 to 1 — horizontal gaze direction)
+- `headY` (number, -1 to 1 — vertical gaze direction)
+
+The monster's gaze follows the cursor on the homepage via `onmousemove` → `monsterLookAt()` store API, which bridges the layout → page boundary through a callback registration pattern.
 
 ## Key Technical Decisions
 

@@ -60,6 +60,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - Real-time progress tracking
 - Quick add habit link
 - Empty state with habit suggestions (HabitSuggestions component)
+- Monster head tracking — gaze follows cursor via `onmousemove` → `monsterLookAt()`
 
 ---
 
@@ -446,18 +447,26 @@ All components are located in `src/lib/components/`.
 | `isHappy` | `boolean`      | No       | `false` | Trigger happy animation |
 | `class`   | `string`       | No       | `''`    | Additional CSS classes  |
 
+**Exported Methods:**
+
+| Method   | Signature                                               | Description                               |
+| -------- | ------------------------------------------------------- | ----------------------------------------- |
+| `lookAt` | `(targetX: number, targetY: number, duration?) => void` | Smoothly animate gaze direction (-1 to 1) |
+
 **Features:**
 
 - Rive canvas animation (when WebGL available)
 - Automatic emoji fallback (when Rive fails or WebGL unavailable)
+- View Model data binding (`autoBind: true`) for CharacterVM headX/headY
+- Smooth head tracking via `lookAt()` with `requestAnimationFrame` + ease-out cubic
+- HiDPI/Retina support via `resizeDrawingSurfaceToCanvas()`
 - Visibility-based pause/play (saves battery when off-screen)
 - Tab visibility handling (pauses when tab hidden)
-- Reduced motion support
 
 **Fallback Strategy:**
 
 1. Check WebGL support on mount
-2. Attempt to load Rive animation
+2. Attempt to load Rive animation with `monster_hatchling.riv`
 3. On error → display emoji with bounce animation
 
 ---
@@ -488,6 +497,8 @@ All components are located in `src/lib/components/`.
 **Features:**
 
 - Uses Monster.svelte for Rive animation (with emoji fallback)
+- Registers Monster's `lookAt` callback via `registerMonsterLookAt()` store API
+- Unregisters callback on destroy
 - Evolution progress bar
 - Stage badge
 - Monster name display
@@ -781,6 +792,7 @@ Hungry Hundreds uses a two-tier animation system:
 | Animation        | Type       | Location       | Trigger                     |
 | ---------------- | ---------- | -------------- | --------------------------- |
 | Monster Rive     | Rive       | Monster.svelte | Page load, stage change     |
+| Head tracking    | Rive       | Monster.svelte | Cursor move (onmousemove)   |
 | Monster fallback | CSS        | Monster.svelte | WebGL unavailable           |
 | Button spring    | Motion One | HabitCard      | Toggle button tap           |
 | Celebrate        | Motion One | HabitCard      | Streak milestone (7/30/100) |
@@ -828,12 +840,12 @@ if (prefersReducedMotion()) {
 
 ### Future Animations (Planned)
 
-| Component    | Planned Animation        | Status     |
-| ------------ | ------------------------ | ---------- |
-| ProgressRing | Motion One on completion | 📋 Planned |
-| StatsCard    | Count-up animation       | 📋 Planned |
-| Page wrapper | Route transitions        | 📋 Planned |
-| Monster      | Full state machine       | 📋 Planned |
+| Component    | Planned Animation        | Status         |
+| ------------ | ------------------------ | -------------- |
+| ProgressRing | Motion One on completion | 📋 Planned     |
+| StatsCard    | Count-up animation       | 📋 Planned     |
+| Page wrapper | Route transitions        | 📋 Planned     |
+| Monster      | View Model head tracking | ✅ Implemented |
 
 ---
 
@@ -845,12 +857,15 @@ Based on the roadmap phases and current implementation:
 
 #### Phase 5: Animation (In Progress)
 
-- [x] **Monster.svelte** - Rive canvas component with emoji fallback
+- [x] **Monster.svelte** - Rive canvas component with emoji fallback and `lookAt()` export
+- [x] **View Model binding** - CharacterVM headX/headY for head tracking
+- [x] **Head tracking** - Cursor tracking on homepage via `onmousemove` → `monsterLookAt()`
+- [x] **HiDPI support** - `resizeDrawingSurfaceToCanvas()` on load and resize
+- [x] **Monster asset** - `monster_hatchling.riv` with CharacterVM view model
 - [x] **Micro-interactions** - Button springs on HabitCard, icon taps on BottomNav
 - [x] **Milestone celebrations** - Celebrate animation on streak milestones
 - [x] **Animation utilities** - `transitions.ts` and `rive-utils.ts`
 - [x] **Rive utilities** - WebGL detection, visibility observers, state machine helpers
-- [ ] **Custom monster.riv** - Replace placeholder with custom monster asset
 - [ ] **Page transitions** - Smooth route transitions with Motion One
 - [ ] **Confetti effects** - Particles on habit completion
 
