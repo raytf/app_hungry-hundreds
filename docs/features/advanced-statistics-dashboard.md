@@ -530,6 +530,43 @@ No new Supabase Edge Functions are needed. All analytics are computed client-sid
 - [x] Analysis capped at 365 days for Never Miss Twice to bound computation cost
 - [x] `recentLogs` store uses `liveQuery` directly on `db.logs` for automatic Dexie reactivity
 
+## Implementation Notes
+
+### Deviations from Original Plan
+
+1. **Debounce timing:** Documentation specified 500ms debounce; implementation uses 300ms. The shorter interval felt more responsive during manual testing without causing performance issues.
+
+2. **Lazy computation strategy:** Documentation mentioned `requestIdleCallback` or `setTimeout(0)` for idle-time computation. Implementation uses a standard `setTimeout` with 300ms debounce instead, which is simpler and achieves the same goal of avoiding rapid recomputation.
+
+3. **Loading skeleton:** Documentation referenced Motion One transitions for progressive rendering. Implementation uses CSS `animate-pulse` skeleton placeholder, which avoids adding a Motion One dependency for a simple loading state.
+
+4. **Weekly habits in Never Miss Twice:** Documentation specified checking weekly habits against their weekly period. Implementation skips weekly habits entirely (`if (habit.frequencyType === 'weekly') continue`) because determining "missed" for a weekly habit on a per-day basis is ambiguous — the user could complete any day within the week. This simplification avoids false negatives.
+
+5. **`recentLogs` data source:** Documentation implied using the `getLogsBetweenDates()` helper from `habitLogs.ts`. Implementation uses `liveQuery` directly on `db.logs` for automatic Dexie reactivity (the helper is a one-shot async function, not a reactive query).
+
+6. **Unused re-exported helpers:** `getWeekStart()` and `getWeekDates()` were exported from `stats.ts` as planned, but `advancedStats.ts` computes its own date ranges inline since it needs different windows (30/60/28/14 days) than the weekly helpers provide.
+
+7. **Memoization vs. debouncing:** Documentation described explicit memoization (cache last result + log count). Implementation relies on debouncing only, since Svelte's derived store already avoids recomputation when inputs haven't changed.
+
+### Partial Implementations
+
+Three acceptance criteria are partially met:
+
+| Criterion                         | Status                  | Detail                                                                                                                             |
+| --------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Recovery Speed trend indicator    | Computed, not displayed | `calculateRecoverySpeed()` returns a `trend` object, but the dashboard's `InsightCard` for recovery does not pass the `trend` prop |
+| Time-to-Complete trend            | Computed, not displayed | `calculateTimeToComplete()` returns a `trend` object, but the dashboard's `InsightCard` does not pass it                           |
+| Trend Direction "Not enough data" | Returns default instead | When < 14 days of history, returns `steady` / `0%` rather than an explicit "Not enough data" message                               |
+
+These are minor UI wiring gaps — the data is available and can be connected with a one-line prop addition each.
+
+### Technical Decisions
+
+- **365-day cap on Never Miss Twice:** The algorithm walks every day since each habit's creation. To prevent runaway computation for long-lived habits, the check is capped at 365 days back from today.
+- **60-day window for `recentLogs`:** A single `liveQuery` fetches 60 days of logs, which covers the largest analysis window (Recovery Speed). Other metrics filter this set further (30 days for Day Patterns, 28 for Consistency/Trend, 14 for Time-to-Complete).
+- **Error boundary:** `computeAllMetrics()` is wrapped in try/catch. On error, the store returns safe defaults with `isLoading: false` and `hasEnoughData: false`, preventing a computation error from crashing the dashboard.
+- **Dexie v5 migration:** Adding the standalone `date` index requires no `.upgrade()` handler — Dexie automatically builds the index from existing data on the next database open.
+
 ## Performance Considerations
 
 ### Computation Cost
