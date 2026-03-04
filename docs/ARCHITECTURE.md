@@ -310,24 +310,113 @@ The service worker (`src/service-worker.ts`) provides:
 
 ### PWA Update Lifecycle
 
-New SW updates follow a user-confirmed flow to prevent asset version mismatches on installed PWAs:
+When a new version is deployed, the app asks the user to reload rather than updating silently. This prevents errors that would occur if the app tried to mix old and new files mid-session — the reload ensures everything switches over cleanly at once.
 
+```mermaid
+flowchart TD
+    subgraph SERVER["☁️ Server"]
+        A["🚀 New version deployed"]
+    end
+
+    subgraph DEVICE["📱 User's Device"]
+        B["📦 New version downloads<br/>in the background"]
+        C["🔔 Banner appears:<br/>'Update Available'"]
+        D{"👤 User decides<br/>when to update"}
+        E["👆 User taps<br/>'Update & Reload'"]
+        F["✅ App reloads with<br/>the new version"]
+    end
+
+    A --> B
+    B --> C
+    C --> D
+    D -- "Not now" --> C
+    D -- "Ready" --> E
+    E --> F
+
+    style SERVER fill:#f8fafc,stroke:#94a3b8,color:#334155
+    style DEVICE fill:#f8fafc,stroke:#94a3b8,color:#334155
+    style A fill:#e0e7ff,stroke:#6366f1,color:#312e81
+    style B fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    style C fill:#dbeafe,stroke:#3b82f6,color:#1e3a5a
+    style D fill:#faf5ff,stroke:#a78bfa,color:#4c1d95
+    style E fill:#ede9fe,stroke:#8b5cf6,color:#4c1d95
+    style F fill:#d1fae5,stroke:#10b981,color:#064e3b
 ```
-Deploy new build
-  → Browser detects updated service-worker.ts
-  → New SW installs and enters "waiting" state
-  → pwaStore._detectUpdates() sees registration.waiting (or updatefound event)
-  → showUpdatePrompt becomes true → UpdatePrompt.svelte toast appears
-  → User taps "Update & Reload"
-  → pwaStore.applyUpdate() sends SKIP_WAITING message to waiting SW
-  → New SW calls skipWaiting() → becomes active controller
-  → controllerchange event fires → window.location.reload()
-  → Page reloads with fully fresh assets (no version mismatch)
+
+#### Why not update automatically?
+
+The app stores two sets of files on the device so it works offline:
+
+- **App files** — the JavaScript, CSS, and images that make the app run (stored in a `static` cache)
+- **Cached pages** — pages you've visited before, saved for offline use (stored in a `runtime` cache)
+
+Both caches are tagged with a version number. When a new version is deployed, the new files are downloaded in the background but **not activated yet** — the user is still running the old version. If the app silently swapped to the new files mid-session, the old page would try to load new files it doesn't recognise, causing errors. The reload ensures the old page is discarded and everything starts fresh with the new version.
+
+```mermaid
+flowchart TB
+    subgraph BEFORE["Before update — user is on v1"]
+        direction LR
+        S1["📁 static-v1<br/>App code & styles"]
+        R1["📁 runtime-v1<br/>Cached pages"]
+    end
+
+    subgraph DURING["Update downloaded — both versions stored"]
+        direction LR
+        S1b["📁 static-v1<br/>Still serving user"]
+        S2b["📁 static-v2<br/>Ready, waiting"]
+    end
+
+    subgraph AFTER["After reload — clean switch to v2"]
+        direction LR
+        S2["📁 static-v2<br/>App code & styles"]
+        R2["📁 runtime-v2<br/>Cached pages"]
+    end
+
+    BEFORE --> DURING
+    DURING --> AFTER
+
+    style BEFORE fill:#f0fdf4,stroke:#86efac,color:#14532d
+    style DURING fill:#fefce8,stroke:#fde047,color:#713f12
+    style AFTER fill:#eff6ff,stroke:#93c5fd,color:#1e3a8a
+    style S1 fill:#bbf7d0,stroke:#22c55e,color:#14532d
+    style R1 fill:#bbf7d0,stroke:#22c55e,color:#14532d
+    style S1b fill:#bbf7d0,stroke:#22c55e,color:#14532d
+    style S2b fill:#fef08a,stroke:#eab308,color:#713f12
+    style S2 fill:#bfdbfe,stroke:#3b82f6,color:#1e3a8a
+    style R2 fill:#bfdbfe,stroke:#3b82f6,color:#1e3a8a
+```
+
+#### How offline caching works
+
+App files and page navigations use different caching strategies to balance speed and freshness:
+
+```mermaid
+flowchart LR
+    subgraph ASSETS["App files (JS, CSS, images)"]
+        direction LR
+        A1["📱 App requests<br/>a file"] --> A2{"In cache?"}
+        A2 -- "Yes" --> A3["⚡ Serve from<br/>cache (instant)"]
+        A2 -- "No" --> A4["🌐 Fetch from<br/>network & cache it"]
+    end
+
+    subgraph PAGES["Page navigation"]
+        direction LR
+        P1["📱 User navigates<br/>to a page"] --> P2{"Online?"}
+        P2 -- "Yes" --> P3["🌐 Fetch fresh<br/>page from network"]
+        P2 -- "No" --> P4["⚡ Serve cached<br/>page (offline)"]
+    end
+
+    style ASSETS fill:#f0fdf4,stroke:#86efac,color:#14532d
+    style PAGES fill:#eff6ff,stroke:#93c5fd,color:#1e3a8a
+    style A3 fill:#bbf7d0,stroke:#22c55e,color:#14532d
+    style A4 fill:#fef08a,stroke:#eab308,color:#713f12
+    style P3 fill:#bfdbfe,stroke:#3b82f6,color:#1e3a8a
+    style P4 fill:#bbf7d0,stroke:#22c55e,color:#14532d
 ```
 
 Key files:
 
-- `src/service-worker.ts` — SW lifecycle; handles `SKIP_WAITING` message
+- `src/service-worker.ts` — SW lifecycle; caching strategies; handles `SKIP_WAITING` message
 - `src/lib/stores/pwa.ts` — `updateAvailable` state, `_detectUpdates()`, `applyUpdate()`
 - `src/lib/components/UpdatePrompt.svelte` — Toast banner rendered in root layout
 
