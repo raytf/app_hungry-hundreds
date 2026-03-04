@@ -4,15 +4,15 @@
 
 ## Stack Overview
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Framework | SvelteKit (SPA mode) | 15KB core, compiles to vanilla JS |
-| Character Animation | Rive | State machines for monster evolution |
-| UI Animation | Motion One | 2.6KB micro-interactions |
-| Offline Storage | Dexie.js | IndexedDB wrapper (29KB) |
-| Backend | Supabase | PostgreSQL + Auth + Edge Functions |
-| Push Notifications | Firebase Cloud Messaging | Cross-platform delivery |
-| Hosting | Cloudflare Pages | 300+ edges, $0 bandwidth |
+| Layer               | Technology               | Purpose                              |
+| ------------------- | ------------------------ | ------------------------------------ |
+| Framework           | SvelteKit (SPA mode)     | 15KB core, compiles to vanilla JS    |
+| Character Animation | Rive                     | State machines for monster evolution |
+| UI Animation        | Motion One               | 2.6KB micro-interactions             |
+| Offline Storage     | Dexie.js                 | IndexedDB wrapper (29KB)             |
+| Backend             | Supabase                 | PostgreSQL + Auth + Edge Functions   |
+| Push Notifications  | Firebase Cloud Messaging | Cross-platform delivery              |
+| Hosting             | Cloudflare Pages         | 300+ edges, $0 bandwidth             |
 
 **Targets:** Bundle <75KB | Load <2.5s on 3G | 100% offline reliability
 
@@ -174,7 +174,7 @@ DECLARE
 BEGIN
   LOOP
     IF EXISTS (
-      SELECT 1 FROM habit_logs 
+      SELECT 1 FROM habit_logs
       WHERE habit_id = p_habit_id AND logged_date = check_date
     ) THEN
       streak := streak + 1;
@@ -193,22 +193,26 @@ $$ LANGUAGE plpgsql;
 ## Core Features
 
 ### 1. Habit Management
+
 - Create/edit/delete habits with name, color, reminder time
 - Maximum 10 habits per user (MVP)
 - Soft delete with 30-day recovery window
 
 ### 2. Daily Check-in
+
 - Tap to mark habit complete for today
 - Visual feedback: button spring animation (Motion One)
 - Immediate local save (Dexie), background sync (Supabase)
 - Cannot complete future dates; can backfill past 7 days
 
 ### 3. Streak Tracking
+
 - Current streak: consecutive days completed
 - Best streak: all-time record
 - Streak calculated locally first, server authoritative on sync
 
 ### 4. Monster Evolution
+
 Five stages based on longest active streak:
 | Stage | Streak Days | Animation State |
 |-------|-------------|-----------------|
@@ -219,11 +223,13 @@ Five stages based on longest active streak:
 | Elder | 100+ | idle_elder, happy_elder |
 
 Rive state machine inputs:
+
 - `evolutionStage` (number 0-4)
 - `isHappy` (boolean, true on habit completion)
 - `triggerCelebrate` (trigger, on milestone)
 
 ### 5. Push Notifications
+
 - Daily reminder at user-configured time
 - Streak milestone celebrations (7, 30, 100 days)
 - Re-engagement after 3 days inactive
@@ -233,6 +239,7 @@ Rive state machine inputs:
 ## Data Flow
 
 ### Habit Completion Flow
+
 ```
 1. User taps "Done" on habit
 2. UI: Button springs (Motion One)
@@ -244,13 +251,14 @@ Rive state machine inputs:
 ```
 
 ### Offline Sync Strategy
+
 ```
 Priority: Local-first, server-authoritative
 
 On action (create/update/delete):
   1. Apply to Dexie immediately
   2. Add to syncQueue with timestamp
-  
+
 On connectivity restored:
   1. Process syncQueue oldest-first
   2. For each item:
@@ -266,23 +274,25 @@ On connectivity restored:
 ## Configuration
 
 ### svelte.config.js
+
 ```javascript
 import adapter from '@sveltejs/adapter-cloudflare';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default {
-  preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter({
-      routes: { include: ['/*'], exclude: ['<all>'] }
-    }),
-    serviceWorker: { register: false }, // Manual registration
-    alias: { '$lib': './src/lib' }
-  }
+	preprocess: vitePreprocess(),
+	kit: {
+		adapter: adapter({
+			routes: { include: ['/*'], exclude: ['<all>'] }
+		}),
+		serviceWorker: { register: false }, // Manual registration
+		alias: { $lib: './src/lib' }
+	}
 };
 ```
 
 ### vite.config.ts
+
 ```typescript
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
@@ -300,23 +310,25 @@ export default defineConfig({
 ```
 
 ### manifest.json
+
 ```json
 {
-  "name": "Hungry Hundreds",
-  "short_name": "Hungry",
-  "description": "Build habits, grow your monster",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#e94560",
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
+	"name": "Hungry Hundreds",
+	"short_name": "Hungry",
+	"description": "Build habits, grow your monster",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#1a1a2e",
+	"theme_color": "#e94560",
+	"icons": [
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+	]
 }
 ```
 
 ### Environment Variables
+
 ```bash
 # .env.local (not committed)
 PUBLIC_SUPABASE_URL=https://xxx.supabase.co
@@ -330,81 +342,96 @@ PUBLIC_FIREBASE_VAPID_KEY=xxx
 
 ## Service Worker
 
+The service worker uses two versioned caches and a **user-confirmed update flow** to prevent asset version mismatches on installed PWAs.
+
+### Caching Strategy
+
+| Cache               | Contents                                               | Population                      |
+| ------------------- | ------------------------------------------------------ | ------------------------------- |
+| `static-{version}`  | Built JS/CSS chunks (`build`) + static files (`files`) | Precached on install            |
+| `runtime-{version}` | Navigation HTML, lazily-loaded assets                  | Populated on fetch (cache miss) |
+
+| Request Type                             | Strategy                        | Rationale                                                                           |
+| ---------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------- |
+| Same-origin static assets                | Cache-first                     | Precached and content-hashed; always safe to serve from cache                       |
+| Navigation (`mode: 'navigate'`)          | Network-first                   | Ensures fresh HTML with correct chunk references; falls back to cached HTML offline |
+| API calls (`/api/`, `supabase.co`, etc.) | Pass-through (not cached by SW) | Data freshness managed by Dexie offline-first layer                                 |
+
+### Update Lifecycle
+
+New SW updates are **not** activated immediately. The new SW enters a "waiting" state so the app can prompt the user before switching, preventing broken asset references:
+
+```
+Deploy new build
+  → Browser detects updated service-worker.ts
+  → New SW installs, precaches new assets, enters "waiting" state
+  → pwaStore._detectUpdates() sees registration.waiting (or updatefound event)
+  → showUpdatePrompt derived store becomes true → UpdatePrompt.svelte toast appears
+  → User taps "Update & Reload"
+  → pwaStore.applyUpdate() sends { type: 'SKIP_WAITING' } message to waiting SW
+  → Waiting SW calls self.skipWaiting() → becomes active controller
+  → controllerchange event fires → window.location.reload()
+  → Page reloads with fully fresh assets from new static-{version} cache
+```
+
+### Implementation
+
 ```typescript
 // src/service-worker.ts
-/// <reference lib="webworker" />
-declare const self: ServiceWorkerGlobalScope;
-
 import { build, files, version } from '$service-worker';
 
-const CACHE_NAME = `cache-${version}`;
-const ASSETS = [...build, ...files];
+const STATIC_CACHE = `static-${version}`;
+const RUNTIME_CACHE = `runtime-${version}`;
+const PRECACHE_ASSETS = [...build, ...files];
 
-// Install: cache app shell
+// Install: precache static assets — do NOT call skipWaiting()
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE_ASSETS))
+    // New SW enters "waiting" state; activated via SKIP_WAITING message
   );
 });
 
-// Activate: clean old caches
+// Activate: delete old versioned caches, claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      .then((keys) => Promise.all(
+        keys.filter((k) => k !== STATIC_CACHE && k !== RUNTIME_CACHE)
+            .map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );
 });
 
-// Fetch: cache-first for assets, network-first for API
+// Fetch: cache-first for assets, network-first for navigation
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
-  if (url.pathname.startsWith('/api') || url.origin.includes('supabase')) {
-    // Network first for API
-    event.respondWith(
-      fetch(request).catch(() => caches.match(request))
-    );
+  if (event.request.method !== 'GET') return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith(networkFirst(event.request));
   } else {
-    // Cache first for assets
-    event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request))
-    );
+    event.respondWith(cacheFirst(event.request));
   }
 });
 
-// Push notification handler
-self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? {};
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Hungry Hundreds', {
-      body: data.body || 'Time to check in!',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      data: { url: data.url || '/' }
-    })
-  );
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    self.clients.openWindow(event.notification.data.url)
-  );
+// Message: user-confirmed update trigger
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 ```
+
+### Key Files
+
+- `src/service-worker.ts` — SW lifecycle; caching strategies; handles `SKIP_WAITING` message
+- `src/lib/stores/pwa.ts` — `updateAvailable` state, `_detectUpdates()`, `applyUpdate()`
+- `src/lib/components/UpdatePrompt.svelte` — Toast banner rendered in root layout
 
 ---
 
 ## API Endpoints (Supabase Edge Functions)
 
 ### POST /functions/v1/complete-habit
+
 ```typescript
 // supabase/functions/complete-habit/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
@@ -439,6 +466,7 @@ serve(async (req) => {
 ```
 
 ### POST /functions/v1/daily-reminder (Scheduled)
+
 ```typescript
 // supabase/functions/daily-reminder/index.ts
 // Triggered by Supabase cron at minute intervals
@@ -456,89 +484,88 @@ serve(async () => {
 ## UI Components
 
 ### Monster.svelte
+
 ```svelte
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { Rive, StateMachineInput } from '@rive-app/canvas';
-  import { currentStreak } from '$lib/stores/habits';
-  
-  let canvas: HTMLCanvasElement;
-  let rive: Rive;
-  let evolutionInput: StateMachineInput;
-  let happyInput: StateMachineInput;
-  
-  function getEvolutionStage(streak: number): number {
-    if (streak >= 100) return 4; // Elder
-    if (streak >= 30) return 3;  // Adult
-    if (streak >= 7) return 2;   // Teen
-    if (streak >= 1) return 1;   // Baby
-    return 0; // Egg
-  }
-  
-  onMount(() => {
-    rive = new Rive({
-      src: '/animations/monster.riv',
-      canvas,
-      autoplay: true,
-      stateMachines: 'MonsterStateMachine',
-      onLoad: () => {
-        evolutionInput = rive.stateMachineInputs('MonsterStateMachine')
-          .find(i => i.name === 'evolutionStage');
-        happyInput = rive.stateMachineInputs('MonsterStateMachine')
-          .find(i => i.name === 'isHappy');
-      }
-    });
-    
-    return () => rive?.cleanup();
-  });
-  
-  $: if (evolutionInput) evolutionInput.value = getEvolutionStage($currentStreak);
-  
-  export function triggerHappy() {
-    if (happyInput) {
-      happyInput.value = true;
-      setTimeout(() => happyInput.value = false, 2000);
-    }
-  }
+	import { onMount } from 'svelte';
+	import { Rive, StateMachineInput } from '@rive-app/canvas';
+	import { currentStreak } from '$lib/stores/habits';
+
+	let canvas: HTMLCanvasElement;
+	let rive: Rive;
+	let evolutionInput: StateMachineInput;
+	let happyInput: StateMachineInput;
+
+	function getEvolutionStage(streak: number): number {
+		if (streak >= 100) return 4; // Elder
+		if (streak >= 30) return 3; // Adult
+		if (streak >= 7) return 2; // Teen
+		if (streak >= 1) return 1; // Baby
+		return 0; // Egg
+	}
+
+	onMount(() => {
+		rive = new Rive({
+			src: '/animations/monster.riv',
+			canvas,
+			autoplay: true,
+			stateMachines: 'MonsterStateMachine',
+			onLoad: () => {
+				evolutionInput = rive
+					.stateMachineInputs('MonsterStateMachine')
+					.find((i) => i.name === 'evolutionStage');
+				happyInput = rive
+					.stateMachineInputs('MonsterStateMachine')
+					.find((i) => i.name === 'isHappy');
+			}
+		});
+
+		return () => rive?.cleanup();
+	});
+
+	$: if (evolutionInput) evolutionInput.value = getEvolutionStage($currentStreak);
+
+	export function triggerHappy() {
+		if (happyInput) {
+			happyInput.value = true;
+			setTimeout(() => (happyInput.value = false), 2000);
+		}
+	}
 </script>
 
 <canvas bind:this={canvas} width={300} height={300} />
 ```
 
 ### HabitCard.svelte
+
 ```svelte
 <script lang="ts">
-  import { animate, spring } from 'motion';
-  import { completeHabit } from '$lib/stores/habits';
-  import type { Habit } from '$lib/db';
-  
-  export let habit: Habit;
-  export let completed: boolean;
-  export let onComplete: () => void;
-  
-  let button: HTMLButtonElement;
-  
-  async function handleComplete() {
-    if (completed) return;
-    
-    // Spring animation
-    animate(button, { scale: [1, 1.2, 1] }, { easing: spring() });
-    
-    await completeHabit(habit.id!);
-    onComplete();
-  }
+	import { animate, spring } from 'motion';
+	import { completeHabit } from '$lib/stores/habits';
+	import type { Habit } from '$lib/db';
+
+	export let habit: Habit;
+	export let completed: boolean;
+	export let onComplete: () => void;
+
+	let button: HTMLButtonElement;
+
+	async function handleComplete() {
+		if (completed) return;
+
+		// Spring animation
+		animate(button, { scale: [1, 1.2, 1] }, { easing: spring() });
+
+		await completeHabit(habit.id!);
+		onComplete();
+	}
 </script>
 
 <div class="habit-card" style="--color: {habit.color}">
-  <span class="name">{habit.name}</span>
-  <button 
-    bind:this={button}
-    on:click={handleComplete}
-    class:completed
-    disabled={completed}
-  >
-    {completed ? '✓' : '○'}
-  </button>
+	<span class="name">{habit.name}</span>
+	<button bind:this={button} on:click={handleComplete} class:completed disabled={completed}>
+		{completed ? '✓' : '○'}
+	</button>
 </div>
 ```
 
@@ -546,13 +573,13 @@ serve(async () => {
 
 ## Performance Budgets
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Bundle (gzip) | <75KB | `pnpm build && ls -la .svelte-kit/cloudflare` |
-| LCP | <2.5s | Lighthouse on 3G throttle |
-| FID | <100ms | Lighthouse |
-| CLS | <0.1 | Lighthouse |
-| Offline | 100% functional | Manual test: airplane mode |
+| Metric        | Target          | Measurement                                   |
+| ------------- | --------------- | --------------------------------------------- |
+| Bundle (gzip) | <75KB           | `pnpm build && ls -la .svelte-kit/cloudflare` |
+| LCP           | <2.5s           | Lighthouse on 3G throttle                     |
+| FID           | <100ms          | Lighthouse                                    |
+| CLS           | <0.1            | Lighthouse                                    |
+| Offline       | 100% functional | Manual test: airplane mode                    |
 
 ---
 
