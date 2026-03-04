@@ -7,10 +7,9 @@ import { build, files, version } from '$service-worker';
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Cache names
-const CACHE_NAME = `hungry-hundreds-${version}`;
+// Cache names – both are versioned so old entries are cleaned up on activate
 const STATIC_CACHE = `static-${version}`;
-const RUNTIME_CACHE = 'runtime-cache';
+const RUNTIME_CACHE = `runtime-${version}`;
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
@@ -53,7 +52,10 @@ self.addEventListener('activate', (event: ExtendableEvent) => {
 			await Promise.all(
 				cacheNames
 					.filter((name) => name !== STATIC_CACHE && name !== RUNTIME_CACHE)
-					.map((name) => caches.delete(name))
+					.map((name) => {
+						console.log(`[SW] Deleting old cache: ${name}`);
+						return caches.delete(name);
+					})
 			);
 
 			// Take control immediately
