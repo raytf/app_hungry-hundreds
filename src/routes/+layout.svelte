@@ -14,7 +14,7 @@
 	import { pushStore } from '$lib/notifications';
 	import { refreshStatus } from '$lib/stores/habits';
 	import { refreshStats } from '$lib/stores/stats';
-	import { monster, isMonsterHappy } from '$lib/stores/monster';
+	import { monster } from '$lib/stores/monster';
 
 	let { children } = $props();
 
@@ -130,7 +130,7 @@
 		<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
 		<!-- Always mounted but only visible on homepage -->
 		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
-			<MonsterDisplay monster={$monster} isHappy={$isMonsterHappy} />
+			<MonsterDisplay monster={$monster} />
 		</div>
 
 		{@render children()}

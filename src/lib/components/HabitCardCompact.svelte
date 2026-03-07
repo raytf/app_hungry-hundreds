@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 	import { buttonSpring, celebrate } from '$lib/animations/transitions';
-	import { triggerMonsterHappy } from '$lib/stores/monster';
+	import { monsterSetExpression } from '$lib/stores/monster';
 
 	interface Props {
 		habit: HabitWithStatus;
@@ -11,6 +11,8 @@
 	}
 
 	let { habit, onComplete }: Props = $props();
+
+	let expressionTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Completion type states
 	const isFullyCompleted = $derived(habit.completionType === 'full');
@@ -36,9 +38,14 @@
 				setTimeout(() => celebrate(target), 200);
 			}
 
-			// Trigger monster happy animation when completing (not uncompleting)
+			// Trigger monster excited expression when completing (not uncompleting)
 			if (!habit.completedToday) {
-				triggerMonsterHappy();
+				if (expressionTimeout) clearTimeout(expressionTimeout);
+				monsterSetExpression('excited');
+				expressionTimeout = setTimeout(() => {
+					monsterSetExpression('normal');
+					expressionTimeout = null;
+				}, 2000);
 				// Also trigger optional callback if provided
 				if (onComplete) {
 					onComplete();

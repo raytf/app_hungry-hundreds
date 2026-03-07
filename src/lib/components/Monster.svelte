@@ -16,8 +16,7 @@
 	import {
 		supportsWebGL,
 		createVisibilityObserver,
-		createTabVisibilityHandler,
-		setBooleanInput
+		createTabVisibilityHandler
 	} from '$lib/animations/rive-utils';
 	import type {
 		Rive as RiveType,
@@ -28,13 +27,11 @@
 	interface Props {
 		/** Current evolution stage */
 		stage: MonsterStage;
-		/** Trigger happy animation */
-		isHappy?: boolean;
 		/** Additional CSS classes */
 		class?: string;
 	}
 
-	let { stage, isHappy = false, class: className = '' }: Props = $props();
+	let { stage, class: className = '' }: Props = $props();
 
 	// State
 	let canvas: HTMLCanvasElement;
@@ -210,14 +207,6 @@
 			expressionProp.value = expression;
 		}
 	}
-
-	// React to isHappy changes
-	$effect(() => {
-		const happy = isHappy;
-		if (riveInstance && riveLoaded) {
-			setBooleanInput(riveInstance, 'State Machine 1', 'IsClose', happy);
-		}
-	});
 
 	onDestroy(() => {
 		// Cancel any in-progress lookAt animation

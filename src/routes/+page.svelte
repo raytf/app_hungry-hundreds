@@ -3,6 +3,7 @@
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
+	import { resolve } from '$app/paths';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
 	import { monsterLookAt } from '$lib/stores/monster';
 
@@ -62,7 +63,10 @@
 				{#if $sortedHabits.length > 0}
 					<div class="mb-3 flex items-center justify-between">
 						<h3 class="font-semibold text-gray-700">Your Habits</h3>
-						<a href="/habits/new" class="text-sm font-medium text-hungry-600 hover:text-hungry-700">
+						<a
+							href={resolve('/habits/new')}
+							class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
+						>
 							+ Add New
 						</a>
 					</div>

@@ -230,9 +230,17 @@ interface Events {
 ```typescript
 interface Props {
   stage: MonsterStage;  // Current evolution stage
-  isHappy?: boolean;    // Trigger happy animation
   class?: string;       // Additional CSS classes
 }
+```
+
+**Exported methods**:
+
+```typescript
+// Smoothly animate gaze toward a target (-1 to 1 range)
+export function lookAt(targetX: number, targetY: number, duration?: number): void;
+// Trigger a named facial expression (e.g. 'excited', 'normal')
+export function setExpression(expression: string): void;
 ```
 
 **Features**:

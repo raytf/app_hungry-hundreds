@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import Header from '$lib/components/Header.svelte';
 	import { habits, habitsLoaded, sortedHabits } from '$lib/stores/habits';
-	import { triggerMonsterHappy } from '$lib/stores/monster';
+	import { monsterSetExpression } from '$lib/stores/monster';
 	import { browser } from '$app/environment';
 
 	// Get habit ID from URL params
@@ -27,6 +27,9 @@
 		return 'Daily';
 	});
 
+	// Timeout for reverting monster expression
+	let expressionTimeout: ReturnType<typeof setTimeout> | null = null;
+
 	// Delete confirmation state
 	let showDeleteConfirm = $state(false);
 	let isDeleting = $state(false);
@@ -35,9 +38,14 @@
 		if (habit?.id !== undefined) {
 			const wasCompleted = habit.completionType === 'full';
 			await habits.toggle(habit.id);
-			// Trigger monster happy animation when completing (not uncompleting)
+			// Trigger monster excited expression when completing (not uncompleting)
 			if (!wasCompleted) {
-				triggerMonsterHappy();
+				if (expressionTimeout) clearTimeout(expressionTimeout);
+				monsterSetExpression('excited');
+				expressionTimeout = setTimeout(() => {
+					monsterSetExpression('normal');
+					expressionTimeout = null;
+				}, 2000);
 			}
 		}
 	}
@@ -46,9 +54,14 @@
 		if (habit?.id !== undefined) {
 			const wasPartiallyCompleted = habit.completionType === 'partial';
 			await habits.togglePartial(habit.id);
-			// Trigger monster happy animation when completing (not uncompleting)
+			// Trigger monster excited expression when completing (not uncompleting)
 			if (!wasPartiallyCompleted) {
-				triggerMonsterHappy();
+				if (expressionTimeout) clearTimeout(expressionTimeout);
+				monsterSetExpression('excited');
+				expressionTimeout = setTimeout(() => {
+					monsterSetExpression('normal');
+					expressionTimeout = null;
+				}, 2000);
 			}
 		}
 	}

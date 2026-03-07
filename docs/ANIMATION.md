@@ -36,11 +36,7 @@ static/animations/
 
 #### State Machine Inputs
 
-The Rive state machine (`State Machine 1`) accepts these boolean inputs:
-
-| Input     | Type    | Purpose                 |
-| --------- | ------- | ----------------------- |
-| `IsClose` | boolean | Trigger happy animation |
+The Rive state machine (`State Machine 1`) no longer uses boolean inputs. Facial expressions are controlled via the expression system — see [Monster Store API](#monster-store-api-srclibstoresmonsterhs) below.
 
 #### View Model (CharacterVM)
 
@@ -94,13 +90,13 @@ Key implementation details:
 ```typescript
 // Props
 interface Props {
-  stage: MonsterStage;   // Current evolution stage
-  isHappy?: boolean;     // Trigger happy animation
-  class?: string;        // Additional CSS classes
+  stage: MonsterStage;  // Current evolution stage
+  class?: string;       // Additional CSS classes
 }
 
-// Exported method for parent components
+// Exported methods for parent components
 export function lookAt(targetX: number, targetY: number, duration = 300): void;
+export function setExpression(expression: string): void;
 ```
 
 #### Head Tracking (`lookAt`)
@@ -139,21 +135,46 @@ monsterRef.lookAt(0.5, -0.3, 300);
 	onDestroy(() => registerMonsterLookAt(null));
 </script>
 
-<Monster bind:this={monsterRef} stage={monster.stage} {isHappy} />
+<Monster bind:this={monsterRef} stage={monster.stage} />
 ```
 
 ### Monster Store API (`src/lib/stores/monster.ts`)
 
-The monster store provides a public API for triggering head tracking from any component:
+The monster store provides a public API for triggering head tracking and facial expressions from any component:
 
 ```typescript
-import { monsterLookAt } from '$lib/stores/monster';
+import { monsterLookAt, monsterSetExpression } from '$lib/stores/monster';
 
 // Smoothly animate the monster's gaze (-1 to 1 range)
 monsterLookAt(x, y, duration?);
+
+// Trigger a facial expression on the monster
+monsterSetExpression('excited');
+// Revert after 2 seconds
+setTimeout(() => monsterSetExpression('normal'), 2000);
 ```
 
 This callback pattern bridges the layout → page boundary since `MonsterDisplay` lives in `+layout.svelte` as a fixed overlay.
+
+#### Expression Trigger Pattern
+
+When a habit is completed (full or partial), the completion handler calls `monsterSetExpression('excited')` and schedules a revert to `'normal'` after 2000ms. Any existing timeout is cleared first to prevent overlapping expression changes:
+
+```typescript
+import { monsterSetExpression } from '$lib/stores/monster';
+
+let expressionTimeout: ReturnType<typeof setTimeout> | null = null;
+
+// On habit completion:
+if (expressionTimeout) clearTimeout(expressionTimeout);
+monsterSetExpression('excited');
+expressionTimeout = setTimeout(() => {
+  monsterSetExpression('normal');
+  expressionTimeout = null;
+}, 2000);
+```
+
+This pattern is used in both `HabitCardCompact.svelte` and `src/routes/habits/[id]/+page.svelte`.
 
 ### Homepage Head Tracking
 
@@ -299,13 +320,13 @@ export function celebrate(element: HTMLElement) {
 
 ### MonsterDisplay.svelte
 
-| Trigger         | Animation                            | Package    |
-| --------------- | ------------------------------------ | ---------- |
-| Page load       | Idle loop                            | Rive       |
-| Habit completed | Happy animation (IsClose)            | Rive       |
-| Stage evolution | Evolution transition                 | Rive       |
-| Cursor move     | Head tracking (lookAt → headX/headY) | Rive       |
-| Container mount | Scale-in entrance                    | Motion One |
+| Trigger         | Animation                                 | Package    |
+| --------------- | ----------------------------------------- | ---------- |
+| Page load       | Idle loop                                 | Rive       |
+| Habit completed | Excited expression (monsterSetExpression) | Rive       |
+| Stage evolution | Evolution transition                      | Rive       |
+| Cursor move     | Head tracking (lookAt → headX/headY)      | Rive       |
+| Container mount | Scale-in entrance                         | Motion One |
 
 ### BottomNav.svelte
 
@@ -423,7 +444,7 @@ src/lib/
 │   ├── transitions.ts           # Motion One utilities
 │   └── rive-utils.ts            # WebGL detection, visibility observers
 └── stores/
-    └── monster.ts               # Monster state + registerMonsterLookAt/monsterLookAt
+    └── monster.ts               # Monster state + registerMonsterLookAt/monsterLookAt/monsterSetExpression
 
 src/routes/
 └── +page.svelte                 # Homepage with onmousemove head tracking

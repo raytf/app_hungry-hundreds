@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { derived, writable } from 'svelte/store';
+import { derived } from 'svelte/store';
 import { habits } from './habits';
 
 // ============================================================================
@@ -125,37 +125,6 @@ export const monster = derived<typeof habits, Monster>(habits, ($habits) => {
 export const longestStreak = derived(habits, ($habits) => {
 	return $habits.length > 0 ? Math.max(...$habits.map((h) => h.streak), 0) : 0;
 });
-
-// ============================================================================
-// Monster Happy State
-// ============================================================================
-
-/**
- * Writable store for monster happy animation state
- */
-export const isMonsterHappy = writable(false);
-
-let happyTimeout: ReturnType<typeof setTimeout> | null = null;
-
-/**
- * Trigger the monster happy animation
- * Automatically resets after 2 seconds
- */
-export function triggerMonsterHappy() {
-	// Clear any existing timeout
-	if (happyTimeout) {
-		clearTimeout(happyTimeout);
-	}
-
-	// Set happy state
-	isMonsterHappy.set(true);
-
-	// Reset after 2 seconds
-	happyTimeout = setTimeout(() => {
-		isMonsterHappy.set(false);
-		happyTimeout = null;
-	}, 2000);
-}
 
 // ============================================================================
 // Monster LookAt (Head Tracking)

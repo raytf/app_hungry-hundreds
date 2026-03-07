@@ -9,7 +9,6 @@
 	 */
 	import { onDestroy } from 'svelte';
 	import {
-		monsterStages,
 		registerMonsterLookAt,
 		registerMonsterSetExpression,
 		type Monster as MonsterType
@@ -18,13 +17,9 @@
 
 	interface Props {
 		monster: MonsterType;
-		/** Trigger happy animation (e.g., after habit completion) */
-		isHappy?: boolean;
 	}
 
-	let { monster, isHappy = false }: Props = $props();
-
-	let stageConfig = $derived(monsterStages[monster.stage]);
+	let { monster }: Props = $props();
 
 	// Get a reference to the Monster component so we can register its lookAt method
 	let monsterRef: Monster | undefined = $state();
@@ -48,7 +43,7 @@
 	<!-- Monster container - full height and width -->
 	<div class="relative flex h-full w-full items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
-		<Monster bind:this={monsterRef} stage={monster.stage} {isHappy} />
+		<Monster bind:this={monsterRef} stage={monster.stage} />
 		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">
 			<div
 				class="h-full bg-white/80 transition-all duration-500"
