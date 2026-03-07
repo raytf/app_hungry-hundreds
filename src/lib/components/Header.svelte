@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { resolve } from '$app/paths';
 	import SyncStatusIndicator from './SyncStatusIndicator.svelte';
 
 	interface Props {
@@ -17,7 +18,7 @@
 	<div class="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
 		{#if showBack}
 			<a
-				href="/"
+				href={resolve('/')}
 				class="-ml-2 p-2 text-gray-600 transition-colors hover:text-gray-900"
 				aria-label="Go back"
 			>

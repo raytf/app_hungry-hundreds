@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { isAuthenticated, authLoading } from '$lib/stores/auth';
 	import type { Snippet } from 'svelte';
@@ -38,7 +39,9 @@
 			const currentPath = page.url.pathname;
 			// Don't redirect if already on auth pages
 			if (!currentPath.startsWith('/auth')) {
-				goto(`${redirectTo}?redirect=${encodeURIComponent(currentPath)}`);
+				const redirectUrl = `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`;
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				goto(resolve(redirectUrl as any));
 			}
 		}
 	});

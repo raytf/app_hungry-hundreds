@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import Header from '$lib/components/Header.svelte';
 	import { habits, habitsLoaded, sortedHabits } from '$lib/stores/habits';
 	import { monsterSetExpression } from '$lib/stores/monster';
@@ -70,7 +71,7 @@
 		if (habit?.id !== undefined) {
 			isDeleting = true;
 			await habits.remove(habit.id);
-			goto('/');
+			goto(resolve('/'));
 		}
 	}
 </script>
@@ -96,7 +97,7 @@
 			<p class="mb-2 text-5xl">🔍</p>
 			<h3 class="mb-2 text-lg font-semibold text-gray-800">Habit not found</h3>
 			<p class="mb-4 text-gray-500">The habit you're looking for doesn't exist.</p>
-			<a href="/" class="btn-primary inline-block">Back to Home</a>
+			<a href={resolve('/')} class="btn-primary inline-block">Back to Home</a>
 		</div>
 	{:else}
 		<!-- Habit Header -->
@@ -112,7 +113,7 @@
 				<p class="text-sm text-gray-500">{frequencyDescription()}</p>
 			</div>
 			<a
-				href="/habits/{habit.id}/edit"
+				href={resolve(`/habits/${habit.id}/edit`)}
 				class="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
 				aria-label="Edit habit"
 			>

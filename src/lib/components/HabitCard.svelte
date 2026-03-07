@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 	import { buttonSpring } from '$lib/animations/transitions';
 
@@ -49,7 +50,7 @@
 
 	function handleCardClick() {
 		if (habit.id !== undefined) {
-			goto(`/habits/${habit.id}`);
+			goto(resolve(`/habits/${habit.id}`));
 		}
 	}
 </script>
@@ -143,7 +144,7 @@
 			<!-- Edit button -->
 			{#if showEdit && habit.id !== undefined}
 				<a
-					href="/habits/{habit.id}/edit"
+					href={resolve(`/habits/${habit.id}/edit`)}
 					onclick={handleEditClick}
 					class="flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
 					aria-label="Edit {habit.name}"

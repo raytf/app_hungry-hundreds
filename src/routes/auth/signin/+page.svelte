@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { auth } from '$lib/stores/auth';
 	import { monsterStages } from '$lib/data/mockData';
 
@@ -38,7 +39,8 @@
 			}
 
 			// Redirect to original page or home on success
-			goto(redirectUrl);
+			// @ts-expect-error - redirectUrl is a dynamic string from query params, not a statically typed route
+			goto(resolve(redirectUrl));
 		} catch (err) {
 			error = 'An unexpected error occurred. Please try again.';
 			loading = false;
@@ -108,13 +110,15 @@
 	<div class="mt-8 text-center">
 		<p class="text-gray-600">
 			Don't have an account?
-			<a href="/auth/signup" class="font-semibold text-hungry-600 hover:text-hungry-700">
+			<a href={resolve('/auth/signup')} class="font-semibold text-hungry-600 hover:text-hungry-700">
 				Sign up
 			</a>
 		</p>
 	</div>
 
 	<div class="mt-4 text-center">
-		<a href="/" class="text-sm text-gray-500 hover:text-gray-700"> ← Continue without account </a>
+		<a href={resolve('/')} class="text-sm text-gray-500 hover:text-gray-700">
+			← Continue without account
+		</a>
 	</div>
 </main>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits } from '$lib/stores/habits';
@@ -42,7 +43,7 @@
 			frequencyType: habit.frequencyType,
 			frequencyTarget: habit.frequencyTarget
 		});
-		goto('/');
+		goto(resolve('/'));
 	}
 </script>
 
@@ -76,12 +77,19 @@
 			<div class="space-y-4">
 				<button onclick={() => (step = 'monster')} class="btn-primary w-full"> Get Started </button>
 				{#if !$isAuthenticated}
-					<a href="/auth/signup" class="btn-secondary block w-full text-center"> Create Account </a>
-					<button onclick={() => goto('/')} class="text-sm text-gray-500 hover:text-gray-700">
+					<a href={resolve('/auth/signup')} class="btn-secondary block w-full text-center">
+						Create Account
+					</a>
+					<button
+						onclick={() => goto(resolve('/'))}
+						class="text-sm text-gray-500 hover:text-gray-700"
+					>
 						Skip for Now
 					</button>
 				{:else}
-					<button onclick={() => goto('/')} class="btn-secondary w-full"> Skip for Now </button>
+					<button onclick={() => goto(resolve('/'))} class="btn-secondary w-full">
+						Skip for Now
+					</button>
 				{/if}
 			</div>
 		</div>

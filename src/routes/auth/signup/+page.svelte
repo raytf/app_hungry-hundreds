@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { auth } from '$lib/stores/auth';
 	import { monsterStages } from '$lib/data/mockData';
 
@@ -62,7 +63,7 @@
 			}
 
 			// Redirect to onboarding on success
-			goto('/onboard');
+			goto(resolve('/onboard'));
 		} catch (err) {
 			error = 'An unexpected error occurred. Please try again.';
 			loading = false;
@@ -74,7 +75,7 @@
 	<title>Sign Up | Hungry Hundreds</title>
 </svelte:head>
 
-<main class="page-container flex flex-1 flex-col justify-center pb-8 pt-4">
+<main class="page-container flex flex-1 flex-col justify-center pt-4 pb-8">
 	<div class="text-center">
 		<div class="mb-6">
 			<span class="text-6xl">{monsterStages.egg.emoji}</span>
@@ -155,14 +156,15 @@
 	<div class="mt-8 text-center">
 		<p class="text-gray-600">
 			Already have an account?
-			<a href="/auth/signin" class="font-semibold text-hungry-600 hover:text-hungry-700">
+			<a href={resolve('/auth/signin')} class="font-semibold text-hungry-600 hover:text-hungry-700">
 				Sign in
 			</a>
 		</p>
 	</div>
 
 	<div class="mt-4 text-center">
-		<a href="/" class="text-sm text-gray-500 hover:text-gray-700"> ← Continue without account </a>
+		<a href={resolve('/')} class="text-sm text-gray-500 hover:text-gray-700">
+			← Continue without account
+		</a>
 	</div>
 </main>
-

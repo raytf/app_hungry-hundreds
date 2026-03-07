@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 	import { buttonSpring, celebrate } from '$lib/animations/transitions';
 	import { monsterSetExpression } from '$lib/stores/monster';
@@ -58,7 +59,7 @@
 
 	function handleCardClick() {
 		if (habit.id !== undefined) {
-			goto(`/habits/${habit.id}`);
+			goto(resolve(`/habits/${habit.id}`));
 		}
 	}
 </script>

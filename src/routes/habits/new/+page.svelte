@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Header from '$lib/components/Header.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits } from '$lib/stores/habits';
@@ -23,7 +24,7 @@
 			frequencyTarget: habit.frequencyTarget,
 			partialCriteria: habit.partialCriteria ?? undefined
 		});
-		goto('/habits');
+		goto(resolve('/habits'));
 	}
 </script>
 

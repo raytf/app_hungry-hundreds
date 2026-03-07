@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import Header from '$lib/components/Header.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits, habitsLoaded } from '$lib/stores/habits';
@@ -41,7 +42,7 @@
 				frequencyTarget: data.frequencyTarget,
 				partialCriteria: data.partialCriteria ?? undefined
 			});
-			goto('/habits');
+			goto(resolve('/habits'));
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to update habit';
 			isSubmitting = false;
@@ -70,7 +71,7 @@
 			<p class="mb-2 text-5xl">🔍</p>
 			<h3 class="mb-2 text-lg font-semibold text-gray-800">Habit not found</h3>
 			<p class="mb-4 text-gray-500">The habit you're looking for doesn't exist.</p>
-			<a href="/habits" class="btn-primary inline-block">Back to Habits</a>
+			<a href={resolve('/habits')} class="btn-primary inline-block">Back to Habits</a>
 		</div>
 	{:else}
 		<p class="mb-6 text-gray-600">Update your habit details below.</p>

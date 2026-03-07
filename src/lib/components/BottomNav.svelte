@@ -1,6 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import type { RouteId } from '$app/types';
 	import { iconTap } from '$lib/animations/transitions';
+
+	type StaticRouteId = Exclude<RouteId, '/habits/[id]' | '/habits/[id]/edit'>;
 
 	const items = [
 		{ href: '/', label: 'Today', icon: '🏠' },
@@ -29,10 +33,10 @@
 	class="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)]"
 >
 	<div class="mx-auto flex h-16 max-w-lg justify-around">
-		{#each items as item}
-			{@const active = isActive(item.href, $page.url.pathname)}
+		{#each items as item (item.href)}
+			{@const active = isActive(item.href, page.url.pathname)}
 			<a
-				href={item.href}
+				href={resolve(item.href as StaticRouteId)}
 				onclick={handleNavClick}
 				class="flex w-16 flex-col items-center justify-center transition-colors"
 				class:text-hungry-500={active}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Header from '$lib/components/Header.svelte';
 	import SyncStatusIndicator from '$lib/components/SyncStatusIndicator.svelte';
 	import { habits } from '$lib/stores/habits';
@@ -22,7 +23,7 @@
 		signingOut = true;
 		const result = await auth.signOut();
 		if (result.success) {
-			goto('/auth/signin');
+			goto(resolve('/auth/signin'));
 		}
 		signingOut = false;
 	}
@@ -53,8 +54,7 @@
 		}
 
 		// Yesterday
-		const yesterday = new Date(now);
-		yesterday.setDate(yesterday.getDate() - 1);
+		const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
 		if (date.toDateString() === yesterday.toDateString()) {
 			return `Yesterday at ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 		}
@@ -122,8 +122,8 @@
 					Sign in to sync your habits across devices and never lose your progress.
 				</p>
 				<div class="flex gap-2">
-					<a href="/auth/signin" class="btn-primary flex-1 text-center">Sign In</a>
-					<a href="/auth/signup" class="btn-secondary flex-1 text-center">Sign Up</a>
+					<a href={resolve('/auth/signin')} class="btn-primary flex-1 text-center">Sign In</a>
+					<a href={resolve('/auth/signup')} class="btn-secondary flex-1 text-center">Sign Up</a>
 				</div>
 			{/if}
 		</div>

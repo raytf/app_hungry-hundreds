@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
 	import HabitCard from '$lib/components/HabitCard.svelte';
+	import { resolve } from '$app/paths';
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 
 	// Delete confirmation dialog state
@@ -40,7 +41,7 @@
 <Header title="All Habits" showSyncStatus>
 	{#snippet right()}
 		<a
-			href="/habits/new"
+			href={resolve('/habits/new')}
 			class="rounded-lg bg-hungry-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-hungry-600"
 		>
 			+ New
@@ -74,7 +75,8 @@
 				<p class="mb-2 text-5xl">🌱</p>
 				<h3 class="mb-2 text-lg font-semibold text-gray-800">No habits yet</h3>
 				<p class="mb-4 text-gray-500">Start building better habits today!</p>
-				<a href="/habits/new" class="btn-primary inline-block">Create Your First Habit</a>
+				<a href={resolve('/habits/new')} class="btn-primary inline-block">Create Your First Habit</a
+				>
 			</div>
 		{:else}
 			<div class="space-y-3">
@@ -112,7 +114,7 @@
 			<!-- Quick actions -->
 			<div class="mt-6 text-center">
 				<a
-					href="/habits/new"
+					href={resolve('/habits/new')}
 					class="inline-flex items-center gap-2 text-hungry-600 hover:text-hungry-700"
 				>
 					<span class="text-xl">+</span>

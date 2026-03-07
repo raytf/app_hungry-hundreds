@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { habits } from '$lib/stores/habits';
+	import { resolve } from '$app/paths';
 	import { suggestedHabits, type SuggestedHabit } from '$lib/data/suggestedHabits';
 
 	interface Props {
@@ -73,7 +74,7 @@
 	<!-- Create Custom Link -->
 	<div class="text-center">
 		<a
-			href="/habits/new"
+			href={resolve('/habits/new')}
 			class="inline-flex items-center gap-2 text-sm font-medium text-hungry-600 hover:text-hungry-700"
 		>
 			<span class="text-lg">✨</span>
@@ -81,4 +82,3 @@
 		</a>
 	</div>
 </div>
-
