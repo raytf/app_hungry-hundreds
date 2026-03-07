@@ -31,10 +31,10 @@
 		return !noNavRoutes.some((route) => path.startsWith(route));
 	});
 
-	// Check if current route should show monster (only homepage)
+	// Check if current route should show monster (homepage and monster test page)
 	const showMonster = $derived.by(() => {
 		const path = page.url.pathname;
-		return path === '/';
+		return path === '/' || path === '/monster';
 	});
 
 	// Check if current route requires auth

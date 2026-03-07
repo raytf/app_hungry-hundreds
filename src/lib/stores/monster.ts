@@ -183,3 +183,28 @@ export function registerMonsterLookAt(fn: LookAtFn | null) {
 export function monsterLookAt(x: number, y: number, duration?: number) {
 	_lookAtFn?.(x, y, duration);
 }
+
+// ============================================================================
+// Monster Expression
+// ============================================================================
+
+type SetExpressionFn = (expression: string) => void;
+let _setExpressionFn: SetExpressionFn | null = null;
+
+/**
+ * Register the Monster component's setExpression function.
+ * Called by MonsterDisplay when the Monster component mounts.
+ */
+export function registerMonsterSetExpression(fn: SetExpressionFn | null) {
+	_setExpressionFn = fn;
+}
+
+/**
+ * Set the monster's facial expression.
+ * No-op if the Monster component hasn't registered its setExpression function.
+ *
+ * @param expression - One of: "normal", "excited", "bored", "surprised"
+ */
+export function monsterSetExpression(expression: string) {
+	_setExpressionFn?.(expression);
+}

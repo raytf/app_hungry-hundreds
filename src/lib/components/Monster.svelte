@@ -19,7 +19,11 @@
 		createTabVisibilityHandler,
 		setBooleanInput
 	} from '$lib/animations/rive-utils';
-	import type { Rive as RiveType, ViewModelInstanceNumber } from '@rive-app/canvas';
+	import type {
+		Rive as RiveType,
+		ViewModelInstanceNumber,
+		ViewModelInstanceString
+	} from '@rive-app/canvas';
 
 	interface Props {
 		/** Current evolution stage */
@@ -41,9 +45,10 @@
 	let cleanupTabVisibility: (() => void) | null = null;
 	let cleanupResize: (() => void) | null = null;
 
-	// View Model number property handles
+	// View Model property handles
 	let headXProp: ViewModelInstanceNumber | null = null;
 	let headYProp: ViewModelInstanceNumber | null = null;
+	let expressionProp: ViewModelInstanceString | null = null;
 
 	// Current interpolated values for smooth animation
 	let currentHeadX = 0;
@@ -126,9 +131,13 @@
 
 		headXProp = vmInstance.number('headX');
 		headYProp = vmInstance.number('headY');
+		expressionProp = vmInstance.string('expression');
 
 		if (!headXProp || !headYProp) {
 			console.warn('Monster: Could not find headX/headY properties on CharacterVM');
+		}
+		if (!expressionProp) {
+			console.warn('Monster: Could not find expression property on CharacterVM');
 		}
 	}
 
@@ -189,6 +198,17 @@
 		}
 
 		animationFrameId = requestAnimationFrame(animate);
+	}
+
+	/**
+	 * Set the monster's facial expression.
+	 *
+	 * @param expression - One of: "normal", "excited", "bored", "surprised"
+	 */
+	export function setExpression(expression: string): void {
+		if (expressionProp) {
+			expressionProp.value = expression;
+		}
 	}
 
 	// React to isHappy changes
