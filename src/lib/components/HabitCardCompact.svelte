@@ -65,7 +65,6 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	onclick={handleCardClick}
 	class="card flex w-full cursor-pointer items-center gap-4 overflow-hidden text-left transition-all hover:shadow-md active:scale-[0.99]"

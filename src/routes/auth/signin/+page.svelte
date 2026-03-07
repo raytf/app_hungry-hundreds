@@ -41,7 +41,7 @@
 			// Redirect to original page or home on success
 			// @ts-expect-error - redirectUrl is a dynamic string from query params, not a statically typed route
 			goto(resolve(redirectUrl));
-		} catch (err) {
+		} catch {
 			error = 'An unexpected error occurred. Please try again.';
 			loading = false;
 		}
