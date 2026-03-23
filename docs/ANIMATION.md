@@ -24,40 +24,9 @@ static/animations/
 └── monster_hatchling.riv   # Rive animation file with CharacterVM view model
 ```
 
-#### Evolution Stages
+#### Evolution Stages & State Machine Inputs
 
-| Stage | Streak Days | Rive State    | Visual Description            | Color     |
-| ----- | ----------- | ------------- | ----------------------------- | --------- |
-| Egg   | 0           | `state_egg`   | Wobbling egg, occasional glow | `#fef3c7` |
-| Baby  | 1-6         | `state_baby`  | Small creature, big eyes      | `#bfdbfe` |
-| Teen  | 7-29        | `state_teen`  | Growing dragon, playful       | `#c4b5fd` |
-| Adult | 30-99       | `state_adult` | Full dragon, confident        | `#f9a8d4` |
-| Elder | 100+        | `state_elder` | Wise dragon with accessories  | `#fcd34d` |
-
-#### State Machine Inputs
-
-The Rive state machine (`State Machine 1`) no longer uses boolean inputs. Facial expressions are controlled via the expression system — see [Monster Store API](#monster-store-api-srclibstoresmonsterhs) below.
-
-#### View Model (CharacterVM)
-
-The `.riv` file contains a **View Model** called `CharacterVM` bound automatically via `autoBind: true`. It exposes number properties for head tracking:
-
-| Property | Type   | Range   | Purpose                   |
-| -------- | ------ | ------- | ------------------------- |
-| `headX`  | number | -1 to 1 | Horizontal gaze direction |
-| `headY`  | number | -1 to 1 | Vertical gaze direction   |
-
-These properties are accessed via the Rive View Model API:
-
-```typescript
-const vmInstance = riveInstance.viewModelInstance;
-const headXProp = vmInstance.number('headX');  // ViewModelInstanceNumber
-const headYProp = vmInstance.number('headY');
-
-// Set values directly
-headXProp.value = 0.5;  // Look right
-headYProp.value = -0.8; // Look down
-```
+Evolution stages (Egg → Hatchling → Juvenile → Adult → Apex) and all Rive state machine inputs are defined in **[RULE_ENGINE_SPEC.md](./RULE_ENGINE_SPEC.md)**. The rule engine produces a `MascotState` object (section 1.7) which drives all Rive inputs — `primaryEmotion`, `emotionIntensity`, `lookX`, `lookY`, `evolutionStage`, and `trigger`.
 
 #### Animation States per Stage
 
@@ -76,27 +45,39 @@ Each stage includes these animation loops:
 
 ### Monster.svelte Component
 
-**File:** `src/lib/components/Monster.svelte`
-
-Key implementation details:
-
-- **Dynamic import** of `@rive-app/canvas` to keep the main bundle small
-- **`autoBind: true`** for automatic CharacterVM view model binding
-- **`resizeDrawingSurfaceToCanvas()`** on load and window resize for HiDPI/Retina display
-- **Visibility observers** pause/resume the Rive instance when off-screen or tab-hidden
-- **Emoji fallback** when WebGL is unavailable or Rive fails to load
-- **Exported `lookAt()` method** for smooth head tracking animation
+The component receives a `MascotState` (from the rule engine) and maps it to Rive inputs. See **[RULE_ENGINE_SPEC.md §1.7](./RULE_ENGINE_SPEC.md#17-mascot-state)** for the full `MascotState` interface. A skeleton:
 
 ```typescript
-// Props
-interface Props {
-  stage: MonsterStage;  // Current evolution stage
-  class?: string;       // Additional CSS classes
-}
+// src/lib/components/Monster.svelte
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import { Rive, type StateMachineInput } from '@rive-app/canvas';
+  import type { MascotState } from '$lib/ruleEngine';
 
-// Exported methods for parent components
-export function lookAt(targetX: number, targetY: number, duration = 300): void;
-export function setExpression(expression: string): void;
+  interface Props { mascotState: MascotState; }
+  let { mascotState }: Props = $props();
+
+  let canvas: HTMLCanvasElement;
+  let riveInstance: Rive | null = null;
+  // inputs wired from MascotState: evolutionStage, primaryEmotion,
+  // emotionIntensity, lookX, lookY, trigger
+
+  onMount(() => {
+    riveInstance = new Rive({
+      src: '/animations/gonn.riv',
+      canvas,
+      autoplay: true,
+      stateMachines: 'GonnController',
+      onLoad: () => { /* bind inputs */ }
+    });
+  });
+
+  $effect(() => { /* push mascotState fields to Rive inputs */ });
+
+  onDestroy(() => riveInstance?.cleanup());
+</script>
+
+<canvas bind:this={canvas} class="h-48 w-48" aria-label="Gonn companion" />
 ```
 
 #### Head Tracking (`lookAt`)
@@ -310,8 +291,8 @@ export function celebrate(element: HTMLElement) {
 		buttonSpring(event.currentTarget as HTMLElement);
 		habits.toggle(habit.id);
 
-		// Check for milestone
-		if (habit.streak + 1 === 7 || habit.streak + 1 === 30) {
+		// Day 100 Feast fires at completionCount === 100 (see RULE_ENGINE_SPEC.md §6)
+		if (habit.completionCount + 1 === 100) {
 			celebrate(event.currentTarget as HTMLElement);
 		}
 	}
@@ -503,6 +484,7 @@ static/animations/
 
 ## Related Documentation
 
+- [RULE_ENGINE_SPEC.md](./RULE_ENGINE_SPEC.md) - Gonn evolution, MascotState, and all Rive input definitions
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 - [UI.md](./UI.md) - UI component documentation
 - [STATUS.md](../STATUS.md) - Implementation status

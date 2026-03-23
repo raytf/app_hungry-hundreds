@@ -42,6 +42,15 @@ Quick reference guide to find the right documentation for your needs.
 - Testing guidelines
 - Code style conventions
 
+### Understand Gonn's Behavior (Rule Engine)
+
+**→ Read**: [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)
+
+- Satiation, evolution, and regression logic
+- Multi-habit aggregation and mood engine
+- Danger zones, celebrations, and food metaphor
+- All data models and TypeScript interfaces
+
 ### Build Features
 
 **→ Read**: [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)
@@ -277,6 +286,34 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
+### [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)
+
+**Purpose**: Single source of truth for Gonn's AI companion behavior
+
+**Contains**:
+
+- Data models: `HabitSnapshot`, `GonnState`, `GlobalSnapshot`, `MascotState`, `DialogueRequest`
+- Satiation feeding and exponential decay formulas
+- Evolution stage thresholds with hysteresis
+- Multi-habit aggregation and `buildGlobalSnapshot()` logic
+- Danger zone definitions and priority rules
+- Mood engine: `deriveMood()`, `deriveIntensity()`, `deriveMascotState()`
+- Celebration events: Evolution cutscenes and Day 100 Feasts
+- Regression framing, animations, and dialogue
+- Food metaphor flavor tags
+
+**Best for**: Implementing the rule engine, understanding Gonn's responses, LLM dialogue integration
+
+**Key Sections**:
+
+- Data Model → All TypeScript interfaces
+- Satiation & Evolution → Feeding, decay, and stage transitions
+- Multi-Habit Aggregation → How habits combine into Gonn's state
+- Mood Engine → `deriveMascotState()` logic
+- Danger Zones → Completion-count-based critical windows
+
+---
+
 ### [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 **Purpose**: Deployment process and configuration
@@ -317,16 +354,19 @@ Quick reference guide to find the right documentation for your needs.
 
 ### Key Concepts
 
-| Concept            | Documentation                                              |
-| ------------------ | ---------------------------------------------------------- |
-| Routing            | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#routing)          |
-| State Management   | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#state-management) |
-| Component Patterns | [COMPONENTS.md](./docs/COMPONENTS.md#component-patterns)   |
-| UI Pages & Layout  | [UI.md](./docs/UI.md#pages)                                |
-| Data Models        | [API.md](./docs/API.md#data-models)                        |
-| Styling            | [UI.md](./docs/UI.md#styling-patterns)                     |
-| Testing            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#testing)            |
-| Deployment         | [DEPLOYMENT.md](./docs/DEPLOYMENT.md)                      |
+| Concept            | Documentation                                                                    |
+| ------------------ | -------------------------------------------------------------------------------- |
+| Routing            | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#routing)                                |
+| State Management   | [ARCHITECTURE.md](./docs/ARCHITECTURE.md#state-management)                       |
+| Component Patterns | [COMPONENTS.md](./docs/COMPONENTS.md#component-patterns)                         |
+| UI Pages & Layout  | [UI.md](./docs/UI.md#pages)                                                      |
+| Data Models        | [API.md](./docs/API.md#data-models)                                              |
+| Gonn / Rule Engine | [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)                                |
+| Satiation & Evolution | [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md#2-satiation--evolution)      |
+| Mood Engine        | [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md#5-mood-engine)                  |
+| Styling            | [UI.md](./docs/UI.md#styling-patterns)                                           |
+| Testing            | [DEVELOPMENT.md](./docs/DEVELOPMENT.md#testing)                                  |
+| Deployment         | [DEPLOYMENT.md](./docs/DEPLOYMENT.md)                                            |
 
 ### Common Tasks
 
@@ -348,6 +388,7 @@ Quick reference guide to find the right documentation for your needs.
 **Implementation**: guide, checklist, templates, patterns
 **API**: data models, stores, endpoints, database
 **Deployment**: cloudflare, build, production, environment
+**Rule Engine**: gonn, mascot, satiation, evolution, regression, mood, danger zones, celebrations, food metaphor, LLM, dialogue
 
 ## 📖 Reading Order
 
@@ -366,7 +407,8 @@ Quick reference guide to find the right documentation for your needs.
 3. [ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System understanding
 4. [UI.md](./docs/UI.md) - UI pages and components
 5. [API.md](./docs/API.md) - Data structures
-6. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
+6. [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md) - Gonn behavior (authoritative)
+7. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
 
 ### For UI Development
 

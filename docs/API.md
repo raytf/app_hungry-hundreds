@@ -282,4 +282,4 @@ export const supabase = createClient(
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment process
-- [TECH_SPEC.md](./TECH_SPEC.md) - Full technical specification
+

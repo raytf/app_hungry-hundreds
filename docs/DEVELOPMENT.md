@@ -382,4 +382,4 @@ Application → Storage → Clear site data
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and design patterns
 - [API.md](./API.md) - Data models and Supabase endpoints
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment process
-- [TECH_SPEC.md](./TECH_SPEC.md) - Full technical specification
+

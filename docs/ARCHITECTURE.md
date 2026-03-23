@@ -171,26 +171,11 @@ interface SyncQueue {
 }
 ```
 
-### Monster Evolution
+### Gonn Evolution & Rule Engine
 
-| Stage | Streak Days | Animation State         |
-| ----- | ----------- | ----------------------- |
-| Egg   | 0           | idle_egg                |
-| Baby  | 1-6         | idle_baby, happy_baby   |
-| Teen  | 7-29        | idle_teen, happy_teen   |
-| Adult | 30-99       | idle_adult, happy_adult |
-| Elder | 100+        | idle_elder, happy_elder |
+Evolution is driven by a **satiation model** (feeding + exponential decay), not streak days. Five stages: Egg → Hatchling → Juvenile → Adult → Apex, with hysteresis thresholds to prevent flickering. Rive inputs are driven by `MascotState`, produced by `deriveMascotState()`.
 
-Rive state machine inputs:
-
-- `IsClose` (boolean, triggers happy animation on habit completion)
-
-Rive View Model (`CharacterVM`, bound via `autoBind: true`):
-
-- `headX` (number, -1 to 1 — horizontal gaze direction)
-- `headY` (number, -1 to 1 — vertical gaze direction)
-
-The monster's gaze follows the cursor on the homepage via `onmousemove` → `monsterLookAt()` store API, which bridges the layout → page boundary through a callback registration pattern.
+See **[RULE_ENGINE_SPEC.md](./RULE_ENGINE_SPEC.md)** for all data models, stage thresholds, decay formulas, mood engine logic, and Rive input definitions.
 
 ## Key Technical Decisions
 
@@ -422,7 +407,7 @@ Key files:
 
 ## Related Documentation
 
+- [RULE_ENGINE_SPEC.md](./RULE_ENGINE_SPEC.md) - Gonn behavior, evolution, and mood engine
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Setup and development workflow
 - [API.md](./API.md) - Data models and Supabase endpoints
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Cloudflare deployment process
-- [TECH_SPEC.md](./TECH_SPEC.md) - Full technical specification

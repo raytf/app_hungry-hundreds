@@ -6,7 +6,7 @@ Before implementing any feature, fixing bugs related to unimplemented functional
 
 ### Why This Rule Exists
 
-The project documentation (TECH_SPEC.md, ARCHITECTURE.md, API.md, DEPLOYMENT.md) describes the **full vision** of the application, including features planned for future phases. Without checking STATUS.md first, an agent might:
+The project documentation (ARCHITECTURE.md, API.md, RULE_ENGINE_SPEC.md, DEPLOYMENT.md) describes the **full vision** of the application, including features planned for future phases. Without checking STATUS.md first, an agent might:
 
 1. Try to use Dexie.js when it's not installed yet
 2. Reference Supabase client code that doesn't exist
@@ -77,7 +77,7 @@ The project documentation (TECH_SPEC.md, ARCHITECTURE.md, API.md, DEPLOYMENT.md)
 | What phase are we in?  | STATUS.md → "Quick Status" table         |
 | What's next?           | STATUS.md → "Immediate Next Steps"       |
 | What are dependencies? | ROADMAP.md → Phase sections & diagram    |
-| Full technical vision? | TECH_SPEC.md, ARCHITECTURE.md            |
+| Full technical vision? | ARCHITECTURE.md, RULE_ENGINE_SPEC.md     |
 
 ### Files to Read (In Order)
 

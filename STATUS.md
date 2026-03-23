@@ -2,7 +2,7 @@
 
 > **⚠️ AI AGENTS: Read this file FIRST before any implementation work.**
 >
-> The project documentation (TECH_SPEC.md, ARCHITECTURE.md, API.md) describes the **full vision**.
+> The project documentation (ARCHITECTURE.md, API.md, RULE_ENGINE_SPEC.md) describes the **full vision**.
 > This file tracks what is **actually implemented** vs. what is **planned but not built**.
 
 ## Quick Status
@@ -280,7 +280,7 @@ None currently.
 - **[ROADMAP.md](./docs/ROADMAP.md)** - Detailed phase breakdown with dependencies
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System design (describes full vision)
 - **[API.md](./docs/API.md)** - Data models (describes full vision)
-- **[TECH_SPEC.md](./docs/TECH_SPEC.md)** - Complete technical specification
+- **[RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)** - Gonn behavior, evolution, and mood engine (authoritative)
 
 ---
 

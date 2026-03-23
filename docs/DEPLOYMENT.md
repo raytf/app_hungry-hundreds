@@ -466,4 +466,4 @@ Before deploying to production:
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
 - [API.md](./API.md) - Data models and Supabase endpoints
-- [TECH_SPEC.md](./TECH_SPEC.md) - Full technical specification
+

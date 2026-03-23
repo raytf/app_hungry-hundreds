@@ -331,6 +331,6 @@ flowchart TD
 ## Related Documentation
 
 - **[STATUS.md](../STATUS.md)** - Quick implementation status (AI agents read first)
-- **[TECH_SPEC.md](./TECH_SPEC.md)** - Full technical specification
+
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture
 - **[API.md](./API.md)** - Data models and endpoints

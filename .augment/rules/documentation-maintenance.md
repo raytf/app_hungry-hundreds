@@ -46,7 +46,7 @@ When introducing new approaches, patterns, or methodologies to the Hungry Hundre
 | `docs/DEVELOPMENT.md`  | Setup and workflow           | Adding dependencies, changing setup, new scripts  |
 | `docs/API.md`          | Data models and endpoints    | Changing Dexie/Supabase schemas, adding endpoints |
 | `docs/DEPLOYMENT.md`   | Deployment process           | Adding services, changing infra, new requirements |
-| `docs/TECH_SPEC.md`    | Full technical specification | Major feature additions or architectural changes  |
+| `docs/RULE_ENGINE_SPEC.md` | Gonn behavior, evolution, mood engine | Changing mascot logic, satiation model, Rive inputs |
 | `.augment/rules/*.md`  | Development rules            | Establishing new practices                        |
 
 ### Project-Specific Considerations
