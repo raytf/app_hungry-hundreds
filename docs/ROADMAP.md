@@ -10,8 +10,10 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 | 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | ✅ Complete |
 | 3     | Backend       | Supabase, auth, database, Edge Functions           | ✅ Complete |
 | 4     | Sync          | Offline queue, conflict resolution, reconnect      | ✅ Complete |
-| 5     | Animation     | Rive integration, monster evolution, Motion One    | 🚧 Active   |
+| 5     | Rule Engine & Rive | Rule engine, mascot stores, Rive bridge, Dexie schema | 📋 Planned  |
 | 6     | PWA           | Service worker, push notifications, installability | ✅ Complete |
+| 7     | AI Dialogue   | LLM proxy, memory system, speech bubble, Motion One | 📋 Planned  |
+| 8     | Chatbot       | Interactive multi-turn chat with Gonn, streaming SSE | 📋 Planned  |
 
 ---
 
@@ -138,57 +140,67 @@ src/lib/sync/
 
 ---
 
-## Phase 5: Animation 🚧
+## Phase 5: Rule Engine & Rive 📋
 
-**Goal:** Integrate Rive for monster animations and Motion One for micro-interactions.
+**Goal:** Implement the deterministic rule engine, Gonn state management, and Rive animation bridge. This phase makes Gonn react to habit data in real-time without any LLM dependency.
 
-| Task                            | Status | Dependencies         | Effort |
-| ------------------------------- | ------ | -------------------- | ------ |
-| Install @rive-app/canvas        | ✅     | Phase 1 complete     | S      |
-| Install Motion One              | ✅     | Phase 1 complete     | S      |
-| Create Monster.svelte component | ✅     | Rive installed       | M      |
-| Add animation utilities         | ✅     | Motion One installed | M      |
-| Add Rive utilities              | ✅     | Rive installed       | M      |
-| Integrate HabitCard animations  | ✅     | Animation utilities  | M      |
-| Integrate BottomNav animations  | ✅     | Animation utilities  | S      |
-| Configure Vite lazy loading     | ✅     | Rive installed       | S      |
-| Create custom monster.riv asset | 📋     | Rive installed       | L      |
-| Add page transitions            | 📋     | Animation utilities  | M      |
-| Add confetti effects            | 📋     | Animation utilities  | M      |
+| Task                              | Status | Dependencies               | Effort |
+| --------------------------------- | ------ | -------------------------- | ------ |
+| Create type definitions           | 📋     | Phase 2 complete           | S      |
+| Implement rule engine core        | 📋     | Types defined              | M      |
+| Update Dexie schema               | 📋     | Types defined              | S      |
+| Create Gonn store (Dexie-backed)  | 📋     | Schema updated             | M      |
+| Create Mascot derived store       | 📋     | Rule engine, Gonn store    | M      |
+| Extend Monster.svelte (Rive)      | 📋     | Mascot store, .riv asset   | L      |
 
-**Key Files Created:**
+**Key Files to Create/Modify:**
 
 ```
-src/lib/components/
-├── Monster.svelte           # Rive canvas wrapper with emoji fallback ✅
+src/lib/types/
+└── mascot.ts            # HabitSnapshot, GonnState, GlobalSnapshot, MascotState, etc.
 
-src/lib/animations/
-├── transitions.ts           # Motion One utilities (buttonSpring, celebrate, iconTap) ✅
-└── rive-utils.ts            # Rive helpers (WebGL detection, visibility observers) ✅
+src/lib/ai/
+└── ruleEngine.ts        # deriveMood(), deriveIntensity(), deriveMascotState()
+
+src/lib/stores/
+├── gonn.ts              # GonnState store (Dexie-backed, satiation/decay)
+└── mascot.ts            # REWRITE: derived MascotState from GlobalSnapshot
+
+src/lib/db/
+└── db.ts                # ADD: gonnState, mascotMemory, dialogueCache tables
+
+src/lib/components/
+└── Monster.svelte       # EXTEND: Rive bridge with emotion/intensity/evolveNow inputs
 
 static/animations/
-└── cat-treat.riv            # Placeholder Rive asset (pending custom monster.riv)
+└── gonn.riv             # Rive animation file (external asset)
 ```
 
-**Monster Evolution Stages:**
-| Stage | XP Required | State Machine Input |
-|-------|-------------|---------------------|
-| Egg | 0 | `stage=0` |
-| Baby | 100 | `stage=1` |
-| Teen | 500 | `stage=2` |
-| Adult | 1500 | `stage=3` |
-| Elder | 5000 | `stage=4` |
+**Evolution Stages (Satiation-Based, with Hysteresis):**
+
+| Stage | Enter At | Exit At | Form |
+|-------|----------|---------|------|
+| 1 — Egg | default | — | Small, round, mostly face/eyes |
+| 2 — Hatchling | satiation ≥ 10 | satiation < 6 | Eyes open, wiggling |
+| 3 — Juvenile | satiation ≥ 25 | satiation < 18 | Limbs visible, teeth emerge |
+| 4 — Adult | satiation ≥ 50 | satiation < 40 | Full body, horns, attitude |
+| 5 — Apex | satiation ≥ 80 | satiation < 70 | Full kaiju, tail, special FX |
+
+MVP targets stages 1–3 only.
 
 **Acceptance Criteria:**
 
-- [x] Monster component with Rive canvas and emoji fallback
-- [x] Button spring animation on habit toggle
-- [x] Celebrate animation on streak milestones (7/30/100)
-- [x] Icon tap animation on BottomNav
-- [x] Reduced motion support
-- [ ] Custom monster.riv asset created
-- [ ] Page transitions implemented
-- [ ] Confetti effects implemented
+- [ ] Rule engine produces correct MascotState from habit data (unit tested)
+- [ ] Satiation feeding and exponential decay work correctly
+- [ ] Evolution stage transitions use hysteresis (no flickering)
+- [ ] Gonn store persists in Dexie, syncs to Supabase
+- [ ] Rive inputs update reactively when MascotState changes
+- [ ] Rule engine execution < 5ms
+- [ ] Monster.svelte falls back to emoji if Rive fails
+
+**Reference:**
+- `docs/RULE_ENGINE_SPEC.md` — authoritative formulas
+- `docs/features/ai-implementation-spec.md` — implementation guide
 
 ---
 
@@ -203,35 +215,106 @@ static/animations/
 | Create app icons                | ✅     | None             | S      |
 | Set up Firebase Cloud Messaging | ✅     | Phase 3 auth     | M      |
 | Implement push notifications    | ✅     | FCM configured   | L      |
-| Create PWA install store        | ✅     | None             | S      |
-| Create InstallPrompt component  | ✅     | PWA store        | M      |
-| Integrate PWA in layout         | ✅     | All above        | S      |
-
-**Key Files Created:**
-
-```
-src/service-worker.ts             # SvelteKit service worker ✅
-static/manifest.json              # PWA manifest ✅
-static/icon-192.png               # App icon (placeholder) ✅
-static/icon-512.png               # App icon (placeholder) ✅
-static/icon-192-maskable.png      # Maskable icon ✅
-static/icon-512-maskable.png      # Maskable icon ✅
-src/lib/notifications/
-├── firebase.ts                   # FCM initialization ✅
-└── push.ts                       # Push notification store ✅
-src/lib/stores/
-└── pwa.ts                        # PWA install prompt store ✅
-src/lib/components/
-└── InstallPrompt.svelte          # Install banner component ✅
-```
 
 **Acceptance Criteria:**
 
 - [x] App is installable on mobile
-- [x] Works fully offline with service worker
-- [x] Push notification system with FCM
-- [x] Install prompt detection and UI
-- [ ] Lighthouse PWA score > 90 (needs testing)
+- [x] Works fully offline
+- [x] Push notifications for daily reminders
+- [x] Service worker with offline caching and background sync
+
+---
+
+## Phase 7: AI Dialogue 📋
+
+**Goal:** Add LLM-powered dialogue for Gonn via Supabase Edge Functions, with a memory system and speech bubble UI.
+
+| Task                              | Status | Dependencies               | Effort |
+| --------------------------------- | ------ | -------------------------- | ------ |
+| Implement memory system           | 📋     | Phase 5 Dexie schema       | M      |
+| Create Supabase Edge Function     | 📋     | Supabase project           | M      |
+| Implement dialogue pipeline       | 📋     | Edge function, memory      | M      |
+| Create SpeechBubble.svelte        | 📋     | Dialogue pipeline          | M      |
+
+**Key Files Created:**
+
+```
+src/lib/ai/
+├── memory.ts            # Memory read/write/trim
+└── dialogue.ts          # LLM dialogue pipeline + caching
+
+src/lib/components/
+└── SpeechBubble.svelte  # Typewriter speech bubble
+
+supabase/functions/
+└── gonn-dialogue/
+    └── index.ts         # Edge function LLM proxy
+```
+
+**Acceptance Criteria:**
+
+- [ ] LLM dialogue generates in < 2s (async, non-blocking)
+- [ ] Dialogue cache hit rate > 50% (4-hour expiry)
+- [ ] Memory system stores permanent + short-term memories
+- [ ] SpeechBubble shows typewriter text with auto-dismiss
+- [ ] Offline: animations + rule engine work fully, dialogue hidden
+- [ ] Max 80 characters per dialogue line
+- [ ] Gonn personality consistent across evolution stages
+
+**Reference:**
+- `docs/features/ai-implementation-spec.md` — full implementation guide
+
+---
+
+## Phase 8: Chatbot 📋
+
+**Goal:** Add an interactive, multi-turn chat interface where users can talk directly to Gonn with full habit context, streaming responses, and session persistence.
+
+**Dependencies:** Phase 5 (Rule Engine & Rive) and Phase 7 (AI Dialogue) must be complete.
+
+| Task                              | Status | Dependencies                       | Effort |
+| --------------------------------- | ------ | ---------------------------------- | ------ |
+| Dexie schema: `chatSessions`      | 📋     | Phase 5 Dexie schema               | S      |
+| Chat history utility              | 📋     | Types defined                      | S      |
+| `gonn-chat` Edge Function         | 📋     | Phase 7 Edge Function pattern      | M      |
+| Chat store (Svelte 5 runes)       | 📋     | History util, Edge Function        | M      |
+| GonnChat.svelte component         | 📋     | Chat store                         | M      |
+
+**Key Files to Create/Modify:**
+
+```
+src/lib/
+├── ai/
+│   └── chatHistory.ts          # trimHistory(), summariseTurns()
+├── stores/
+│   └── chat.ts                 # chatStore — Svelte 5 runes, SSE streaming
+├── components/
+│   └── GonnChat.svelte         # Chat panel UI, suggestions, streaming renderer
+└── types/
+    └── mascot.ts               # EXTEND — add ChatMessage, ChatSession interfaces
+
+src/lib/db/
+└── db.ts                       # ADD: chatSessions table, increment version
+
+supabase/functions/
+└── gonn-chat/
+    └── index.ts                # Streaming edge function with auth + rate limiting
+```
+
+**Acceptance Criteria:**
+
+- [ ] Chat streams token-by-token via SSE
+- [ ] Session persists across app restarts via Dexie
+- [ ] Sliding window (10 turns) with summary compression for older turns
+- [ ] Gonn references specific habit names, streaks, and danger zones during chat
+- [ ] Auth-gated: unauthenticated requests rejected with 401
+- [ ] Rate limited: max 20 messages per user per hour
+- [ ] Svelte 5 runes used throughout (no `writable`/`get`)
+- [ ] Works when Phase 7 SpeechBubble is also active (no conflicts)
+- [ ] Graceful offline handling: error message shown, no crash
+
+**Reference:**
+- `docs/features/chatbot-spec.md` — full implementation spec
 
 ---
 
@@ -269,12 +352,13 @@ flowchart TD
         P4D[Full Sync on Reconnect]
     end
 
-    subgraph Phase5["Phase 5: Animation 🚧"]
-        P5A[Rive Integration ✅]
-        P5B[Monster Component ✅]
-        P5C[Motion One Utils ✅]
-        P5D[Custom Monster Asset 📋]
-        P5E[Page Transitions 📋]
+    subgraph Phase5["Phase 5: Rule Engine & Rive"]
+        P5A[Type Definitions]
+        P5B[Rule Engine Core]
+        P5C[Dexie Schema Update]
+        P5D[Gonn Store]
+        P5E[Mascot Derived Store]
+        P5F[Rive Bridge / Monster.svelte]
     end
 
     subgraph Phase6["Phase 6: PWA ✅"]
@@ -283,6 +367,21 @@ flowchart TD
         P6C[Firebase Setup]
         P6D[Push Notifications]
         P6E[Installability]
+    end
+
+    subgraph Phase7["Phase 7: AI Dialogue"]
+        P7A[Memory System]
+        P7B[Edge Function LLM Proxy]
+        P7C[Dialogue Pipeline + Cache]
+        P7D[SpeechBubble.svelte]
+    end
+
+    subgraph Phase8["Phase 8: Chatbot"]
+        P8A[Dexie chatSessions Table]
+        P8B[Chat History Utility]
+        P8C[gonn-chat Edge Function]
+        P8D[Chat Store]
+        P8E[GonnChat.svelte]
     end
 
     P1A --> P1B --> P1C --> P1D
@@ -296,12 +395,25 @@ flowchart TD
     P2C --> P4A
     P3E --> P4A --> P4B --> P4C --> P4D
 
-    P1B --> P5A --> P5B --> P5D
-    P1B --> P5C --> P5E
-    P2D --> P5B
+    P2D --> P5A --> P5B
+    P5A --> P5C --> P5D --> P5E
+    P5B --> P5E --> P5F
+    P1B --> P5F
 
     P4D --> P6A --> P6B --> P6E
     P3D --> P6C --> P6D
+
+    P5C --> P7A
+    P3E --> P7B --> P7C
+    P7A --> P7C --> P7D
+    P5F --> P7D
+
+    P5C --> P8A --> P8B
+    P7B --> P8C
+    P7A --> P8C
+    P8B --> P8D --> P8E
+    P8C --> P8D
+    P1B --> P8E
 ```
 
 ---
@@ -334,3 +446,6 @@ flowchart TD
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture
 - **[API.md](./API.md)** - Data models and endpoints
+- **[RULE_ENGINE_SPEC.md](./RULE_ENGINE_SPEC.md)** - Gonn behavior formulas (authoritative)
+- **[ai-implementation-spec.md](./features/ai-implementation-spec.md)** - AI companion implementation guide
+- **[chatbot-spec.md](./features/chatbot-spec.md)** - Interactive chatbot spec (Phase 8)

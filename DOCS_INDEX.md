@@ -51,6 +51,27 @@ Quick reference guide to find the right documentation for your needs.
 - Danger zones, celebrations, and food metaphor
 - All data models and TypeScript interfaces
 
+### Implement AI Companion (Rule Engine + LLM Dialogue)
+
+**→ Read**: [ai-implementation-spec.md](./docs/features/ai-implementation-spec.md)
+
+- Rule engine, Rive bridge, and LLM dialogue implementation guide
+- Type definitions, Dexie schema additions, Supabase Edge Function
+- Memory system, speech bubble, reactive wiring
+
+**→ Reference**: [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)
+
+- Authoritative source for Gonn behavior formulas and data models
+
+### Implement Gonn Chat (Interactive Chatbot)
+
+**→ Read**: [chatbot-spec.md](./docs/features/chatbot-spec.md)
+
+- Multi-turn conversational chatbot with Gonn
+- Streaming SSE responses, Dexie session persistence
+- Supabase Edge Function (`gonn-chat`), auth + rate limiting
+- Requires Phase 5 (Rule Engine & Rive) and Phase 7 (AI Dialogue) complete first
+
 ### Build Features
 
 **→ Read**: [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md)
@@ -314,6 +335,61 @@ Quick reference guide to find the right documentation for your needs.
 
 ---
 
+### [ai-implementation-spec.md](./docs/features/ai-implementation-spec.md)
+
+**Purpose**: Implementation guide for AI companion features
+
+**Contains**:
+
+- Architecture overview (rule engine → Rive bridge → LLM dialogue)
+- Type definitions: `HabitSnapshot`, `GonnState`, `GlobalSnapshot`, `MascotState`, `DialogueRequest`
+- New Dexie tables: `gonnState`, `mascotMemory`, `dialogueCache`
+- Rule engine implementation: `deriveMood()`, `deriveIntensity()`, `deriveMascotState()`
+- Rive bridge: state machine inputs, emotion mapping, Monster.svelte extension
+- Supabase Edge Function: `gonn-dialogue` LLM proxy
+- Memory system: permanent and short-term memory read/write
+- SpeechBubble.svelte component
+- Reactive wiring and orchestration
+- Performance targets
+
+**Best for**: Building the AI companion, understanding the full implementation stack
+
+**Key Sections**:
+
+- Type Definitions → All interfaces for the system
+- Rule Engine Implementation → Mood, intensity, look direction, complete derivation
+- Rive Bridge → State machine inputs and Monster.svelte extension
+- AI Dialogue Layer → Edge function, caching, client pipeline
+- Memory System → Writing and reading memories for LLM context
+
+---
+
+### [chatbot-spec.md](./docs/features/chatbot-spec.md)
+
+**Purpose**: Implementation spec for the interactive Gonn chatbot (Phase 8)
+
+**Contains**:
+
+- Prerequisites and dependency on Phase 5 + Phase 7
+- Dexie `chatSessions` table and `ChatMessage`/`ChatSession` interfaces
+- Chat history trimming with sliding window and summary compression
+- Supabase Edge Function `gonn-chat` with streaming SSE, auth, and rate limiting
+- `chat.ts` store using Svelte 5 runes
+- `GonnChat.svelte` component with suggestion chips, streaming renderer
+- `writeChatMemory()` for capturing chat insights as permanent memories
+- Context injection: habit data, Gonn state, and memory into LLM calls
+
+**Best for**: Building the interactive chat feature, understanding multi-turn LLM integration
+
+**Key Sections**:
+
+- Step 1 (Dexie Schema) → New table and interfaces
+- Step 3 (Edge Function) → Streaming LLM proxy with auth + rate limiting
+- Step 4 (Chat Store) → Svelte 5 runes store with SSE parsing
+- Step 5 (GonnChat.svelte) → Chat panel UI component
+
+---
+
 ### [DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 
 **Purpose**: Deployment process and configuration
@@ -389,6 +465,8 @@ Quick reference guide to find the right documentation for your needs.
 **API**: data models, stores, endpoints, database
 **Deployment**: cloudflare, build, production, environment
 **Rule Engine**: gonn, mascot, satiation, evolution, regression, mood, danger zones, celebrations, food metaphor, LLM, dialogue
+**AI Implementation**: rule engine build, rive bridge, speech bubble, memory system, edge function, dialogue cache, mascot state, emotion mapping
+**Chatbot**: gonn chat, interactive chat, multi-turn, streaming, SSE, chat session, chat history, sliding window, suggestion chips, rate limiting
 
 ## 📖 Reading Order
 
@@ -408,7 +486,9 @@ Quick reference guide to find the right documentation for your needs.
 4. [UI.md](./docs/UI.md) - UI pages and components
 5. [API.md](./docs/API.md) - Data structures
 6. [RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md) - Gonn behavior (authoritative)
-7. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
+7. [ai-implementation-spec.md](./docs/features/ai-implementation-spec.md) - AI companion build guide
+8. [chatbot-spec.md](./docs/features/chatbot-spec.md) - Interactive chatbot spec
+9. [IMPLEMENTATION.md](./docs/IMPLEMENTATION.md) - Implementation patterns
 
 ### For UI Development
 

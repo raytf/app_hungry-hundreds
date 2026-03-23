@@ -7,17 +7,19 @@
 
 ## Quick Status
 
-| Phase | Name          | Status      | Progress |
-| ----- | ------------- | ----------- | -------- |
-| 1     | UI Foundation | ✅ Complete | 5/5      |
-| 2     | Data Layer    | ✅ Complete | 5/5      |
-| 3     | Backend       | ✅ Complete | 5/5      |
-| 4     | Sync          | ✅ Complete | 4/4      |
-| 5     | Animation     | 🚧 Active   | 4/6      |
-| 6     | PWA           | ✅ Complete | 5/5      |
+| Phase | Name              | Status      | Progress |
+| ----- | ----------------- | ----------- | -------- |
+| 1     | UI Foundation     | ✅ Complete | 5/5      |
+| 2     | Data Layer        | ✅ Complete | 5/5      |
+| 3     | Backend           | ✅ Complete | 5/5      |
+| 4     | Sync              | ✅ Complete | 4/4      |
+| 5     | Rule Engine & Rive | 📋 Planned  | 0/6      |
+| 6     | PWA               | ✅ Complete | 5/5      |
+| 7     | AI Dialogue       | 📋 Planned  | 0/4      |
+| 8     | Chatbot           | 📋 Planned  | 0/5      |
 
-**Current Phase:** Phase 5 (Animation) - Rive Monster, Motion One Micro-interactions
-**Last Updated:** 2026-02-24
+**Current Phase:** Phase 5 (Rule Engine & Rive) — Next priority
+**Last Updated:** 2026-03-23
 
 ---
 
@@ -165,13 +167,13 @@
 
 ### Technologies Documented but Not Installed
 
-| Technology       | Documented In           | Status       | Reason                |
-| ---------------- | ----------------------- | ------------ | --------------------- |
-| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 2 - Complete    |
-| Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete    |
-| @rive-app/canvas | ARCHITECTURE.md         | ✅ Installed | Phase 5 - In Progress |
-| Motion One       | ARCHITECTURE.md         | ✅ Installed | Phase 5 - In Progress |
-| Firebase (FCM)   | DEPLOYMENT.md           | ✅ Installed | Phase 6 - PWA         |
+| Technology       | Documented In           | Status       | Reason              |
+| ---------------- | ----------------------- | ------------ | ------------------- |
+| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 2 - Complete  |
+| Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete  |
+| @rive-app/canvas | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Rule Engine & Rive |
+| Motion One       | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Rule Engine & Rive |
+| Firebase (FCM)   | DEPLOYMENT.md           | ✅ Installed | Phase 6 - PWA       |
 
 ### Features Documented but Not Built
 
@@ -222,24 +224,36 @@ All Phase 6 tasks completed:
 5. ✅ **PWA installability** - Install prompt detection and banner component
 6. ✅ **Predictable SW updates** - Waiting SW detection, `UpdatePrompt.svelte` toast, user-confirmed reload
 
-### Phase 5: Animation (In Progress)
+### Phase 5: Rule Engine & Rive (Next Priority)
 
 Completed tasks:
 
-1. ✅ **Install @rive-app/canvas** - Rive runtime for monster animations
-2. ✅ **Install Motion One** - Micro-interactions for UI elements
-3. ✅ **Create Monster.svelte** - Rive canvas wrapper with emoji fallback
-4. ✅ **Update MonsterDisplay** - Integrated Monster.svelte
-5. ✅ **Add HabitCard animations** - buttonSpring and celebrate
-6. ✅ **Add BottomNav animations** - iconTap on navigation
-7. ✅ **Configure Vite lazy loading** - Rive chunk for performance
+1. **Type definitions** - `src/lib/types/mascot.ts` with all interfaces from spec
+2. **Rule engine core** - `src/lib/ai/ruleEngine.ts` implementing `deriveMascotState()` + helpers
+3. **Dexie schema update** - Add `gonnState`, `mascotMemory`, `dialogueCache` tables
+4. **Gonn store** - `src/lib/stores/gonn.ts` (Dexie-backed GonnState with satiation/decay)
+5. **Mascot store** - `src/lib/stores/mascot.ts` (derived MascotState from GlobalSnapshot)
+6. **Rive bridge** - Extend `Monster.svelte` with rule engine → Rive state machine inputs
 
-Remaining tasks:
+See `docs/features/ai-implementation-spec.md` for full implementation guide.
+See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 
-1. 📋 **Add page transitions** - Smooth route transitions with Motion One
-2. 📋 **Add confetti effects** - Celebration particles on milestones
+### Phase 7: AI Dialogue (After Phase 5)
 
-See `docs/ANIMATION.md` and `docs/features/phase-5-animation.md` for documentation.
+1. **Memory system** - `src/lib/ai/memory.ts` for permanent + short-term memories
+2. **Supabase Edge Function** - `supabase/functions/gonn-dialogue/index.ts` LLM proxy
+3. **Dialogue pipeline** - `src/lib/ai/dialogue.ts` with caching
+4. **SpeechBubble.svelte** - Typewriter effect speech bubble component
+
+### Phase 8: Chatbot (After Phase 7)
+
+1. **Dexie schema update** - Add `chatSessions` table, `ChatMessage`/`ChatSession` types
+2. **Chat history utility** - `src/lib/ai/chatHistory.ts` with sliding window + summary
+3. **Supabase Edge Function** - `supabase/functions/gonn-chat/index.ts` streaming LLM proxy with auth + rate limiting
+4. **Chat store** - `src/lib/stores/chat.ts` (Svelte 5 runes, SSE streaming)
+5. **GonnChat.svelte** - Chat panel UI with suggestion chips and streaming renderer
+
+See `docs/features/chatbot-spec.md` for full implementation spec.
 
 ### Prerequisites Check
 
@@ -281,6 +295,8 @@ None currently.
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System design (describes full vision)
 - **[API.md](./docs/API.md)** - Data models (describes full vision)
 - **[RULE_ENGINE_SPEC.md](./docs/RULE_ENGINE_SPEC.md)** - Gonn behavior, evolution, and mood engine (authoritative)
+- **[ai-implementation-spec.md](./docs/features/ai-implementation-spec.md)** - AI companion implementation guide
+- **[chatbot-spec.md](./docs/features/chatbot-spec.md)** - Interactive chatbot spec (Phase 8)
 
 ---
 
