@@ -12,11 +12,27 @@
 
 	let { habit, showEdit = false }: Props = $props();
 
-	// Determine if this is a weekly frequency habit
-	const isWeekly = $derived(habit.frequencyType === 'weekly');
+	// Determine schedule type
+	const isIntervalBased = $derived(habit.schedule?.type === 'every-x-days');
+	const isWeekly = $derived(
+		!isIntervalBased && (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
+	);
 
 	// Determine if this is a multi-completion daily habit (frequencyTarget > 1)
-	const isMultiDaily = $derived(habit.frequencyType === 'daily' && habit.frequencyTarget > 1);
+	const isMultiDaily = $derived(
+		!isIntervalBased && habit.frequencyType === 'daily' && (habit.frequencyTarget ?? 1) > 1
+	);
+
+	// Countdown label for interval habits
+	const dueLabel = $derived(
+		!isIntervalBased || habit.dueInDays === undefined
+			? ''
+			: habit.dueInDays > 0
+				? `Due in ${habit.dueInDays} day${habit.dueInDays !== 1 ? 's' : ''}`
+				: habit.dueInDays === 0
+					? 'Due today'
+					: `Overdue by ${Math.abs(habit.dueInDays)} day${Math.abs(habit.dueInDays) !== 1 ? 's' : ''}`
+	);
 
 	// Check if target is met for the current period
 	const periodTargetMet = $derived(habit.periodProgress >= habit.periodTarget);
@@ -100,7 +116,17 @@
 				{habit.name}
 			</h3>
 			<!-- Frequency description -->
-			{#if isWeekly}
+			{#if isIntervalBased}
+				<p class="text-sm text-gray-500">Every {habit.schedule?.intervalDays} days</p>
+				<p
+					class="text-xs font-medium"
+					class:text-green-600={habit.completedToday}
+					class:text-blue-600={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+					class:text-red-500={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
+				>
+					{#if habit.completedToday}✓ Done for this interval{:else}{dueLabel}{/if}
+				</p>
+			{:else if isWeekly}
 				<p class="text-sm text-gray-500">{habit.frequencyTarget}x per week</p>
 			{:else if isMultiDaily}
 				<p class="text-sm text-gray-500">{habit.frequencyTarget}x per day</p>
@@ -121,7 +147,7 @@
 		<!-- Action buttons (edit + partial) -->
 		<div class="flex shrink-0 items-center gap-2">
 			<!-- Partial completion button (for single-daily habits when not fully completed) -->
-			{#if !isMultiDaily && !isWeekly && habit.id !== undefined && !isFullyCompleted}
+			{#if !isIntervalBased && !isMultiDaily && !isWeekly && habit.id !== undefined && !isFullyCompleted}
 				<button
 					type="button"
 					onclick={handlePartialToggle}
@@ -169,7 +195,16 @@
 
 	<!-- Bottom row: Metrics in a clean horizontal layout -->
 	<div class="mt-3 flex items-center gap-4 border-t pt-3 text-sm">
-		{#if isWeekly}
+		{#if isIntervalBased}
+			<!-- Interval habit metrics -->
+			<div class="flex items-center gap-1.5">
+				<span class="text-orange-600">{habit.streak > 0 ? '🔥' : '—'}</span>
+				<span class="font-medium text-gray-700">{habit.streak}</span>
+				<span class="text-gray-500">interval{habit.streak !== 1 ? 's' : ''} streak</span>
+			</div>
+			<div class="h-4 w-px bg-gray-200"></div>
+			<div class="text-gray-500">{habit.totalCompletions} total</div>
+		{:else if isWeekly}
 			<!-- Weekly habit metrics -->
 			<div class="flex items-center gap-1.5">
 				<span

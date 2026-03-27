@@ -20,12 +20,25 @@
 	// Frequency description
 	const frequencyDescription = $derived(() => {
 		if (!habit) return '';
-		if (habit.frequencyType === 'weekly') {
+		if (habit.schedule?.type === 'every-x-days') {
+			return `Every ${habit.schedule.intervalDays} days`;
+		}
+		if (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly') {
 			return `${habit.frequencyTarget}x per week`;
-		} else if (habit.frequencyTarget > 1) {
+		} else if ((habit.frequencyTarget ?? 1) > 1) {
 			return `${habit.frequencyTarget}x per day`;
 		}
 		return 'Daily';
+	});
+
+	// Countdown label for interval habits
+	const dueLabelDetail = $derived(() => {
+		if (habit?.schedule?.type !== 'every-x-days') return '';
+		const d = habit?.dueInDays;
+		if (d === undefined) return '';
+		if (d > 0) return `Due in ${d} day${d !== 1 ? 's' : ''}`;
+		if (d === 0) return 'Due today';
+		return `Overdue by ${Math.abs(d)} day${Math.abs(d) !== 1 ? 's' : ''}`;
 	});
 
 	// Timeout for reverting monster expression
@@ -141,21 +154,53 @@
 				<div class="rounded-xl bg-orange-50 p-3 text-center">
 					<p class="text-2xl font-bold text-orange-600">🔥 {habit.streak}</p>
 					<p class="text-sm text-orange-700">
-						{habit.frequencyType === 'weekly' ? 'Week Streak' : 'Day Streak'}
+						{habit.schedule?.type === 'every-x-days'
+							? 'Interval Streak'
+							: habit.frequencyType === 'weekly'
+								? 'Week Streak'
+								: 'Day Streak'}
 					</p>
 				</div>
 				<div class="rounded-xl bg-blue-50 p-3 text-center">
 					<p class="text-2xl font-bold text-blue-600">{habit.totalCompletions}</p>
 					<p class="text-sm text-blue-700">Total Completions</p>
 				</div>
-				<div class="col-span-2 rounded-xl bg-green-50 p-3 text-center">
-					<p class="text-2xl font-bold text-green-600">
-						{habit.periodProgress}/{habit.periodTarget}
-					</p>
-					<p class="text-sm text-green-700">
-						{habit.frequencyType === 'weekly' ? 'This Week' : 'Today'}
-					</p>
-				</div>
+				{#if habit.schedule?.type === 'every-x-days'}
+					<div
+						class="col-span-2 rounded-xl p-3 text-center"
+						class:bg-green-50={habit.completedToday}
+						class:bg-blue-50={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+						class:bg-red-50={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
+					>
+						<p
+							class="text-2xl font-bold"
+							class:text-green-600={habit.completedToday}
+							class:text-blue-600={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+							class:text-red-500={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
+						>
+							{habit.completedToday ? '✓ Done' : dueLabelDetail()}
+						</p>
+						<p
+							class="text-sm"
+							class:text-green-700={habit.completedToday}
+							class:text-blue-700={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+							class:text-red-600={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
+						>
+							{habit.completedToday
+								? `Next due in ${habit.dueInDays} day${habit.dueInDays !== 1 ? 's' : ''}`
+								: 'Current Interval'}
+						</p>
+					</div>
+				{:else}
+					<div class="col-span-2 rounded-xl bg-green-50 p-3 text-center">
+						<p class="text-2xl font-bold text-green-600">
+							{habit.periodProgress}/{habit.periodTarget}
+						</p>
+						<p class="text-sm text-green-700">
+							{habit.frequencyType === 'weekly' ? 'This Week' : 'Today'}
+						</p>
+					</div>
+				{/if}
 			</div>
 			{#if habit.reminderTime}
 				<div class="mt-4 flex items-center gap-2 text-gray-600">
@@ -210,7 +255,9 @@
 				class:text-green-700={isFullyCompleted}
 			>
 				{#if isFullyCompleted}
-					✓ Completed Today
+					{habit.schedule?.type === 'every-x-days'
+						? '✓ Completed This Interval'
+						: '✓ Completed Today'}
 				{:else}
 					Mark as Complete
 				{/if}

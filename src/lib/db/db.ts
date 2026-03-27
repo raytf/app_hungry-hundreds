@@ -12,6 +12,12 @@ import Dexie, { type Table } from 'dexie';
 // TypeScript Interfaces
 // ============================================================================
 
+/** Habit frequency type for the flexible streaks system */
+export type FrequencyType = 'daily' | 'weekly';
+
+/** Completion quality for a habit log entry */
+export type CompletionType = 'full' | 'partial';
+
 /**
  * Schedule configuration for a habit
  */
@@ -38,15 +44,16 @@ export interface Habit {
 	reminderTime?: string; // HH:MM format (24-hour)
 	schedule: HabitSchedule; // Schedule type and frequency
 	// Frequency configuration (Phase 1: Flexible Streaks)
-	frequencyType: FrequencyType; // 'daily' or 'weekly'
+	// These are optional for every-x-days habits which use schedule.intervalDays instead
+	frequencyType?: FrequencyType; // 'daily' or 'weekly' (undefined for every-x-days habits)
 	/**
 	 * Target completions per period:
 	 * - For 'daily': 1-10 times per day (e.g., "Drink water 8 times per day")
 	 * - For 'weekly': 1-7 times per week (e.g., "Gym 3 times per week")
 	 * Default: 1
 	 */
-	frequencyTarget: number;
-	weekStartsOn: 0 | 1; // 0 = Sunday, 1 = Monday
+	frequencyTarget?: number;
+	weekStartsOn?: 0 | 1; // 0 = Sunday, 1 = Monday
 	/**
 	 * User-defined criteria for what constitutes a partial completion
 	 * e.g., "20 pushups instead of full gym session" or "10 minutes instead of 30"
@@ -104,17 +111,22 @@ export class HungryHundredsDB extends Dexie {
 		});
 
 		// Version 2: Add schedule field to habits (defaults applied via upgrade)
-		this.version(2).stores({
-			habits: '++id, serverId, createdAt',
-			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
-			syncQueue: '++id, timestamp'
-		}).upgrade((tx) => {
-			return tx.table('habits').toCollection().modify((habit) => {
-				if (!habit.schedule) {
-					habit.schedule = { type: 'daily' };
-				}
+		this.version(2)
+			.stores({
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+				syncQueue: '++id, timestamp'
+			})
+			.upgrade((tx) => {
+				return tx
+					.table('habits')
+					.toCollection()
+					.modify((habit) => {
+						if (!habit.schedule) {
+							habit.schedule = { type: 'daily' };
+						}
+					});
 			});
-		});
 	}
 }
 

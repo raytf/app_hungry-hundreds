@@ -49,6 +49,8 @@ export interface HabitWithStatus extends Habit {
 	totalCompletions: number; // Lifetime completion count
 	// Partial completion fields (Phase 2)
 	completionType: CompletionType | null; // 'full' | 'partial' | null (no completion today)
+	// Interval habit fields (every-x-days)
+	dueInDays?: number; // Days until next due; negative = overdue; undefined for non-interval habits
 }
 
 // ============================================================================
@@ -119,6 +121,7 @@ interface HabitStatusResult {
 	periodType: 'day' | 'week';
 	totalCompletions: number;
 	completionType: CompletionType | null;
+	dueInDays?: number;
 }
 
 // Derived store that fetches flexible streaks and completion status
@@ -152,13 +155,19 @@ const habitStatusWithTrigger = derived<
 					const completionType = completionTypes[i];
 
 					if (flexResult) {
-						// For daily habits: completedToday = target met for the day
-						// For weekly habits: completedToday = has any completion for TODAY specifically
-						// (not just any progress this week)
-						const completedToday =
-							habit.frequencyType === 'daily'
-								? flexResult.periodProgress >= flexResult.periodTarget
-								: (completedTodayMap.get(id) ?? false);
+						// Determine completedToday based on schedule type
+						const scheduleType = habit.schedule?.type;
+						let completedToday: boolean;
+						if (scheduleType === 'every-x-days') {
+							// Interval habits: "done" means completed within the current window
+							completedToday = flexResult.periodProgress >= 1;
+						} else if (habit.frequencyType === 'daily' || scheduleType === 'daily') {
+							// Daily habits: target met for the day
+							completedToday = flexResult.periodProgress >= flexResult.periodTarget;
+						} else {
+							// Weekly habits: has any completion for TODAY specifically
+							completedToday = completedTodayMap.get(id) ?? false;
+						}
 
 						statusMap.set(id, {
 							streak: flexResult.streak,
@@ -167,7 +176,8 @@ const habitStatusWithTrigger = derived<
 							periodTarget: flexResult.periodTarget,
 							periodType: flexResult.periodType,
 							totalCompletions: flexResult.totalCompletions,
-							completionType
+							completionType,
+							dueInDays: flexResult.dueInDays
 						});
 					} else {
 						// Fallback for edge cases
@@ -204,7 +214,8 @@ const habitsWithStatusFinal = derived<
 			periodTarget: 1,
 			periodType: 'day' as const,
 			totalCompletions: 0,
-			completionType: null
+			completionType: null,
+			dueInDays: undefined
 		};
 		return {
 			...habit,
@@ -214,7 +225,8 @@ const habitsWithStatusFinal = derived<
 			periodTarget: status.periodTarget,
 			periodType: status.periodType,
 			totalCompletions: status.totalCompletions,
-			completionType: status.completionType
+			completionType: status.completionType,
+			dueInDays: status.dueInDays
 		};
 	});
 });

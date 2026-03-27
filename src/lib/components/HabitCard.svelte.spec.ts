@@ -30,6 +30,7 @@ const mockHabit: HabitWithStatus = {
 	name: 'Morning Run',
 	emoji: '🏃',
 	color: '#22c55e',
+	schedule: { type: 'daily' },
 	frequencyType: 'daily',
 	frequencyTarget: 1,
 	weekStartsOn: 1,

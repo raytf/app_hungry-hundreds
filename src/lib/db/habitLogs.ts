@@ -77,7 +77,7 @@ export async function toggleHabitCompletion(
 	const habit = await db.habits.get(habitId);
 	if (!habit) return false;
 
-	const target = habit.frequencyType === 'daily' ? habit.frequencyTarget : 1;
+	const target = habit.frequencyType === 'daily' ? (habit.frequencyTarget ?? 1) : 1;
 	const existingLogs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
 	const currentCount = existingLogs.length;
 
@@ -341,6 +341,7 @@ export interface FlexibleStreakResult {
 	periodTarget: number; // Target for current period (1-10 for daily, 1-7 for weekly)
 	periodType: 'day' | 'week';
 	totalCompletions: number; // Lifetime completion count
+	dueInDays?: number; // Only for 'every-x-days' habits: days until next due (negative = overdue)
 }
 
 /**
@@ -544,18 +545,105 @@ export async function calculateWeekStreak(
 }
 
 /**
+ * Calculate streak and due-date for every-x-days interval habits.
+ *
+ * Streak logic:
+ * - Each completion starts a new window of `intervalDays` days
+ * - A window is "on time" if the next completion came within that window
+ * - Streak = count of consecutive on-time completions (newest first)
+ * - If the current window is overdue (dueInDays < 0), streak resets to 0
+ *
+ * dueInDays:
+ * - Positive: completed this interval, X days left until next is due
+ * - Zero: due today (not yet done)
+ * - Negative: overdue by |dueInDays| days
+ */
+async function calculateIntervalStreak(habit: Habit): Promise<FlexibleStreakResult> {
+	const habitId = habit.id!;
+	const intervalDays = habit.schedule?.intervalDays ?? 7;
+	const totalCompletions = await getTotalCompletions(habitId);
+
+	// Get unique completion dates (full completions only for streak; any for "done" display)
+	const allLogs = await db.logs.where('habitId').equals(habitId).toArray();
+	const uniqueDates = [...new Set(allLogs.map((l) => l.date))].sort().reverse(); // newest first
+
+	const today = getTodayDate();
+	const todayMs = new Date(today + 'T00:00:00').getTime();
+	const msPerDay = 24 * 60 * 60 * 1000;
+
+	if (uniqueDates.length === 0) {
+		// No completions yet — due immediately
+		return {
+			streak: 0,
+			periodProgress: 0,
+			periodTarget: 1,
+			periodType: 'day',
+			totalCompletions,
+			dueInDays: 0
+		};
+	}
+
+	// Calculate next due date from last completion
+	const lastDate = uniqueDates[0];
+	const lastMs = new Date(lastDate + 'T00:00:00').getTime();
+	const nextDueMs = lastMs + intervalDays * msPerDay;
+	const dueInDays = Math.round((nextDueMs - todayMs) / msPerDay);
+
+	// completedThisInterval: already done and still within the window
+	const completedThisInterval = dueInDays > 0;
+
+	// Calculate streak of consecutive on-time completions
+	let streak = 0;
+	if (dueInDays < 0) {
+		// Overdue — streak is broken
+		streak = 0;
+	} else if (uniqueDates.length > 0) {
+		// Count starting from most recent completion
+		streak = 1;
+		for (let i = 0; i < uniqueDates.length - 1; i++) {
+			const newerMs = new Date(uniqueDates[i] + 'T00:00:00').getTime();
+			const olderMs = new Date(uniqueDates[i + 1] + 'T00:00:00').getTime();
+			const gapDays = Math.round((newerMs - olderMs) / msPerDay);
+			if (gapDays <= intervalDays) {
+				streak++;
+			} else {
+				break; // Gap too large — consecutive chain broken
+			}
+		}
+	}
+
+	return {
+		streak,
+		periodProgress: completedThisInterval ? 1 : 0,
+		periodTarget: 1,
+		periodType: 'day',
+		totalCompletions,
+		dueInDays
+	};
+}
+
+/**
  * Calculate flexible streak for a habit based on its frequency type
  * @param habit - The habit to calculate streak for (must have id)
  * @returns FlexibleStreakResult with all streak metrics
  */
 export async function calculateFlexibleStreak(habit: Habit): Promise<FlexibleStreakResult> {
 	const habitId = habit.id!;
-	const target = habit.frequencyTarget;
+
+	// every-x-days schedule: use interval-based calculation
+	if (habit.schedule?.type === 'every-x-days') {
+		return calculateIntervalStreak(habit);
+	}
+
+	// Determine effective frequency type (schedule takes precedence for backward compat)
+	const effectiveType =
+		habit.frequencyType ?? (habit.schedule?.type === 'weekly' ? 'weekly' : 'daily');
+	const target = habit.frequencyTarget ?? 1;
 
 	// Get total completions (works for both daily and weekly)
 	const totalCompletions = await getTotalCompletions(habitId);
 
-	if (habit.frequencyType === 'daily') {
+	if (effectiveType === 'daily') {
 		const today = getTodayDate();
 
 		// For multi-completion daily habits (target > 1)
@@ -588,7 +676,7 @@ export async function calculateFlexibleStreak(habit: Habit): Promise<FlexibleStr
 		}
 	} else {
 		// Weekly habits: consecutive successful weeks
-		const weekStartsOn = habit.weekStartsOn;
+		const weekStartsOn = habit.weekStartsOn ?? 1;
 
 		// Get current week progress
 		const today = new Date();
