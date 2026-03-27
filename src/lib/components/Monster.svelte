@@ -6,13 +6,23 @@
 	 * view model data binding for head tracking (headX, headY).
 	 * Falls back to emoji display if Rive fails to load or WebGL is unavailable.
 	 *
-	 * Exports a `lookAt(targetX, targetY, duration?)` method for parent
-	 * components to smoothly animate the monster's gaze direction.
+	 * Subscribes to `mascotState` store for rule-engine-driven updates
+	 * (emotion, look direction, intensity, evolution stage).
+	 * Also exports `lookAt()` and `setExpression()` for manual overrides.
 	 *
 	 * @see docs/ANIMATION.md for animation system documentation
+	 * @see src/lib/stores/mascot.ts — reactive MascotState source
 	 */
 	import { onMount, onDestroy } from 'svelte';
 	import { monsterStages, type MonsterStage } from '$lib/stores/monster';
+	import {
+		mascotState,
+		riveLookX,
+		riveLookY,
+		emotionNumber,
+		riveIntensity
+	} from '$lib/stores/mascot';
+	import type { EvolutionStage } from '$lib/types/mascot';
 	import {
 		supportsWebGL,
 		createVisibilityObserver,
@@ -25,13 +35,27 @@
 	} from '@rive-app/canvas';
 
 	interface Props {
-		/** Current evolution stage */
-		stage: MonsterStage;
+		/** Current evolution stage (legacy prop — overridden by mascotState when available) */
+		stage?: MonsterStage;
 		/** Additional CSS classes */
 		class?: string;
 	}
 
-	let { stage, class: className = '' }: Props = $props();
+	let { stage: stageProp, class: className = '' }: Props = $props();
+
+	// Map EvolutionStage number → MonsterStage string for emoji fallback
+	const STAGE_TO_MONSTER: Record<EvolutionStage, MonsterStage> = {
+		1: 'egg',
+		2: 'baby',
+		3: 'teen',
+		4: 'adult',
+		5: 'elder'
+	};
+
+	// Derive effective stage: mascotState takes priority over prop
+	let effectiveStage = $derived(
+		STAGE_TO_MONSTER[$mascotState.evolutionStage] ?? stageProp ?? 'egg'
+	);
 
 	// State
 	let canvas: HTMLCanvasElement;
@@ -46,14 +70,32 @@
 	let headXProp: ViewModelInstanceNumber | null = null;
 	let headYProp: ViewModelInstanceNumber | null = null;
 	let expressionProp: ViewModelInstanceString | null = null;
+	let intensityProp: ViewModelInstanceNumber | null = null;
+	let emotionProp: ViewModelInstanceNumber | null = null;
 
 	// Current interpolated values for smooth animation
 	let currentHeadX = 0;
 	let currentHeadY = 0;
 	let animationFrameId: number | null = null;
 
+	// Whether lookAt is currently overriding rule engine look direction
+	let manualLookOverride = false;
+	let manualLookTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Whether setExpression is currently overriding the rule engine emotion
+	let manualExpressionOverride = false;
+	let manualExpressionTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Map debug expression names → rule engine emotion numbers
+	const EXPRESSION_TO_EMOTION: Record<string, number> = {
+		normal: 0, // idle
+		excited: 2, // excited
+		bored: 3, // tired
+		surprised: 1 // happy (closest available)
+	};
+
 	// Get emoji fallback config
-	let stageConfig = $derived(monsterStages[stage]);
+	let stageConfig = $derived(monsterStages[effectiveStage]);
 
 	// Check if we should attempt Rive
 	let shouldUseRive = $state(false);
@@ -114,7 +156,7 @@
 	}
 
 	/**
-	 * Initialize the CharacterVM view model properties (headX, headY).
+	 * Initialize the CharacterVM view model properties.
 	 * Called after Rive loads with autoBind enabled.
 	 */
 	function initViewModel() {
@@ -129,14 +171,42 @@
 		headXProp = vmInstance.number('headX');
 		headYProp = vmInstance.number('headY');
 		expressionProp = vmInstance.string('expression');
+		intensityProp = vmInstance.number('intensity');
+		emotionProp = vmInstance.number('emotion');
 
 		if (!headXProp || !headYProp) {
 			console.warn('Monster: Could not find headX/headY properties on CharacterVM');
 		}
-		if (!expressionProp) {
-			console.warn('Monster: Could not find expression property on CharacterVM');
-		}
 	}
+
+	// ============================================================================
+	// Rule Engine → Rive Bridge ($effect)
+	// ============================================================================
+
+	/**
+	 * Reactively push mascotState values to Rive view model properties.
+	 * Skips look direction when a manual lookAt override is active.
+	 * Skips emotion when a manual setExpression override is active.
+	 */
+	$effect(() => {
+		if (!riveLoaded) return;
+
+		// Emotion number (0–7) — skip when manual expression override is active
+		if (!manualExpressionOverride) {
+			if (emotionProp) emotionProp.value = $emotionNumber;
+		}
+
+		// Intensity (0–1)
+		if (intensityProp) intensityProp.value = $riveIntensity;
+
+		// Look direction (only when not manually overridden)
+		if (!manualLookOverride) {
+			if (headXProp) headXProp.value = $riveLookX;
+			if (headYProp) headYProp.value = $riveLookY;
+			currentHeadX = $riveLookX;
+			currentHeadY = $riveLookY;
+		}
+	});
 
 	// ============================================================================
 	// Smooth Head Tracking (lookAt)
@@ -162,6 +232,13 @@
 		// Clamp to valid range
 		targetX = Math.max(-1, Math.min(1, targetX));
 		targetY = Math.max(-1, Math.min(1, targetY));
+
+		// Temporarily override rule engine look direction
+		manualLookOverride = true;
+		if (manualLookTimeout) clearTimeout(manualLookTimeout);
+		manualLookTimeout = setTimeout(() => {
+			manualLookOverride = false;
+		}, duration + 500); // release after animation + settle time
 
 		// Cancel any in-progress animation
 		if (animationFrameId !== null) {
@@ -199,12 +276,25 @@
 
 	/**
 	 * Set the monster's facial expression.
+	 * Temporarily overrides the rule engine emotion for 3 seconds.
 	 *
 	 * @param expression - One of: "normal", "excited", "bored", "surprised"
 	 */
 	export function setExpression(expression: string): void {
-		if (expressionProp) {
-			expressionProp.value = expression;
+		// Pause the rule engine emotion update for 3 seconds
+		manualExpressionOverride = true;
+		if (manualExpressionTimeout) clearTimeout(manualExpressionTimeout);
+		manualExpressionTimeout = setTimeout(() => {
+			manualExpressionOverride = false;
+		}, 3000);
+
+		// Set string expression property (Rive string input)
+		if (expressionProp) expressionProp.value = expression;
+
+		// Also drive the emotion number so the state machine responds
+		const emotionNum = EXPRESSION_TO_EMOTION[expression];
+		if (emotionNum !== undefined && emotionProp) {
+			emotionProp.value = emotionNum;
 		}
 	}
 
@@ -213,6 +303,8 @@
 		if (animationFrameId !== null) {
 			cancelAnimationFrame(animationFrameId);
 		}
+		if (manualLookTimeout) clearTimeout(manualLookTimeout);
+		if (manualExpressionTimeout) clearTimeout(manualExpressionTimeout);
 		cleanupVisibility?.();
 		cleanupTabVisibility?.();
 		cleanupResize?.();

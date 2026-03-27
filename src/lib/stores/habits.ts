@@ -9,7 +9,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { readable, derived, writable } from 'svelte/store';
+import { readable, derived, writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { liveQuery } from 'dexie';
 import {
@@ -243,11 +243,18 @@ export const habits = {
 	subscribe: habitsWithStatusFinal.subscribe,
 
 	/**
-	 * Toggle habit completion for today (full completion)
+	 * Toggle habit completion for today (full completion).
+	 * Feeds Gonn when completing (not uncompleting).
 	 */
 	toggle: async (id: number): Promise<void> => {
 		if (!browser) return;
-		await toggleHabitCompletion(id);
+		const completed = await toggleHabitCompletion(id);
+		if (completed) {
+			// Lazy import to avoid circular dependency
+			const { feedGonn } = await import('$lib/stores/gonn');
+			const totalActive = get(habitsWithStatusFinal).length;
+			feedGonn(totalActive);
+		}
 		refreshStatus();
 	},
 

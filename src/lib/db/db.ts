@@ -7,6 +7,8 @@
  * @see docs/API.md for full data model documentation
  */
 import Dexie, { type Table } from 'dexie';
+import type { GonnState, MemoryEntry, DialogueCacheEntry } from '$lib/types/mascot';
+import { DEFAULT_GONN_STATE } from '$lib/types/mascot';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -96,6 +98,9 @@ export class HungryHundredsDB extends Dexie {
 	habits!: Table<Habit>;
 	logs!: Table<HabitLog>;
 	syncQueue!: Table<SyncQueue>;
+	gonnState!: Table<GonnState>;
+	mascotMemory!: Table<MemoryEntry>;
+	dialogueCache!: Table<DialogueCacheEntry>;
 
 	constructor() {
 		super('HungryHundreds');
@@ -126,6 +131,28 @@ export class HungryHundredsDB extends Dexie {
 							habit.schedule = { type: 'daily' };
 						}
 					});
+			});
+
+		// Version 3: Add mascot system tables (gonnState, mascotMemory, dialogueCache)
+		this.version(3)
+			.stores({
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+				syncQueue: '++id, timestamp',
+				gonnState: 'id',
+				mascotMemory: '++id, type, key, createdAt',
+				dialogueCache: 'contextHash, createdAt'
+			})
+			.upgrade(async (tx) => {
+				// Seed the singleton GonnState row
+				const table = tx.table('gonnState');
+				const existing = await table.get('gonn');
+				if (!existing) {
+					await table.add({
+						...DEFAULT_GONN_STATE,
+						lastFedAt: new Date().toISOString()
+					});
+				}
 			});
 	}
 }
@@ -167,10 +194,17 @@ export function now(): number {
  * Called on logout to prevent cross-user data contamination
  */
 export async function clearAllUserData(): Promise<void> {
-	await db.transaction('rw', [db.habits, db.logs, db.syncQueue], async () => {
-		await db.habits.clear();
-		await db.logs.clear();
-		await db.syncQueue.clear();
-	});
+	await db.transaction(
+		'rw',
+		[db.habits, db.logs, db.syncQueue, db.gonnState, db.mascotMemory, db.dialogueCache],
+		async () => {
+			await db.habits.clear();
+			await db.logs.clear();
+			await db.syncQueue.clear();
+			await db.gonnState.clear();
+			await db.mascotMemory.clear();
+			await db.dialogueCache.clear();
+		}
+	);
 	console.log('[db] All user data cleared');
 }

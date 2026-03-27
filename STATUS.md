@@ -7,19 +7,19 @@
 
 ## Quick Status
 
-| Phase | Name              | Status      | Progress |
-| ----- | ----------------- | ----------- | -------- |
-| 1     | UI Foundation     | ✅ Complete | 5/5      |
-| 2     | Data Layer        | ✅ Complete | 5/5      |
-| 3     | Backend           | ✅ Complete | 5/5      |
-| 4     | Sync              | ✅ Complete | 4/4      |
-| 5     | Rule Engine & Rive | 📋 Planned  | 0/6      |
-| 6     | PWA               | ✅ Complete | 5/5      |
-| 7     | AI Dialogue       | 📋 Planned  | 0/4      |
-| 8     | Chatbot           | 📋 Planned  | 0/5      |
+| Phase | Name               | Status      | Progress |
+| ----- | ------------------ | ----------- | -------- |
+| 1     | UI Foundation      | ✅ Complete | 5/5      |
+| 2     | Data Layer         | ✅ Complete | 5/5      |
+| 3     | Backend            | ✅ Complete | 5/5      |
+| 4     | Sync               | ✅ Complete | 4/4      |
+| 5     | Rule Engine & Rive | ✅ Complete | 6/6      |
+| 6     | PWA                | ✅ Complete | 5/5      |
+| 7     | AI Dialogue        | 📋 Planned  | 0/4      |
+| 8     | Chatbot            | 📋 Planned  | 0/5      |
 
-**Current Phase:** Phase 5 (Rule Engine & Rive) — Next priority
-**Last Updated:** 2026-03-23
+**Current Phase:** Phase 7 (AI Dialogue) — Next priority
+**Last Updated:** 2026-03-27
 
 ---
 
@@ -127,11 +127,11 @@
 - ✅ **Predictable SW Update Flow** - Waiting SW detection, user-confirmed `SKIP_WAITING`, auto-reload on `controllerchange`
 - ✅ **Layout PWA Integration** - Manifest link, Apple meta tags, PWA initialization
 
-### Phase 5: Animation (In Progress)
+### Phase 5: Animation & Rule Engine (Complete)
 
 - ✅ **Rive Installed** - `@rive-app/canvas@2.34.3` for monster animations
 - ✅ **Motion One Installed** - `motion@12.31.0` for UI micro-interactions
-- ✅ **Monster.svelte** - Rive canvas wrapper with emoji fallback, View Model data binding, and exported `lookAt()` method
+- ✅ **Monster.svelte** - Rive canvas wrapper with emoji fallback, View Model data binding, rule engine bridge
 - ✅ **MonsterDisplay Updated** - Uses Monster.svelte with Rive animation, registers `lookAt` callback via store
 - ✅ **View Model Binding** - CharacterVM with `headX`/`headY` number properties (-1 to 1) for head tracking
 - ✅ **Head Tracking** - Monster gaze follows cursor on homepage via `onmousemove` → `monsterLookAt()` store API
@@ -142,6 +142,13 @@
 - ✅ **BottomNav Animations** - Icon tap animation
 - ✅ **Vite Lazy Loading** - Rive chunk configured for lazy loading
 - ✅ **Monster Asset** - Using `monster_hatchling.riv` with CharacterVM view model
+- ✅ **Type Definitions** - `src/lib/types/mascot.ts` with GonnState, MascotState, HabitSnapshot, GlobalSnapshot
+- ✅ **Rule Engine Core** - `src/lib/ai/ruleEngine.ts` with pure functions: satiation, decay, evolution (hysteresis), mood
+- ✅ **Dexie Schema v3** - `gonnState`, `mascotMemory`, `dialogueCache` tables added
+- ✅ **GonnState Store** - `src/lib/stores/gonn.ts` with feedGonn, tickDecay, reactive liveQuery
+- ✅ **Snapshot Builders** - `src/lib/ai/snapshots.ts` with danger zones, streak health, window status
+- ✅ **MascotState Store** - `src/lib/stores/mascot.ts` derived store connecting habits + gonn → rule engine
+- ✅ **Rive Bridge** - Monster.svelte subscribes to `$mascotState`, pushes emotion/look/intensity to Rive with manual override
 - 📋 **Page Transitions** - Not yet implemented
 - 📋 **Confetti Effects** - Not yet implemented
 
@@ -167,13 +174,13 @@
 
 ### Technologies Documented but Not Installed
 
-| Technology       | Documented In           | Status       | Reason              |
-| ---------------- | ----------------------- | ------------ | ------------------- |
-| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 2 - Complete  |
-| Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete  |
-| @rive-app/canvas | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Rule Engine & Rive |
-| Motion One       | ARCHITECTURE.md         | ❌ Not yet   | Phase 5 - Rule Engine & Rive |
-| Firebase (FCM)   | DEPLOYMENT.md           | ✅ Installed | Phase 6 - PWA       |
+| Technology       | Documented In           | Status       | Reason             |
+| ---------------- | ----------------------- | ------------ | ------------------ |
+| Dexie.js         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 2 - Complete |
+| Supabase         | ARCHITECTURE.md, API.md | ✅ Installed | Phase 3 - Complete |
+| @rive-app/canvas | ARCHITECTURE.md         | ✅ Installed | Phase 5 - Complete |
+| Motion One       | ARCHITECTURE.md         | ✅ Installed | Phase 5 - Complete |
+| Firebase (FCM)   | DEPLOYMENT.md           | ✅ Installed | Phase 6 - PWA      |
 
 ### Features Documented but Not Built
 
@@ -224,16 +231,17 @@ All Phase 6 tasks completed:
 5. ✅ **PWA installability** - Install prompt detection and banner component
 6. ✅ **Predictable SW updates** - Waiting SW detection, `UpdatePrompt.svelte` toast, user-confirmed reload
 
-### Phase 5: Rule Engine & Rive (Next Priority)
+### Phase 5: Rule Engine & Rive ✅ Complete
 
-Completed tasks:
+All Phase 5 tasks completed:
 
-1. **Type definitions** - `src/lib/types/mascot.ts` with all interfaces from spec
-2. **Rule engine core** - `src/lib/ai/ruleEngine.ts` implementing `deriveMascotState()` + helpers
-3. **Dexie schema update** - Add `gonnState`, `mascotMemory`, `dialogueCache` tables
-4. **Gonn store** - `src/lib/stores/gonn.ts` (Dexie-backed GonnState with satiation/decay)
-5. **Mascot store** - `src/lib/stores/mascot.ts` (derived MascotState from GlobalSnapshot)
-6. **Rive bridge** - Extend `Monster.svelte` with rule engine → Rive state machine inputs
+1. ✅ **Type definitions** - `src/lib/types/mascot.ts` with all interfaces from spec
+2. ✅ **Rule engine core** - `src/lib/ai/ruleEngine.ts` implementing `deriveMascotState()` + helpers
+3. ✅ **Dexie schema update** - `gonnState`, `mascotMemory`, `dialogueCache` tables
+4. ✅ **Gonn store** - `src/lib/stores/gonn.ts` (Dexie-backed GonnState with satiation/decay)
+5. ✅ **Snapshot builders** - `src/lib/ai/snapshots.ts` with danger zones, streak health
+6. ✅ **Mascot store** - `src/lib/stores/mascot.ts` (derived MascotState from GlobalSnapshot)
+7. ✅ **Rive bridge** - `Monster.svelte` subscribes to `$mascotState` with manual override support
 
 See `docs/features/ai-implementation-spec.md` for full implementation guide.
 See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.

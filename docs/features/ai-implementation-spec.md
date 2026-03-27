@@ -126,7 +126,7 @@ interface MascotState {
   emotionIntensity: number;       // 0–100
   lookX: number;                  // 0–100 (joystick)
   lookY: number;                  // 0–100 (joystick)
-  evolutionStage: number;         // 1–5 (MVP uses 1–3)
+  evolutionStage: number;         // 1–5
   trigger?: 'levelUp' | 'regress' | 'celebrate100' | 'streakSave' | 'nudge';
   context: MascotContext;
 }
@@ -321,22 +321,26 @@ function deriveMascotState(global: GlobalSnapshot): MascotState {
 
 Flag these completion-count ranges (not calendar days) as known dropout windows:
 
-| Window | Completion Count | Label |
-|--------|-----------------|-------|
-| First-week cliff | 4–10 | "This is where most people stop" |
-| Motivation plateau | 18–24 | "The excitement has faded. Discipline takes over." |
-| Mid-term crisis | 35–45 | "Halfway feels like forever" |
-| Automaticity gap | 55–65 | "Almost automatic, but not quite" |
+| Window             | Completion Count | Label                                              |
+| ------------------ | ---------------- | -------------------------------------------------- |
+| First-week cliff   | 4–10             | "This is where most people stop"                   |
+| Motivation plateau | 18–24            | "The excitement has faded. Discipline takes over." |
+| Mid-term crisis    | 35–45            | "Halfway feels like forever"                       |
+| Automaticity gap   | 55–65            | "Almost automatic, but not quite"                  |
 
-### Evolution Stage Thresholds (MVP: 3 stages)
+### Evolution Stage Thresholds (5 stages, with hysteresis)
 
-| Stage | Satiation Range | Form |
-|-------|----------------|------|
-| 1 — Egg | 0–10 | Small, round, mostly face/eyes |
-| 2 — Juvenile | 11–50 | Limbs visible, teeth/horns emerge |
-| 3 — Apex | 51+ | Full kaiju form, tail, special FX |
+Gonn can regress. Separate entry/exit boundaries prevent flickering. See `RULE_ENGINE_SPEC.md` §2.4 for the canonical thresholds and `deriveEvolutionStage()` implementation.
 
-Evolution is permanent (never devolve). Satiation fluctuates and drives visual energy/expressiveness, but `evolutionStage` only goes up.
+| Stage         | Enter At (Growing) | Exit At (Shrinking) | Form                              |
+| ------------- | ------------------ | ------------------- | --------------------------------- |
+| 1 — Egg       | — (default)        | — (floor)           | Small, round, mostly face/eyes    |
+| 2 — Hatchling | satiation ≥ 10     | satiation < 6       | Eyes open, tiny limbs             |
+| 3 — Juvenile  | satiation ≥ 25     | satiation < 18      | Limbs visible, teeth/horns emerge |
+| 4 — Adult     | satiation ≥ 50     | satiation < 40      | Full body, tail, attitude         |
+| 5 — Apex      | satiation ≥ 80     | satiation < 70      | Full kaiju form, special FX       |
+
+Regression is allowed — Gonn can shrink all the way back to Egg. `peakStage` is preserved so the LLM can reference past growth ("I remember being big").
 
 ---
 
@@ -346,14 +350,14 @@ Evolution is permanent (never devolve). Satiation fluctuates and drives visual e
 
 The existing Monster.svelte already handles `lookX` and `lookY`. Add these inputs to the Rive state machine:
 
-| Input Name | Type | Source | Purpose |
-|-----------|------|--------|---------|
-| `lookX` | Number (0–100) | Existing joystick | X-axis head direction |
-| `lookY` | Number (0–100) | Existing joystick | Y-axis head direction |
-| `emotion` | Number | Rule engine → `primaryEmotion` mapped to int | Drives emotion state transitions |
-| `emotionIntensity` | Number (0–100) | Rule engine | Modulates animation blend weights |
-| `evolutionStage` | Number (1–3) | GonnState | Controls which Solo group is active |
-| `evolveNow` | Trigger | Fires when evolution threshold crossed | Plays one-shot evolution cutscene |
+| Input Name         | Type           | Source                                       | Purpose                             |
+| ------------------ | -------------- | -------------------------------------------- | ----------------------------------- |
+| `lookX`            | Number (0–100) | Existing joystick                            | X-axis head direction               |
+| `lookY`            | Number (0–100) | Existing joystick                            | Y-axis head direction               |
+| `emotion`          | Number         | Rule engine → `primaryEmotion` mapped to int | Drives emotion state transitions    |
+| `emotionIntensity` | Number (0–100) | Rule engine                                  | Modulates animation blend weights   |
+| `evolutionStage`   | Number (1–5)   | GonnState                                    | Controls which Solo group is active |
+| `evolveNow`        | Trigger        | Fires when evolution threshold crossed       | Plays one-shot evolution cutscene   |
 
 ### Emotion → Number Mapping
 
@@ -374,51 +378,51 @@ const EMOTION_MAP: Record<MascotState['primaryEmotion'], number> = {
 
 ```svelte
 <script>
-  import { onMount } from 'svelte';
-  import { Rive, Layout, Fit } from '@rive-app/canvas';
-  import { mascotStore } from '$lib/stores/mascot';
+	import { onMount } from 'svelte';
+	import { Rive, Layout, Fit } from '@rive-app/canvas';
+	import { mascotStore } from '$lib/stores/mascot';
 
-  let canvas;
-  let rive;
-  let inputs = {};
+	let canvas;
+	let rive;
+	let inputs = {};
 
-  onMount(() => {
-    rive = new Rive({
-      src: '/animations/monster.riv',
-      canvas,
-      autoplay: true,
-      layout: new Layout({ fit: Fit.Contain }),
-      stateMachines: 'MainStateMachine',
-      onLoad: () => {
-        const allInputs = rive.stateMachineInputs('MainStateMachine');
-        inputs = {
-          lookX: allInputs.find(i => i.name === 'lookX'),
-          lookY: allInputs.find(i => i.name === 'lookY'),
-          emotion: allInputs.find(i => i.name === 'emotion'),
-          emotionIntensity: allInputs.find(i => i.name === 'emotionIntensity'),
-          evolutionStage: allInputs.find(i => i.name === 'evolutionStage'),
-          evolveNow: allInputs.find(i => i.name === 'evolveNow'),
-        };
-      }
-    });
-  });
+	onMount(() => {
+		rive = new Rive({
+			src: '/animations/monster.riv',
+			canvas,
+			autoplay: true,
+			layout: new Layout({ fit: Fit.Contain }),
+			stateMachines: 'MainStateMachine',
+			onLoad: () => {
+				const allInputs = rive.stateMachineInputs('MainStateMachine');
+				inputs = {
+					lookX: allInputs.find((i) => i.name === 'lookX'),
+					lookY: allInputs.find((i) => i.name === 'lookY'),
+					emotion: allInputs.find((i) => i.name === 'emotion'),
+					emotionIntensity: allInputs.find((i) => i.name === 'emotionIntensity'),
+					evolutionStage: allInputs.find((i) => i.name === 'evolutionStage'),
+					evolveNow: allInputs.find((i) => i.name === 'evolveNow')
+				};
+			}
+		});
+	});
 
-  // Reactive: whenever mascotStore updates, push to Rive
-  $: if (inputs.emotion && $mascotStore) {
-    inputs.lookX.value = $mascotStore.lookX;
-    inputs.lookY.value = $mascotStore.lookY;
-    inputs.emotion.value = EMOTION_MAP[$mascotStore.primaryEmotion] ?? 0;
-    inputs.emotionIntensity.value = $mascotStore.emotionIntensity;
-    inputs.evolutionStage.value = $mascotStore.evolutionStage;
-    if ($mascotStore.trigger === 'levelUp') inputs.evolveNow?.fire();
-  }
+	// Reactive: whenever mascotStore updates, push to Rive
+	$: if (inputs.emotion && $mascotStore) {
+		inputs.lookX.value = $mascotStore.lookX;
+		inputs.lookY.value = $mascotStore.lookY;
+		inputs.emotion.value = EMOTION_MAP[$mascotStore.primaryEmotion] ?? 0;
+		inputs.emotionIntensity.value = $mascotStore.emotionIntensity;
+		inputs.evolutionStage.value = $mascotStore.evolutionStage;
+		if ($mascotStore.trigger === 'levelUp') inputs.evolveNow?.fire();
+	}
 
-  // Tap handler
-  function handleTap() {
-    // Briefly show happy, then call AI for dialogue
-    if (inputs.emotion) inputs.emotion.value = EMOTION_MAP.happy;
-    dispatch('tap');
-  }
+	// Tap handler
+	function handleTap() {
+		// Briefly show happy, then call AI for dialogue
+		if (inputs.emotion) inputs.emotion.value = EMOTION_MAP.happy;
+		dispatch('tap');
+	}
 </script>
 
 <canvas bind:this={canvas} on:click={handleTap} />
@@ -430,7 +434,7 @@ const EMOTION_MAP: Record<MascotState['primaryEmotion'], number> = {
 
 ### Supabase Edge Function: `/functions/gonn-dialogue`
 
-```typescript
+````typescript
 // supabase/functions/gonn-dialogue/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
@@ -440,8 +444,10 @@ You are hungry, loyal, slightly dramatic, and genuinely caring underneath the br
 
 Personality by evolution stage:
 - Egg (stage 1): curious, needy, simple sentences. "Feed me!" energy.
-- Juvenile (stage 2): playful, sarcastic, developing attitude. Food critic vibes.
-- Apex (stage 3): wise, philosophical, but still hungry. Mentor who speaks in meal metaphors.
+- Hatchling (stage 2): wide-eyed, excitable, short attention span. Learning to eat.
+- Juvenile (stage 3): playful, sarcastic, developing attitude. Food critic vibes.
+- Adult (stage 4): confident, reliable, knows what they want. Personal trainer energy.
+- Apex (stage 5): wise, philosophical, but still hungry. Mentor who speaks in meal metaphors.
 
 RULES:
 - Max 80 characters per response
@@ -494,7 +500,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ dialogue: text.slice(0, 80), emotion: null }), { headers: { 'Content-Type': 'application/json' } });
   }
 });
-```
+````
 
 ### Client-Side Dialogue Pipeline
 
@@ -603,75 +609,84 @@ async function trimShortTermMemory() {
 
 ```svelte
 <script>
-  export let text = '';
-  export let visible = false;
+	export let text = '';
+	export let visible = false;
 
-  let displayText = '';
-  let typewriterIndex = 0;
-  let timer;
+	let displayText = '';
+	let typewriterIndex = 0;
+	let timer;
 
-  $: if (visible && text) {
-    displayText = '';
-    typewriterIndex = 0;
-    clearInterval(timer);
-    timer = setInterval(() => {
-      if (typewriterIndex < text.length) {
-        displayText = text.slice(0, ++typewriterIndex);
-      } else {
-        clearInterval(timer);
-        setTimeout(() => { visible = false; }, 4000);
-      }
-    }, 30);
-  }
+	$: if (visible && text) {
+		displayText = '';
+		typewriterIndex = 0;
+		clearInterval(timer);
+		timer = setInterval(() => {
+			if (typewriterIndex < text.length) {
+				displayText = text.slice(0, ++typewriterIndex);
+			} else {
+				clearInterval(timer);
+				setTimeout(() => {
+					visible = false;
+				}, 4000);
+			}
+		}, 30);
+	}
 
-  function dismiss() {
-    clearInterval(timer);
-    visible = false;
-  }
+	function dismiss() {
+		clearInterval(timer);
+		visible = false;
+	}
 </script>
 
 {#if visible}
-  <div class="speech-bubble" on:click={dismiss} role="button" tabindex="0">
-    <p>{displayText}</p>
-    <div class="tail" />
-  </div>
+	<div class="speech-bubble" on:click={dismiss} role="button" tabindex="0">
+		<p>{displayText}</p>
+		<div class="tail" />
+	</div>
 {/if}
 
 <style>
-  .speech-bubble {
-    position: absolute;
-    bottom: calc(100% + 12px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--color-surface, #1a1a2e);
-    border: 1px solid var(--color-border, #2a2a4a);
-    border-radius: 12px;
-    padding: 8px 14px;
-    max-width: 240px;
-    animation: bubbleIn 0.25s ease-out;
-    cursor: pointer;
-    z-index: 10;
-  }
-  .speech-bubble p {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--color-text, #e0e0e0);
-  }
-  .tail {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0; height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid var(--color-surface, #1a1a2e);
-  }
-  @keyframes bubbleIn {
-    from { opacity: 0; transform: translateX(-50%) scale(0.85) translateY(6px); }
-    to { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
-  }
+	.speech-bubble {
+		position: absolute;
+		bottom: calc(100% + 12px);
+		left: 50%;
+		transform: translateX(-50%);
+		background: var(--color-surface, #1a1a2e);
+		border: 1px solid var(--color-border, #2a2a4a);
+		border-radius: 12px;
+		padding: 8px 14px;
+		max-width: 240px;
+		animation: bubbleIn 0.25s ease-out;
+		cursor: pointer;
+		z-index: 10;
+	}
+	.speech-bubble p {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.4;
+		color: var(--color-text, #e0e0e0);
+	}
+	.tail {
+		position: absolute;
+		top: 100%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 0;
+		height: 0;
+		border-left: 8px solid transparent;
+		border-right: 8px solid transparent;
+		border-top: 8px solid var(--color-surface, #1a1a2e);
+	}
+	@keyframes bubbleIn {
+		from {
+			opacity: 0;
+			transform: translateX(-50%) scale(0.85) translateY(6px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(-50%) scale(1) translateY(0);
+		}
+	}
 </style>
 ```
 
@@ -728,17 +743,17 @@ async function handleHabitComplete(habitId: string) {
 
 For LLM prompt testing — these are the voice targets:
 
-| Context | Example Dialogue |
-|---------|-----------------|
-| Habit completed, Day 7 | "A whole week! I can taste the growth." |
-| Habit completed, Day 45 | "Halfway. You taste different now — stronger." |
-| Danger zone, not done | "Day 22. This is where most stop. Not us." |
-| Lapse return | "Hey. You came back. Most don't." |
-| Tap, habit done | "Stop poking, I'm digesting your effort." |
-| Tap, habit pending | "Not to be dramatic but I'm literally starving." |
-| Evolution moment | "I have ARMS now! That's because of YOU." |
-| Night time, idle | "*yawn* Go sleep. Tomorrow's meal won't cook itself." |
-| Morning, pending | "Coffee's poured. You know what comes next." |
+| Context                 | Example Dialogue                                      |
+| ----------------------- | ----------------------------------------------------- |
+| Habit completed, Day 7  | "A whole week! I can taste the growth."               |
+| Habit completed, Day 45 | "Halfway. You taste different now — stronger."        |
+| Danger zone, not done   | "Day 22. This is where most stop. Not us."            |
+| Lapse return            | "Hey. You came back. Most don't."                     |
+| Tap, habit done         | "Stop poking, I'm digesting your effort."             |
+| Tap, habit pending      | "Not to be dramatic but I'm literally starving."      |
+| Evolution moment        | "I have ARMS now! That's because of YOU."             |
+| Night time, idle        | "_yawn_ Go sleep. Tomorrow's meal won't cook itself." |
+| Morning, pending        | "Coffee's poured. You know what comes next."          |
 
 ---
 
