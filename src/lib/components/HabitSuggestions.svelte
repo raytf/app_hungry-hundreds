@@ -27,7 +27,8 @@
 				name: suggestion.name,
 				emoji: suggestion.emoji,
 				color: suggestion.color,
-				reminderTime: suggestion.reminderTime
+				reminderTime: suggestion.reminderTime,
+				schedule: suggestion.schedule
 			});
 		} finally {
 			const newSet = new Set(addingIds);

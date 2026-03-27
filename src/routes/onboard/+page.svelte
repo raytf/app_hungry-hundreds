@@ -26,13 +26,14 @@
 		return null;
 	});
 
+	import type { HabitSchedule } from '$lib/db/db';
+
 	function handleHabitSubmit(habit: {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
-		frequencyType: FrequencyType;
-		frequencyTarget: number;
+		schedule: HabitSchedule;
 	}) {
 		habits.reset(); // Start fresh
 		habits.add({
@@ -40,8 +41,7 @@
 			emoji: habit.emoji,
 			color: habit.color,
 			reminderTime: habit.reminderTime ?? undefined,
-			frequencyType: habit.frequencyType,
-			frequencyTarget: habit.frequencyTarget
+			schedule: habit.schedule
 		});
 		goto(resolve('/'));
 	}

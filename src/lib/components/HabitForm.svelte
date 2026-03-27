@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { habitColors, habitEmojis } from '$lib/data/mockData';
-	import type { FrequencyType } from '$lib/db';
+	import type { HabitSchedule } from '$lib/db/db';
 
 	interface HabitFormData {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
-		frequencyType: FrequencyType;
-		frequencyTarget: number;
-		partialCriteria: string | null;
+		schedule: HabitSchedule;
 	}
 
 	interface Props {
@@ -83,6 +81,35 @@
 		{ value: 7, label: '7 times per week' }
 	];
 
+	// Schedule state
+	let scheduleType = $state<HabitSchedule['type']>(initialValues?.schedule?.type ?? 'daily');
+	let timesPerWeek = $state(initialValues?.schedule?.timesPerWeek ?? 3);
+	let intervalDays = $state(initialValues?.schedule?.intervalDays ?? 2);
+
+	/** Build a validated HabitSchedule from current form state */
+	function buildSchedule(): HabitSchedule {
+		switch (scheduleType) {
+			case 'weekly':
+				return { type: 'weekly', timesPerWeek };
+			case 'every-x-days':
+				return { type: 'every-x-days', intervalDays };
+			default:
+				return { type: 'daily' };
+		}
+	}
+
+	/** Human-readable schedule description for the preview */
+	const scheduleLabel = $derived.by(() => {
+		switch (scheduleType) {
+			case 'weekly':
+				return `${timesPerWeek}× per week`;
+			case 'every-x-days':
+				return `Every ${intervalDays} days`;
+			default:
+				return 'Every day';
+		}
+	});
+
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (!name.trim()) return;
@@ -92,9 +119,7 @@
 			emoji,
 			color,
 			reminderTime: reminderTime || null,
-			frequencyType,
-			frequencyTarget,
-			partialCriteria: partialCriteria.trim() || null
+			schedule: buildSchedule()
 		});
 	}
 </script>
@@ -154,72 +179,93 @@
 		</div>
 	</fieldset>
 
-	<!-- Frequency Selection -->
+	<!-- Schedule Type -->
 	<fieldset>
-		<legend class="mb-2 block text-sm font-medium text-gray-700">Frequency</legend>
-		<div class="space-y-3">
-			<!-- Frequency Type Radio Buttons -->
-			<div class="flex gap-4" role="radiogroup" aria-label="Select frequency type">
-				<label class="flex cursor-pointer items-center gap-2">
-					<input
-						type="radio"
-						name="frequencyType"
-						value="daily"
-						checked={frequencyType === 'daily'}
-						onchange={() => (frequencyType = 'daily')}
-						class="h-4 w-4 text-hungry-500 focus:ring-hungry-500"
-					/>
-					<span class="text-sm">Every day</span>
-				</label>
-				<label class="flex cursor-pointer items-center gap-2">
-					<input
-						type="radio"
-						name="frequencyType"
-						value="weekly"
-						checked={frequencyType === 'weekly'}
-						onchange={() => (frequencyType = 'weekly')}
-						class="h-4 w-4 text-hungry-500 focus:ring-hungry-500"
-					/>
-					<span class="text-sm">Weekly target</span>
-				</label>
-			</div>
-
-			<!-- Daily Target Selector (shown when daily is selected) -->
-			{#if frequencyType === 'daily'}
-				<div class="ml-6">
-					<label for="frequency-target-daily" class="mb-1 block text-sm text-gray-600">
-						How many times per day?
-					</label>
-					<select
-						id="frequency-target-daily"
-						bind:value={frequencyTarget}
-						class="input-field w-auto"
-					>
-						{#each dailyTargetOptions as option}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
-				</div>
-			{/if}
-
-			<!-- Weekly Target Selector (shown when weekly is selected) -->
-			{#if frequencyType === 'weekly'}
-				<div class="ml-6">
-					<label for="frequency-target-weekly" class="mb-1 block text-sm text-gray-600">
-						How many times per week?
-					</label>
-					<select
-						id="frequency-target-weekly"
-						bind:value={frequencyTarget}
-						class="input-field w-auto"
-					>
-						{#each weeklyTargetOptions as option}
-							<option value={option.value}>{option.label}</option>
-						{/each}
-					</select>
-				</div>
-			{/if}
+		<legend class="mb-2 block text-sm font-medium text-gray-700">Schedule</legend>
+		<div class="flex flex-wrap gap-2" role="radiogroup" aria-label="Select schedule type">
+			<button
+				type="button"
+				onclick={() => (scheduleType = 'daily')}
+				class="rounded-xl px-4 py-2 text-sm font-medium transition-all"
+				class:bg-hungry-100={scheduleType === 'daily'}
+				class:text-hungry-700={scheduleType === 'daily'}
+				class:ring-2={scheduleType === 'daily'}
+				class:ring-hungry-500={scheduleType === 'daily'}
+				class:bg-gray-100={scheduleType !== 'daily'}
+				class:text-gray-600={scheduleType !== 'daily'}
+				aria-pressed={scheduleType === 'daily'}
+			>
+				Daily
+			</button>
+			<button
+				type="button"
+				onclick={() => (scheduleType = 'weekly')}
+				class="rounded-xl px-4 py-2 text-sm font-medium transition-all"
+				class:bg-hungry-100={scheduleType === 'weekly'}
+				class:text-hungry-700={scheduleType === 'weekly'}
+				class:ring-2={scheduleType === 'weekly'}
+				class:ring-hungry-500={scheduleType === 'weekly'}
+				class:bg-gray-100={scheduleType !== 'weekly'}
+				class:text-gray-600={scheduleType !== 'weekly'}
+				aria-pressed={scheduleType === 'weekly'}
+			>
+				Weekly
+			</button>
+			<button
+				type="button"
+				onclick={() => (scheduleType = 'every-x-days')}
+				class="rounded-xl px-4 py-2 text-sm font-medium transition-all"
+				class:bg-hungry-100={scheduleType === 'every-x-days'}
+				class:text-hungry-700={scheduleType === 'every-x-days'}
+				class:ring-2={scheduleType === 'every-x-days'}
+				class:ring-hungry-500={scheduleType === 'every-x-days'}
+				class:bg-gray-100={scheduleType !== 'every-x-days'}
+				class:text-gray-600={scheduleType !== 'every-x-days'}
+				aria-pressed={scheduleType === 'every-x-days'}
+			>
+				Every X Days
+			</button>
 		</div>
+
+		<!-- Weekly: times per week -->
+		{#if scheduleType === 'weekly'}
+			<div class="mt-3">
+				<label for="times-per-week" class="mb-1 block text-sm text-gray-600">
+					Times per week
+				</label>
+				<div class="flex items-center gap-3">
+					<input
+						id="times-per-week"
+						type="range"
+						min="1"
+						max="7"
+						bind:value={timesPerWeek}
+						class="flex-1"
+					/>
+					<span class="w-8 text-center text-sm font-semibold text-hungry-600">{timesPerWeek}</span>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Every X days: interval -->
+		{#if scheduleType === 'every-x-days'}
+			<div class="mt-3">
+				<label for="interval-days" class="mb-1 block text-sm text-gray-600">
+					Every how many days?
+				</label>
+				<div class="flex items-center gap-3">
+					<input
+						id="interval-days"
+						type="range"
+						min="2"
+						max="30"
+						bind:value={intervalDays}
+						class="flex-1"
+					/>
+					<span class="w-8 text-center text-sm font-semibold text-hungry-600">{intervalDays}</span>
+				</div>
+			</div>
+		{/if}
 	</fieldset>
 
 	<!-- Reminder Time -->
@@ -257,9 +303,9 @@
 			</div>
 			<div class="flex-1">
 				<p class="font-medium">{name || 'New Habit'}</p>
-				{#if reminderTime}
-					<p class="text-sm text-gray-400">{reminderTime}</p>
-				{/if}
+				<p class="text-sm text-gray-400">
+					{scheduleLabel}{#if reminderTime}&ensp;·&ensp;{reminderTime}{/if}
+				</p>
 			</div>
 			<div class="rounded-lg bg-gray-100 px-2 py-1 text-sm font-medium text-gray-500">0</div>
 		</div>

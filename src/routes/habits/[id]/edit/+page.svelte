@@ -18,14 +18,14 @@
 	let isSubmitting = $state(false);
 	let error = $state<string | null>(null);
 
+	import type { HabitSchedule } from '$lib/db/db';
+
 	async function handleSubmit(data: {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
-		frequencyType: FrequencyType;
-		frequencyTarget: number;
-		partialCriteria: string | null;
+		schedule: HabitSchedule;
 	}) {
 		if (!habit?.id) return;
 
@@ -38,9 +38,7 @@
 				emoji: data.emoji,
 				color: data.color,
 				reminderTime: data.reminderTime ?? undefined,
-				frequencyType: data.frequencyType,
-				frequencyTarget: data.frequencyTarget,
-				partialCriteria: data.partialCriteria ?? undefined
+				schedule: data.schedule
 			});
 			goto(resolve('/habits'));
 		} catch (e) {
@@ -85,13 +83,13 @@
 
 		<HabitForm
 			onsubmit={handleSubmit}
-			initialName={habit.name}
-			initialEmoji={habit.emoji}
-			initialColor={habit.color}
-			initialReminderTime={habit.reminderTime ?? null}
-			initialFrequencyType={habit.frequencyType}
-			initialFrequencyTarget={habit.frequencyTarget}
-			initialPartialCriteria={habit.partialCriteria ?? null}
+			initialValues={{
+				name: habit.name,
+				emoji: habit.emoji,
+				color: habit.color,
+				reminderTime: habit.reminderTime ?? null,
+				schedule: habit.schedule
+			}}
 			mode="edit"
 			{isSubmitting}
 		/>

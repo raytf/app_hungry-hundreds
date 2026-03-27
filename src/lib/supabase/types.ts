@@ -23,12 +23,7 @@ export interface Database {
 					emoji: string;
 					color: string;
 					reminder_time: string | null;
-					// Frequency configuration (Phase 1: Flexible Streaks)
-					frequency_type: 'daily' | 'weekly';
-					frequency_target: number;
-					week_starts_on: number;
-					// Partial completion criteria (optional user-defined description)
-					partial_criteria: string | null;
+					schedule: Json;
 					created_at: string;
 					updated_at: string;
 				};
@@ -39,12 +34,7 @@ export interface Database {
 					emoji?: string;
 					color?: string;
 					reminder_time?: string | null;
-					// Frequency configuration (defaults provided by database)
-					frequency_type?: 'daily' | 'weekly';
-					frequency_target?: number;
-					week_starts_on?: number;
-					// Partial completion criteria (optional)
-					partial_criteria?: string | null;
+					schedule?: Json;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -55,12 +45,7 @@ export interface Database {
 					emoji?: string;
 					color?: string;
 					reminder_time?: string | null;
-					// Frequency configuration
-					frequency_type?: 'daily' | 'weekly';
-					frequency_target?: number;
-					week_starts_on?: number;
-					// Partial completion criteria (optional)
-					partial_criteria?: string | null;
+					schedule?: Json;
 					created_at?: string;
 					updated_at?: string;
 				};

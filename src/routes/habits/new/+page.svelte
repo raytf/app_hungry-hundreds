@@ -6,23 +6,21 @@
 	import { habits } from '$lib/stores/habits';
 	import type { FrequencyType } from '$lib/db';
 
+	import type { HabitSchedule } from '$lib/db/db';
+
 	function handleSubmit(habit: {
 		name: string;
 		emoji: string;
 		color: string;
 		reminderTime: string | null;
-		frequencyType: FrequencyType;
-		frequencyTarget: number;
-		partialCriteria: string | null;
+		schedule: HabitSchedule;
 	}) {
 		habits.add({
 			name: habit.name,
 			emoji: habit.emoji,
 			color: habit.color,
 			reminderTime: habit.reminderTime ?? undefined,
-			frequencyType: habit.frequencyType,
-			frequencyTarget: habit.frequencyTarget,
-			partialCriteria: habit.partialCriteria ?? undefined
+			schedule: habit.schedule
 		});
 		goto(resolve('/habits'));
 	}

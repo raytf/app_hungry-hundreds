@@ -13,18 +13,18 @@ import Dexie, { type Table } from 'dexie';
 // ============================================================================
 
 /**
- * Frequency type for habits
- * - 'daily': Must be completed every day (traditional streak)
- * - 'weekly': Target completions per week (e.g., 3x per week)
+ * Schedule configuration for a habit
  */
-export type FrequencyType = 'daily' | 'weekly';
+export interface HabitSchedule {
+	type: 'daily' | 'weekly' | 'every-x-days';
+	timesPerWeek?: number; // 1–7, for 'weekly'
+	intervalDays?: number; // 2–30, for 'every-x-days'
+}
 
 /**
- * Completion type for habit logs
- * - 'full': Standard completion - increments streak
- * - 'partial': Reduced completion - preserves streak but doesn't increment
+ * Default schedule for habits without one (backward compatibility)
  */
-export type CompletionType = 'full' | 'partial';
+export const DEFAULT_HABIT_SCHEDULE: HabitSchedule = { type: 'daily' };
 
 /**
  * Represents a user's habit stored locally in IndexedDB
@@ -36,6 +36,7 @@ export interface Habit {
 	emoji: string; // Emoji icon for the habit
 	color: string; // Hex color code (e.g., "#3498db")
 	reminderTime?: string; // HH:MM format (24-hour)
+	schedule: HabitSchedule; // Schedule type and frequency
 	// Frequency configuration (Phase 1: Flexible Streaks)
 	frequencyType: FrequencyType; // 'daily' or 'weekly'
 	/**
@@ -102,72 +103,18 @@ export class HungryHundredsDB extends Dexie {
 			syncQueue: '++id, timestamp'
 		});
 
-		// Version 2: Add frequency fields for flexible streaks
-		this.version(2)
-			.stores({
-				// Schema unchanged - just adding fields to existing table
-				habits: '++id, serverId, createdAt',
-				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
-				syncQueue: '++id, timestamp'
-			})
-			.upgrade((tx) => {
-				// Migrate existing habits to use daily frequency by default
-				return tx
-					.table('habits')
-					.toCollection()
-					.modify((habit: Partial<Habit>) => {
-						habit.frequencyType = 'daily';
-						habit.frequencyTarget = 1;
-						habit.weekStartsOn = 1; // Default to Monday
-					});
-			});
-
-		// Version 3: Add completionType field for partial completions
-		this.version(3)
-			.stores({
-				// Schema unchanged - just adding field to logs table
-				habits: '++id, serverId, createdAt',
-				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
-				syncQueue: '++id, timestamp'
-			})
-			.upgrade((tx) => {
-				// Migrate existing logs to use 'full' completion type by default
-				return tx
-					.table('logs')
-					.toCollection()
-					.modify((log: Partial<HabitLog>) => {
-						log.completionType = 'full';
-					});
-			});
-
-		// Version 4: Add partialCriteria field for customizable partial completion descriptions
-		this.version(4)
-			.stores({
-				// Schema unchanged - just adding field to habits table
-				habits: '++id, serverId, createdAt',
-				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
-				syncQueue: '++id, timestamp'
-			})
-			.upgrade((tx) => {
-				// Existing habits don't need migration - partialCriteria is optional
-				return tx
-					.table('habits')
-					.toCollection()
-					.modify((habit: Partial<Habit>) => {
-						// Set to undefined (optional field)
-						habit.partialCriteria = undefined;
-					});
-			});
-
-		// Version 5: Add standalone date index on logs for efficient date-range queries
-		// Used by advanced statistics dashboard for cross-habit analytics
-		this.version(5).stores({
+		// Version 2: Add schedule field to habits (defaults applied via upgrade)
+		this.version(2).stores({
 			habits: '++id, serverId, createdAt',
-			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced, date',
+			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
 			syncQueue: '++id, timestamp'
+		}).upgrade((tx) => {
+			return tx.table('habits').toCollection().modify((habit) => {
+				if (!habit.schedule) {
+					habit.schedule = { type: 'daily' };
+				}
+			});
 		});
-		// No .upgrade() needed — adding an index doesn't require data transformation
-		// Dexie automatically builds the new index from existing data
 	}
 }
 

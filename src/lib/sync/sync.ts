@@ -295,10 +295,7 @@ function createSyncStore() {
 						emoji: habit.emoji,
 						color: habit.color,
 						reminder_time: habit.reminderTime,
-						frequency_type: habit.frequencyType,
-						frequency_target: habit.frequencyTarget,
-						week_starts_on: habit.weekStartsOn,
-						partial_criteria: habit.partialCriteria ?? null
+						schedule: habit.schedule as unknown as import('$lib/supabase/types').Json
 					},
 					userId
 				);
@@ -317,24 +314,13 @@ function createSyncStore() {
 					return;
 				}
 
-				// Build update object with only defined fields
-				// (payload.data only contains the changed fields)
-				const updateData: Parameters<typeof updateRemoteHabit>[1] = {};
-				if (payload.data?.name !== undefined) updateData.name = payload.data.name;
-				if (payload.data?.emoji !== undefined) updateData.emoji = payload.data.emoji;
-				if (payload.data?.color !== undefined) updateData.color = payload.data.color;
-				if (payload.data?.reminderTime !== undefined)
-					updateData.reminder_time = payload.data.reminderTime;
-				if (payload.data?.frequencyType !== undefined)
-					updateData.frequency_type = payload.data.frequencyType;
-				if (payload.data?.frequencyTarget !== undefined)
-					updateData.frequency_target = payload.data.frequencyTarget;
-				if (payload.data?.weekStartsOn !== undefined)
-					updateData.week_starts_on = payload.data.weekStartsOn;
-				if (payload.data?.partialCriteria !== undefined)
-					updateData.partial_criteria = payload.data.partialCriteria ?? null;
-
-				const { error } = await updateRemoteHabit(payload.serverId, updateData);
+				const { error } = await updateRemoteHabit(payload.serverId, {
+					name: payload.data?.name,
+					emoji: payload.data?.emoji,
+					color: payload.data?.color,
+					reminder_time: payload.data?.reminderTime,
+					schedule: payload.data?.schedule as unknown as import('$lib/supabase/types').Json
+				});
 
 				if (error) throw error;
 			} else if (op.action === 'delete') {

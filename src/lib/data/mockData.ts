@@ -1,5 +1,7 @@
 // Mock data for UI development - will be replaced with API calls in Phase 2
 
+import type { HabitSchedule } from '$lib/db/db';
+
 export interface Habit {
 	id: number;
 	name: string;
@@ -8,6 +10,7 @@ export interface Habit {
 	streak: number;
 	completedToday: boolean;
 	reminderTime: string | null;
+	schedule: HabitSchedule;
 }
 
 export interface Monster {
@@ -35,7 +38,8 @@ export const mockHabits: Habit[] = [
 		color: '#22c55e',
 		streak: 12,
 		completedToday: false,
-		reminderTime: '07:00'
+		reminderTime: '07:00',
+		schedule: { type: 'daily' }
 	},
 	{
 		id: 2,
@@ -44,7 +48,8 @@ export const mockHabits: Habit[] = [
 		color: '#3b82f6',
 		streak: 5,
 		completedToday: true,
-		reminderTime: '21:00'
+		reminderTime: '21:00',
+		schedule: { type: 'daily' }
 	},
 	{
 		id: 3,
@@ -53,7 +58,8 @@ export const mockHabits: Habit[] = [
 		color: '#8b5cf6',
 		streak: 3,
 		completedToday: false,
-		reminderTime: '06:30'
+		reminderTime: '06:30',
+		schedule: { type: 'weekly', timesPerWeek: 5 }
 	},
 	{
 		id: 4,
@@ -62,7 +68,8 @@ export const mockHabits: Habit[] = [
 		color: '#06b6d4',
 		streak: 0,
 		completedToday: false,
-		reminderTime: null
+		reminderTime: null,
+		schedule: { type: 'daily' }
 	}
 ];
 

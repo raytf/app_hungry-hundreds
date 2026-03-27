@@ -6,7 +6,7 @@
  *
  * @see docs/API.md for sync documentation
  */
-import { db, type Habit, type HabitLog } from '$lib/db';
+import { db, DEFAULT_HABIT_SCHEDULE, type Habit, type HabitLog, type HabitSchedule } from '$lib/db';
 import type { HabitRow, HabitLogRow } from '$lib/supabase';
 
 // ============================================================================
@@ -46,12 +46,7 @@ export function resolveHabitConflict(
 				emoji: local.emoji,
 				color: local.color,
 				reminderTime: local.reminderTime,
-				// Include frequency fields in conflict resolution
-				frequencyType: local.frequencyType,
-				frequencyTarget: local.frequencyTarget,
-				weekStartsOn: local.weekStartsOn,
-				// Include partial criteria
-				partialCriteria: local.partialCriteria,
+				schedule: local.schedule,
 				updatedAt: localUpdatedAt
 			},
 			localUpdatedAt,
@@ -65,12 +60,7 @@ export function resolveHabitConflict(
 				emoji: remote.emoji,
 				color: remote.color,
 				reminderTime: remote.reminder_time ?? undefined,
-				// Include frequency fields in conflict resolution
-				frequencyType: remote.frequency_type,
-				frequencyTarget: remote.frequency_target,
-				weekStartsOn: remote.week_starts_on as 0 | 1,
-				// Include partial criteria
-				partialCriteria: remote.partial_criteria ?? undefined,
+				schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
 				updatedAt: remoteUpdatedAt,
 				serverId: remote.id
 			},
@@ -89,12 +79,7 @@ export async function applyRemoteHabit(localId: number, remote: HabitRow): Promi
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
-		// Include frequency fields
-		frequencyType: remote.frequency_type,
-		frequencyTarget: remote.frequency_target,
-		weekStartsOn: remote.week_starts_on as 0 | 1,
-		// Include partial criteria
-		partialCriteria: remote.partial_criteria ?? undefined,
+		schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
 		serverId: remote.id,
 		updatedAt: new Date(remote.updated_at).getTime()
 	});
@@ -109,12 +94,7 @@ export async function createLocalHabitFromRemote(remote: HabitRow): Promise<numb
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
-		// Include frequency fields
-		frequencyType: remote.frequency_type,
-		frequencyTarget: remote.frequency_target,
-		weekStartsOn: remote.week_starts_on as 0 | 1,
-		// Include partial criteria
-		partialCriteria: remote.partial_criteria ?? undefined,
+		schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
 		serverId: remote.id,
 		createdAt: new Date(remote.created_at).getTime(),
 		updatedAt: new Date(remote.updated_at).getTime()

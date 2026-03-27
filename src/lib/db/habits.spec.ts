@@ -78,6 +78,37 @@ describe('Habit CRUD Operations', () => {
 
 			expect(habit!.reminderTime).toBeUndefined();
 		});
+
+		it('should default schedule to daily when not provided', async () => {
+			const id = await createHabit({ name: 'Test', emoji: '🧪', color: '#000' });
+			const habit = await getHabitById(id);
+
+			expect(habit!.schedule).toEqual({ type: 'daily' });
+		});
+
+		it('should store weekly schedule with timesPerWeek', async () => {
+			const id = await createHabit({
+				name: 'Exercise',
+				emoji: '💪',
+				color: '#f00',
+				schedule: { type: 'weekly', timesPerWeek: 3 }
+			});
+			const habit = await getHabitById(id);
+
+			expect(habit!.schedule).toEqual({ type: 'weekly', timesPerWeek: 3 });
+		});
+
+		it('should store every-x-days schedule with intervalDays', async () => {
+			const id = await createHabit({
+				name: 'Deep Clean',
+				emoji: '🧹',
+				color: '#0f0',
+				schedule: { type: 'every-x-days', intervalDays: 14 }
+			});
+			const habit = await getHabitById(id);
+
+			expect(habit!.schedule).toEqual({ type: 'every-x-days', intervalDays: 14 });
+		});
 	});
 
 	describe('getAllHabits', () => {
@@ -148,6 +179,15 @@ describe('Habit CRUD Operations', () => {
 			expect(updatedHabit!.emoji).toBe('✨');
 			expect(updatedHabit!.color).toBe('#999'); // unchanged
 			expect(updatedHabit!.updatedAt).toBeGreaterThanOrEqual(originalHabit!.updatedAt);
+		});
+
+		it('should update schedule from daily to weekly', async () => {
+			const id = await createHabit({ name: 'Flexible', emoji: '🔄', color: '#abc' });
+
+			await updateHabit(id, { schedule: { type: 'weekly', timesPerWeek: 5 } });
+			const habit = await getHabitById(id);
+
+			expect(habit!.schedule).toEqual({ type: 'weekly', timesPerWeek: 5 });
 		});
 
 		it('should return 0 when updating non-existent habit', async () => {
