@@ -21,10 +21,8 @@
 		initialColor?: string;
 		/** Initial reminder time for editing an existing habit */
 		initialReminderTime?: string | null;
-		/** Initial frequency type for editing an existing habit */
-		initialFrequencyType?: FrequencyType;
-		/** Initial frequency target for editing an existing habit */
-		initialFrequencyTarget?: number;
+		/** Initial schedule for editing an existing habit */
+		initialSchedule?: HabitSchedule;
 		/** Initial partial completion criteria for editing an existing habit */
 		initialPartialCriteria?: string | null;
 		/** Mode determines button text: 'create' or 'edit' */
@@ -39,8 +37,7 @@
 		initialEmoji = habitEmojis[0],
 		initialColor = habitColors[0],
 		initialReminderTime = '',
-		initialFrequencyType = 'daily' as FrequencyType,
-		initialFrequencyTarget = 1,
+		initialSchedule = { type: 'daily' as const },
 		initialPartialCriteria = '',
 		mode = 'create',
 		isSubmitting = false
@@ -52,39 +49,18 @@
 	let emoji = $state(untrack(() => initialEmoji));
 	let color = $state(untrack(() => initialColor));
 	let reminderTime = $state(untrack(() => initialReminderTime ?? ''));
-	let frequencyType = $state<FrequencyType>(untrack(() => initialFrequencyType));
-	let frequencyTarget = $state(untrack(() => initialFrequencyTarget));
 	let partialCriteria = $state(untrack(() => initialPartialCriteria ?? ''));
 
-	// Options for daily frequency target (1-10 times per day)
-	const dailyTargetOptions = [
-		{ value: 1, label: '1 time per day' },
-		{ value: 2, label: '2 times per day' },
-		{ value: 3, label: '3 times per day' },
-		{ value: 4, label: '4 times per day' },
-		{ value: 5, label: '5 times per day' },
-		{ value: 6, label: '6 times per day' },
-		{ value: 7, label: '7 times per day' },
-		{ value: 8, label: '8 times per day' },
-		{ value: 9, label: '9 times per day' },
-		{ value: 10, label: '10 times per day' }
-	];
-
-	// Options for weekly frequency target (1-7 times per week)
-	const weeklyTargetOptions = [
-		{ value: 1, label: '1 time per week' },
-		{ value: 2, label: '2 times per week' },
-		{ value: 3, label: '3 times per week' },
-		{ value: 4, label: '4 times per week' },
-		{ value: 5, label: '5 times per week' },
-		{ value: 6, label: '6 times per week' },
-		{ value: 7, label: '7 times per week' }
-	];
-
 	// Schedule state
-	let scheduleType = $state<HabitSchedule['type']>(initialValues?.schedule?.type ?? 'daily');
-	let timesPerWeek = $state(initialValues?.schedule?.timesPerWeek ?? 3);
-	let intervalDays = $state(initialValues?.schedule?.intervalDays ?? 2);
+	let scheduleType = $state<HabitSchedule['type']>(untrack(() => initialSchedule.type ?? 'daily'));
+	let timesPerWeek = $state(
+		untrack(() => (initialSchedule.type === 'weekly' ? (initialSchedule.timesPerWeek ?? 3) : 3))
+	);
+	let intervalDays = $state(
+		untrack(() =>
+			initialSchedule.type === 'every-x-days' ? (initialSchedule.intervalDays ?? 2) : 2
+		)
+	);
 
 	/** Build a validated HabitSchedule from current form state */
 	function buildSchedule(): HabitSchedule {

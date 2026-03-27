@@ -6,6 +6,7 @@ ALTER TABLE habits
 ADD COLUMN IF NOT EXISTS schedule JSONB NOT NULL DEFAULT '{"type": "daily"}'::jsonb;
 
 -- Add a check constraint to validate schedule structure
+ALTER TABLE habits DROP CONSTRAINT IF EXISTS habits_schedule_valid;
 ALTER TABLE habits
 ADD CONSTRAINT habits_schedule_valid CHECK (
   schedule->>'type' IN ('daily', 'weekly', 'every-x-days')

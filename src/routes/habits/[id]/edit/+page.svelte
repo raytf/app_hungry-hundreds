@@ -6,8 +6,6 @@
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits, habitsLoaded } from '$lib/stores/habits';
 	import { browser } from '$app/environment';
-	import type { FrequencyType } from '$lib/db';
-
 	// Get habit ID from URL params
 	const habitId = $derived(parseInt(page.params.id ?? '', 10));
 
@@ -83,13 +81,11 @@
 
 		<HabitForm
 			onsubmit={handleSubmit}
-			initialValues={{
-				name: habit.name,
-				emoji: habit.emoji,
-				color: habit.color,
-				reminderTime: habit.reminderTime ?? null,
-				schedule: habit.schedule
-			}}
+			initialName={habit.name}
+			initialEmoji={habit.emoji}
+			initialColor={habit.color}
+			initialReminderTime={habit.reminderTime ?? null}
+			initialSchedule={habit.schedule}
 			mode="edit"
 			{isSubmitting}
 		/>
