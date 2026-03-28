@@ -48,7 +48,7 @@
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
 
-<!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
+<!-- Full page grid layout: Header (auto) | Main (1fr) -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="relative grid h-full"

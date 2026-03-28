@@ -1,5 +1,4 @@
 // Components
-export { default as BottomNav } from './components/BottomNav.svelte';
 export { default as Header } from './components/Header.svelte';
 export { default as HabitCard } from './components/HabitCard.svelte';
 export { default as HabitForm } from './components/HabitForm.svelte';

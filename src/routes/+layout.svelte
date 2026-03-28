@@ -4,7 +4,6 @@
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
-	import BottomNav from '$lib/components/BottomNav.svelte';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import UpdatePrompt from '$lib/components/UpdatePrompt.svelte';
@@ -18,18 +17,9 @@
 
 	let { children } = $props();
 
-	// Routes that don't show BottomNav
-	const noNavRoutes = ['/auth', '/onboard'];
-
 	// Routes that require authentication (empty for now - can be enabled later)
 	// Set to ['/habits', '/dashboard', '/settings'] to require auth for those routes
 	const protectedRoutes: string[] = [];
-
-	// Check if current route should show nav
-	const showNav = $derived.by(() => {
-		const path = page.url.pathname;
-		return !noNavRoutes.some((route) => path.startsWith(route));
-	});
 
 	// Check if current route should show monster (homepage and monster test page)
 	const showMonster = $derived.by(() => {
@@ -127,16 +117,12 @@
 
 <AuthGuard requireAuth={requiresAuth}>
 	<div class="h-screen bg-gray-50">
-		<!-- Monster Display - Fixed layer: behind BottomNav, in front of content -->
-		<!-- Always mounted but only visible on homepage -->
+		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
 		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
 			<MonsterDisplay monster={$monster} />
 		</div>
 
 		{@render children()}
-		{#if showNav}
-			<!-- <BottomNav /> -->
-		{/if}
 	</div>
 
 	<!-- PWA Install Prompt -->
