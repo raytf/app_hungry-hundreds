@@ -25,6 +25,23 @@
 		const y = (event.clientY / window.innerHeight - 1) * 2;
 		monsterLookAt(x, y);
 	}
+
+	// ── Scroll indicator ─────────────────────────────────────────────────────
+	let mainEl = $state<HTMLElement | null>(null);
+	let canScrollMore = $state(false);
+
+	function checkScroll() {
+		if (!mainEl) return;
+		canScrollMore = mainEl.scrollTop + mainEl.clientHeight < mainEl.scrollHeight - 1;
+	}
+
+	$effect(() => {
+		if (!mainEl) return;
+		checkScroll();
+		const ro = new ResizeObserver(checkScroll);
+		ro.observe(mainEl);
+		return () => ro.disconnect();
+	});
 </script>
 
 <svelte:head>
@@ -34,8 +51,8 @@
 <!-- Full page grid layout: Header (auto) | Main (1fr) | BottomNav spacer (auto) -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="relative grid"
-	style="height: calc(100vh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
+	class="relative grid h-full"
+	style="grid-template-rows: auto 1fr auto;"
 	onmousemove={handlePageMouseMove}
 >
 	<Header title={formattedDate} showSyncStatus>
@@ -45,65 +62,60 @@
 	</Header>
 
 	<!-- Scrollable main content area - takes remaining space -->
-	<main class="scrollable-main h-[65%] overflow-y-auto overscroll-contain">
-		<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
-			<!-- Progress Summary -->
-			<section class="card mb-6 flex items-center justify-between">
-				<div>
-					<p class="text-sm text-gray-500">Today's Progress</p>
-					<p class="text-xl font-bold text-gray-900">
-						{$todaysProgress.completed} of {$todaysProgress.total} habits
-					</p>
-				</div>
-				<ProgressRing pct={$todaysProgress.pct} size={64} />
-			</section>
+	<div class="relative h-[50%]">
+		<main
+			class="scrollable-main h-full overflow-y-auto overscroll-contain"
+			bind:this={mainEl}
+			onscroll={checkScroll}
+		>
+			<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
+				<!-- Progress Summary -->
+				<section class="card mb-6 flex items-center justify-between">
+					<div>
+						<p class="text-sm text-gray-500">Today's Progress</p>
+						<p class="text-xl font-bold text-gray-900">
+							{$todaysProgress.completed} of {$todaysProgress.total} habits
+						</p>
+					</div>
+					<ProgressRing pct={$todaysProgress.pct} size={64} />
+				</section>
 
-			<!-- Habits List -->
-			<section>
-				{#if $sortedHabits.length > 0}
-					<div class="mb-3 flex items-center justify-between">
-						<h3 class="font-semibold text-gray-700">Your Habits</h3>
-						<a
-							href={resolve('/habits/new')}
-							class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
-						>
-							+ Add New
-						</a>
-					</div>
-					<div class="space-y-3">
-						{#each $sortedHabits as habit (habit.id)}
-							<HabitCardCompact {habit} />
-						{/each}
-					</div>
-				{:else}
-					<!-- Empty state with habit suggestions -->
-					<div class="card py-6">
-						<HabitSuggestions maxSuggestions={4} />
-					</div>
-				{/if}
-			</section>
-		</div>
-	</main>
-	<!-- Fixed gradient overlay at bottom -->
-	<div class="fade-gradient"></div>
+				<!-- Habits List -->
+				<section>
+					{#if $sortedHabits.length > 0}
+						<div class="mb-3 flex items-center justify-between">
+							<h3 class="font-semibold text-gray-700">Your Habits</h3>
+							<a
+								href={resolve('/habits/new')}
+								class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
+							>
+								+ Add New
+							</a>
+						</div>
+						<div class="space-y-3">
+							{#each $sortedHabits as habit (habit.id)}
+								<HabitCardCompact {habit} />
+							{/each}
+						</div>
+					{:else}
+						<!-- Empty state with habit suggestions -->
+						<div class="card py-6">
+							<HabitSuggestions maxSuggestions={4} />
+						</div>
+					{/if}
+				</section>
+			</div>
+		</main>
+		<!-- Scroll-more indicator: fades away once scrolled to the bottom -->
+		{#if canScrollMore}
+			<div
+				class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-gray-50/90 to-transparent transition-opacity duration-300"
+			></div>
+		{/if}
+	</div>
 </div>
 
-<!-- Spacer for BottomNav -->
-<div class="h-16"></div>
-
 <style>
-	/* Fixed fade-out gradient at bottom */
-	/* .fade-gradient {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		height: 80px;
-		background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 1));
-		pointer-events: none;
-		z-index: 10;
-	} */
-
 	/* Desktop scrollbar styling - hidden on mobile */
 	@media (min-width: 768px) {
 		.scrollable-main {
