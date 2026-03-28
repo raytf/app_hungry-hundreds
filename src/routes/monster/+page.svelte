@@ -196,7 +196,7 @@
 >
 	<Header title="Monster Debug" />
 
-	<div class="relative h-[50%] overflow-hidden">
+	<div class="relative h-[60%] overflow-hidden">
 		<main
 			class="scrollable-main h-full overflow-y-auto overscroll-contain"
 			bind:this={mainEl}

@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import type { RouteId } from '$app/types';
 	import SyncStatusIndicator from './SyncStatusIndicator.svelte';
+	import { dev } from '$app/environment';
 	import { iconTap } from '$lib/animations/transitions';
 
 	type StaticRouteId = Exclude<RouteId, '/habits/[id]' | '/habits/[id]/edit'>;
@@ -139,5 +140,26 @@
 				<span>{item.label}</span>
 			</a>
 		{/each}
+
+		{#if dev}
+			<!-- Debug section — only visible in development -->
+			<div class="mt-4 border-t border-dashed border-gray-200 pt-4">
+				<p class="mb-1 px-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">Debug</p>
+				<a
+					href={resolve('/monster')}
+					onclick={handleNavClick}
+					class="mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium transition-colors"
+					class:bg-orange-50={isActive('/monster', page.url.pathname)}
+					class:text-orange-700={isActive('/monster', page.url.pathname)}
+					class:text-gray-400={!isActive('/monster', page.url.pathname)}
+					class:hover:bg-gray-50={!isActive('/monster', page.url.pathname)}
+					class:hover:text-gray-600={!isActive('/monster', page.url.pathname)}
+					aria-current={isActive('/monster', page.url.pathname) ? 'page' : undefined}
+				>
+					<span class="nav-icon text-xl">🐉</span>
+					<span>Monster Debug</span>
+				</a>
+			</div>
+		{/if}
 	</div>
 </nav>

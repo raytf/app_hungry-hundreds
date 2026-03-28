@@ -62,7 +62,7 @@
 	</Header>
 
 	<!-- Scrollable main content area - takes remaining space -->
-	<div class="relative h-[50%]">
+	<div class="relative h-[60%]">
 		<main
 			class="scrollable-main h-full overflow-y-auto overscroll-contain"
 			bind:this={mainEl}
