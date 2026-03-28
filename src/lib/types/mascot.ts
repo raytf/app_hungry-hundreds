@@ -204,3 +204,52 @@ export interface MascotState {
 	trigger?: MascotTrigger;
 	context: MascotContext;
 }
+
+// ============================================================================
+// AI Dialogue Types (Phase 7)
+// ============================================================================
+
+export type InteractionType =
+	| 'habit-complete'
+	| 'app-open'
+	| 'tap'
+	| 'lapse-return'
+	| 'feast'
+	| 'evolution'
+	| 'regression';
+
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export interface DialogueRequest {
+	mascotState: MascotState;
+	gonn: GonnState;
+	habits: Array<{
+		name: string;
+		flavorTag: string;
+		completionCount: number;
+		streakLength: number;
+		dangerZone: boolean;
+		dangerZoneLabel?: string;
+		window: {
+			isScheduledToday: boolean;
+			completionsInWindow: number;
+			targetForWindow: number;
+			daysRemaining: number;
+		};
+	}>;
+	memory: {
+		permanent: MemoryEntry[];
+		shortTerm: MemoryEntry[];
+	};
+	timeContext: {
+		timeOfDay: TimeOfDay;
+		dayOfWeek: string;
+		hourOfDay: number;
+	};
+	interactionType: InteractionType;
+}
+
+export interface DialogueResponse {
+	dialogue: string; // max 80 characters
+	emotion?: string; // optional override of rule engine emotion
+}

@@ -177,3 +177,30 @@ export function registerMonsterSetExpression(fn: SetExpressionFn | null) {
 export function monsterSetExpression(expression: string) {
 	_setExpressionFn?.(expression);
 }
+
+// ============================================================================
+// Monster Dialogue (Typewriter)
+// ============================================================================
+
+type SetDialogueFn = (text: string, charDelayMs?: number, displayMs?: number) => void;
+let _setDialogueFn: SetDialogueFn | null = null;
+
+/**
+ * Register the Monster component's setDialogue function.
+ * Called by MonsterDisplay when the Monster component mounts.
+ */
+export function registerMonsterSetDialogue(fn: SetDialogueFn | null) {
+	_setDialogueFn = fn;
+}
+
+/**
+ * Trigger Gonn's speech bubble typewriter effect.
+ * No-op if the Monster component hasn't registered its setDialogue function.
+ *
+ * @param text        - Text to display (max ~80 chars)
+ * @param charDelayMs - Milliseconds between each character (default: 30)
+ * @param displayMs   - How long to keep the bubble visible after typing (default: 3500)
+ */
+export function monsterSetDialogue(text: string, charDelayMs?: number, displayMs?: number) {
+	_setDialogueFn?.(text, charDelayMs, displayMs);
+}

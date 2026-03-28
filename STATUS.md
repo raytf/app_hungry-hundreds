@@ -7,19 +7,19 @@
 
 ## Quick Status
 
-| Phase | Name               | Status      | Progress |
-| ----- | ------------------ | ----------- | -------- |
-| 1     | UI Foundation      | ✅ Complete | 5/5      |
-| 2     | Data Layer         | ✅ Complete | 5/5      |
-| 3     | Backend            | ✅ Complete | 5/5      |
-| 4     | Sync               | ✅ Complete | 4/4      |
-| 5     | Rule Engine & Rive | ✅ Complete | 6/6      |
-| 6     | PWA                | ✅ Complete | 5/5      |
-| 7     | AI Dialogue        | 📋 Planned  | 0/4      |
-| 8     | Chatbot            | 📋 Planned  | 0/5      |
+| Phase | Name               | Status         | Progress |
+| ----- | ------------------ | -------------- | -------- |
+| 1     | UI Foundation      | ✅ Complete    | 5/5      |
+| 2     | Data Layer         | ✅ Complete    | 5/5      |
+| 3     | Backend            | ✅ Complete    | 5/5      |
+| 4     | Sync               | ✅ Complete    | 4/4      |
+| 5     | Rule Engine & Rive | ✅ Complete    | 6/6      |
+| 6     | PWA                | ✅ Complete    | 5/5      |
+| 7     | AI Dialogue        | 🚧 In Progress | 4/5      |
+| 8     | Chatbot            | 📋 Planned     | 0/5      |
 
-**Current Phase:** Phase 7 (AI Dialogue) — Next priority
-**Last Updated:** 2026-03-27
+**Current Phase:** Phase 7 (AI Dialogue) — In Progress
+**Last Updated:** 2026-03-28
 
 ---
 
@@ -246,12 +246,16 @@ All Phase 5 tasks completed:
 See `docs/features/ai-implementation-spec.md` for full implementation guide.
 See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 
-### Phase 7: AI Dialogue (After Phase 5)
+### Phase 7: AI Dialogue 🚧
 
-1. **Memory system** - `src/lib/ai/memory.ts` for permanent + short-term memories
-2. **Supabase Edge Function** - `supabase/functions/gonn-dialogue/index.ts` LLM proxy
-3. **Dialogue pipeline** - `src/lib/ai/dialogue.ts` with caching
-4. **SpeechBubble.svelte** - Typewriter effect speech bubble component
+1. ✅ **Type definitions** - `DialogueRequest`, `DialogueResponse`, `InteractionType`, `TimeOfDay` in `src/lib/types/mascot.ts`
+2. ✅ **Memory system** - `src/lib/ai/memory.ts` — permanent + short-term memory read/write/trim
+3. ✅ **Dialogue pipeline** - `src/lib/ai/dialogue.ts` — 4-hour cache, 12s throttle, edge function fetch
+4. ✅ **Supabase migration** - `supabase/migrations/20260328021436_dialogue_usage.sql` — rate limit table + RPC
+5. ✅ **Edge Function** - `supabase/functions/gonn-dialogue/index.ts` — Claude Haiku proxy with auth + rate limiting
+6. ✅ **Monster.svelte** - `setDialogue()` export with typewriter effect via Rive `dialogueText`/`dialogueVisible` VM props
+7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
+8. ⏳ **Migration push** — `supabase db push` pending (timed out; run manually)
 
 ### Phase 8: Chatbot (After Phase 7)
 

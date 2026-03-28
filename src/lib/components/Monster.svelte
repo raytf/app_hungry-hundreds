@@ -31,7 +31,8 @@
 	import type {
 		Rive as RiveType,
 		ViewModelInstanceNumber,
-		ViewModelInstanceString
+		ViewModelInstanceString,
+		ViewModelInstanceBoolean
 	} from '@rive-app/canvas';
 
 	interface Props {
@@ -72,6 +73,12 @@
 	let expressionProp: ViewModelInstanceString | null = null;
 	let intensityProp: ViewModelInstanceNumber | null = null;
 	let emotionProp: ViewModelInstanceNumber | null = null;
+	let dialogueProp: ViewModelInstanceString | null = null;
+	let dialogueVisibleProp: ViewModelInstanceBoolean | null = null;
+
+	// Typewriter state
+	let typewriterInterval: ReturnType<typeof setInterval> | null = null;
+	let dialogueHideTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Current interpolated values for smooth animation
 	let currentHeadX = 0;
@@ -173,6 +180,8 @@
 		expressionProp = vmInstance.string('expression');
 		intensityProp = vmInstance.number('intensity');
 		emotionProp = vmInstance.number('emotion');
+		dialogueProp = vmInstance.string('dialogueText');
+		dialogueVisibleProp = vmInstance.boolean('dialogueVisible');
 
 		if (!headXProp || !headYProp) {
 			console.warn('Monster: Could not find headX/headY properties on CharacterVM');
@@ -298,6 +307,55 @@
 		}
 	}
 
+	/**
+	 * Display dialogue text inside the Rive speech bubble using a typewriter effect.
+	 * Shows the bubble, types out the text character-by-character, then hides the bubble
+	 * after the full text has been visible for `displayMs` milliseconds.
+	 *
+	 * No-ops if the Rive view model dialogue properties are not available
+	 * (e.g., Rive failed to load or the artboard has no speech bubble).
+	 *
+	 * @param text       - Dialogue string (max ~80 chars)
+	 * @param charDelayMs  - Milliseconds between each typed character (default: 30)
+	 * @param displayMs  - How long the complete message stays visible before hiding (default: 3500)
+	 */
+	export function setDialogue(text: string, charDelayMs = 30, displayMs = 3500): void {
+		if (!dialogueProp || !dialogueVisibleProp) return;
+
+		// Cancel any in-progress typewriter
+		if (typewriterInterval !== null) {
+			clearInterval(typewriterInterval);
+			typewriterInterval = null;
+		}
+		if (dialogueHideTimeout !== null) {
+			clearTimeout(dialogueHideTimeout);
+			dialogueHideTimeout = null;
+		}
+
+		// Reset text and show the bubble
+		dialogueProp.value = '';
+		dialogueVisibleProp.value = true;
+
+		// Type out the text character by character
+		let charIndex = 0;
+		typewriterInterval = setInterval(() => {
+			charIndex++;
+			if (dialogueProp) dialogueProp.value = text.slice(0, charIndex);
+
+			if (charIndex >= text.length) {
+				if (typewriterInterval !== null) {
+					clearInterval(typewriterInterval);
+					typewriterInterval = null;
+				}
+				// Hide the bubble after the display duration
+				dialogueHideTimeout = setTimeout(() => {
+					if (dialogueVisibleProp) dialogueVisibleProp.value = false;
+					dialogueHideTimeout = null;
+				}, displayMs);
+			}
+		}, charDelayMs);
+	}
+
 	onDestroy(() => {
 		// Cancel any in-progress lookAt animation
 		if (animationFrameId !== null) {
@@ -305,6 +363,8 @@
 		}
 		if (manualLookTimeout) clearTimeout(manualLookTimeout);
 		if (manualExpressionTimeout) clearTimeout(manualExpressionTimeout);
+		if (typewriterInterval !== null) clearInterval(typewriterInterval);
+		if (dialogueHideTimeout !== null) clearTimeout(dialogueHideTimeout);
 		cleanupVisibility?.();
 		cleanupTabVisibility?.();
 		cleanupResize?.();

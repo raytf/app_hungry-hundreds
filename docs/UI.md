@@ -19,17 +19,18 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route               | Page         | Purpose                 | Status      |
-| ------------------- | ------------ | ----------------------- | ----------- |
-| `/`                 | Home (Today) | Daily habit check-in    | ✅ Complete |
-| `/habits`           | Habits List  | View and manage habits  | ✅ Complete |
-| `/habits/new`       | New Habit    | Create a new habit      | ✅ Complete |
-| `/habits/[id]/edit` | Edit Habit   | Edit an existing habit  | ✅ Complete |
-| `/dashboard`        | Statistics   | Analytics and streaks   | ✅ Complete |
-| `/settings`         | Settings     | App preferences         | ✅ Complete |
-| `/onboard`          | Onboarding   | First-time setup wizard | ✅ Complete |
-| `/auth/signin`      | Sign In      | User authentication     | ✅ Complete |
-| `/auth/signup`      | Sign Up      | Account creation        | ✅ Complete |
+| Route               | Page          | Purpose                 | Status      |
+| ------------------- | ------------- | ----------------------- | ----------- |
+| `/`                 | Home (Today)  | Daily habit check-in    | ✅ Complete |
+| `/habits`           | Habits List   | View and manage habits  | ✅ Complete |
+| `/habits/new`       | New Habit     | Create a new habit      | ✅ Complete |
+| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit  | ✅ Complete |
+| `/dashboard`        | Statistics    | Analytics and streaks   | ✅ Complete |
+| `/settings`         | Settings      | App preferences         | ✅ Complete |
+| `/onboard`          | Onboarding    | First-time setup wizard | ✅ Complete |
+| `/auth/signin`      | Sign In       | User authentication     | ✅ Complete |
+| `/auth/signup`      | Sign Up       | Account creation        | ✅ Complete |
+| `/monster`          | Monster Debug | Dev-only debug tools    | ✅ Complete |
 
 ### Page Details
 
@@ -254,6 +255,49 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - Loading states with spinner
 - Links between sign in/sign up
 - "Continue without account" option
+
+---
+
+#### Monster Debug (`/monster`)
+
+**File:** `src/routes/monster/+page.svelte`
+
+**Purpose:** Developer-only debug console for testing the Gonn mascot system, AI dialogue pipeline, and Rive animation controls.
+
+**Layout:**
+
+1. Header with title "Monster Debug" + head-tracking via `onmousemove`
+2. Expression panel — override Gonn's facial expression
+3. Satiation slider — drag to set satiation value
+4. Force Stage panel — jump to any evolution stage
+5. Actions panel — Feed / Reset buttons
+6. **Dialogue: Fire a call** — trigger the AI dialogue pipeline
+7. **Dialogue: Cache inspector** — view and clear Dexie dialogue cache
+8. **Dialogue: Rate limit inspector** — check client throttle and server limits
+9. **Dialogue: Rive typewriter test** — send custom text directly to the speech bubble
+10. Live GonnState JSON dump
+11. Live MascotState JSON dump
+
+**Components Used:**
+
+- `Header`
+- `MonsterDisplay` (via root layout)
+
+**AI Dialogue Panels (added Phase 7):**
+
+| Panel                | Purpose                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Fire a call          | Choose interaction type, habit name, streak; calls `generateDialogue()` and shows LLM/cache badge                  |
+| Cache inspector      | Lists all `dialogueCache` Dexie entries with hash + timestamp; Refresh / Clear buttons                             |
+| Rate limit inspector | Shows last LLM call time, client 12 s throttle countdown, server 5/min · 50/day limits, link to edge function logs |
+| Rive typewriter test | Free-text input → `monsterSetDialogue()` → typewriter effect on Gonn's speech bubble                               |
+
+**Key Features:**
+
+- Interaction type selector: `tap`, `complete`, `danger_zone`, `ambient`, `evolve`
+- Cache hit detection: badge shows `📦 cache` or `🤖 llm` for each response
+- Error display for throttle / auth failures
+- `monsterSetDialogue` wired through store registration pattern (`registerMonsterSetDialogue`)
 
 ---
 

@@ -11,6 +11,7 @@
 	import {
 		registerMonsterLookAt,
 		registerMonsterSetExpression,
+		registerMonsterSetDialogue,
 		type Monster as MonsterType
 	} from '$lib/stores/monster';
 	import Monster from './Monster.svelte';
@@ -24,11 +25,12 @@
 	// Get a reference to the Monster component so we can register its lookAt method
 	let monsterRef: Monster | undefined = $state();
 
-	// Register the lookAt and setExpression callbacks once the Monster component is bound
+	// Register the lookAt, setExpression, and setDialogue callbacks once the Monster component is bound
 	$effect(() => {
 		if (monsterRef) {
 			registerMonsterLookAt(monsterRef.lookAt);
 			registerMonsterSetExpression(monsterRef.setExpression);
+			registerMonsterSetDialogue(monsterRef.setDialogue);
 		}
 	});
 
@@ -36,6 +38,7 @@
 	onDestroy(() => {
 		registerMonsterLookAt(null);
 		registerMonsterSetExpression(null);
+		registerMonsterSetDialogue(null);
 	});
 </script>
 
