@@ -47,7 +47,7 @@
 
 	// ── Feed / Reset ─────────────────────────────────────────────────────────
 	async function handleFeed() {
-		await feedGonn(3); // simulate 3-habit user
+		await feedGonn();
 	}
 
 	async function handleReset() {

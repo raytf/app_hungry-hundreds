@@ -46,6 +46,8 @@ function makeGonn(overrides: Partial<GonnState> = {}): GonnState {
 		daysSinceLastFed: 0,
 		expectedDailyFeeds: 1,
 		totalCompletions: 50,
+		feedsToday: 0,
+		lastFedDate: new Date().toISOString().split('T')[0],
 		...overrides
 	};
 }

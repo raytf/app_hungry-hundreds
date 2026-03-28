@@ -9,7 +9,7 @@
  *
  * @see docs/API.md for data model documentation
  */
-import { readable, derived, writable, get } from 'svelte/store';
+import { readable, derived, writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { liveQuery } from 'dexie';
 import {
@@ -249,11 +249,13 @@ export const habits = {
 	toggle: async (id: number): Promise<void> => {
 		if (!browser) return;
 		const completed = await toggleHabitCompletion(id);
+		// Lazy import to avoid circular dependency
 		if (completed) {
-			// Lazy import to avoid circular dependency
 			const { feedGonn } = await import('$lib/stores/gonn');
-			const totalActive = get(habitsWithStatusFinal).length;
-			feedGonn(totalActive);
+			feedGonn();
+		} else {
+			const { unfeedGonn } = await import('$lib/stores/gonn');
+			unfeedGonn();
 		}
 		refreshStatus();
 	},

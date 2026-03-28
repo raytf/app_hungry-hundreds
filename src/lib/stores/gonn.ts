@@ -72,17 +72,26 @@ async function ensureGonnRow(): Promise<GonnState> {
 // Mutations
 // ============================================================================
 
+/** Get today's date as YYYY-MM-DD */
+function todayDateStr(): string {
+	return new Date().toISOString().split('T')[0];
+}
+
 /**
- * Feed Gonn after a habit completion.
- * Adds satiation, resets starvation counter, updates evolution.
- *
- * @param totalActiveHabits — current number of active habits
+ * Feed Gonn after a habit completion (harmonic model).
+ * The nth completion today adds 1/n satiation (diminishing bonuses).
+ * Resets the daily counter if the date has changed.
  */
-export async function feedGonn(totalActiveHabits: number): Promise<void> {
+export async function feedGonn(): Promise<void> {
 	if (!browser) return;
 
 	const gonn = await ensureGonnRow();
-	const amount = feedAmount(totalActiveHabits);
+	const today = todayDateStr();
+
+	// Reset daily counter if new day
+	const feedsToday = gonn.lastFedDate === today ? gonn.feedsToday : 0;
+	const nth = feedsToday + 1;
+	const amount = feedAmount(nth);
 	const newSatiation = Math.min(100, gonn.satiation + amount);
 	const newStage = deriveEvolutionStage(newSatiation, gonn.evolutionStage);
 	const newPeak = Math.max(gonn.peakStage, newStage) as EvolutionStage;
@@ -93,7 +102,36 @@ export async function feedGonn(totalActiveHabits: number): Promise<void> {
 		peakStage: newPeak,
 		lastFedAt: new Date().toISOString(),
 		daysSinceLastFed: 0,
-		totalCompletions: gonn.totalCompletions + 1
+		totalCompletions: gonn.totalCompletions + 1,
+		feedsToday: nth,
+		lastFedDate: today
+	});
+}
+
+/**
+ * Reverse the last feed after a habit uncompletion.
+ * Subtracts the harmonic value that was added by the last nth completion.
+ */
+export async function unfeedGonn(): Promise<void> {
+	if (!browser) return;
+
+	const gonn = await ensureGonnRow();
+	const today = todayDateStr();
+
+	// Only reverse if there are feeds today to reverse
+	if (gonn.lastFedDate !== today || gonn.feedsToday <= 0) return;
+
+	const lastNth = gonn.feedsToday;
+	const amount = feedAmount(lastNth);
+	const newSatiation = Math.max(0, gonn.satiation - amount);
+	const newStage = deriveEvolutionStage(newSatiation, gonn.evolutionStage);
+	const newPeak = Math.max(gonn.peakStage, newStage) as EvolutionStage;
+
+	await db.gonnState.update('gonn', {
+		satiation: newSatiation,
+		evolutionStage: newStage,
+		peakStage: newPeak,
+		feedsToday: lastNth - 1
 	});
 }
 

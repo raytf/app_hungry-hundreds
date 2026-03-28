@@ -52,12 +52,19 @@ const STAGE_THRESHOLDS: Record<EvolutionStage, StageThreshold> = {
 // ============================================================================
 
 /**
- * How much satiation a single habit completion adds.
- * All habits completed in a day = +1.0 total satiation.
+ * How much satiation the nth habit completion today adds.
+ * Uses harmonic series (1/n) so:
+ *   1st completion: +1.0
+ *   2nd completion: +0.5
+ *   3rd completion: +0.33
+ *
+ * 1 habit × 100 days = 100 satiation. Extra habits are diminishing bonuses.
+ *
+ * @param nthCompletionToday — which completion this is today (1-based)
  */
-export function feedAmount(totalActiveHabits: number): number {
-	if (totalActiveHabits <= 0) return 0;
-	return 1.0 / totalActiveHabits;
+export function feedAmount(nthCompletionToday: number): number {
+	if (nthCompletionToday <= 0) return 0;
+	return 1.0 / nthCompletionToday;
 }
 
 // ============================================================================

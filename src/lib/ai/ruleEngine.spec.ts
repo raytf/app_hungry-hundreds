@@ -69,6 +69,8 @@ function makeGonn(overrides: Partial<GonnState> = {}): GonnState {
 		daysSinceLastFed: 0,
 		expectedDailyFeeds: 1,
 		totalCompletions: 50,
+		feedsToday: 0,
+		lastFedDate: new Date().toISOString().split('T')[0],
 		...overrides
 	};
 }
@@ -95,21 +97,32 @@ function makeGlobal(overrides: Partial<GlobalSnapshot> = {}): GlobalSnapshot {
 // feedAmount
 // ============================================================================
 
-describe('feedAmount', () => {
-	it('returns 0 for zero active habits', () => {
+describe('feedAmount (harmonic series)', () => {
+	it('returns 0 for zero or negative nth', () => {
 		expect(feedAmount(0)).toBe(0);
+		expect(feedAmount(-1)).toBe(0);
 	});
 
-	it('returns 1.0 for a single habit', () => {
+	it('returns 1.0 for 1st completion today', () => {
 		expect(feedAmount(1)).toBe(1.0);
 	});
 
-	it('returns 0.5 for two habits', () => {
+	it('returns 0.5 for 2nd completion today', () => {
 		expect(feedAmount(2)).toBeCloseTo(0.5);
 	});
 
-	it('returns 0.1 for ten habits', () => {
+	it('returns 0.33 for 3rd completion today', () => {
+		expect(feedAmount(3)).toBeCloseTo(0.333, 2);
+	});
+
+	it('returns 0.1 for 10th completion today', () => {
 		expect(feedAmount(10)).toBeCloseTo(0.1);
+	});
+
+	it('harmonic sum of 5 completions is ~2.28', () => {
+		let sum = 0;
+		for (let n = 1; n <= 5; n++) sum += feedAmount(n);
+		expect(sum).toBeCloseTo(2.283, 2);
 	});
 });
 

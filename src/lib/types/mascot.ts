@@ -96,6 +96,11 @@ export interface GonnState {
 	expectedDailyFeeds: number;
 
 	totalCompletions: number; // lifetime total, never resets
+
+	/** How many habit completions have fed Gonn today (resets daily) */
+	feedsToday: number;
+	/** ISO date string (YYYY-MM-DD) of the last feed day, for resetting feedsToday */
+	lastFedDate: string;
 }
 
 export const DEFAULT_GONN_STATE: GonnState = {
@@ -106,7 +111,9 @@ export const DEFAULT_GONN_STATE: GonnState = {
 	lastFedAt: new Date().toISOString(),
 	daysSinceLastFed: 0,
 	expectedDailyFeeds: 0,
-	totalCompletions: 0
+	totalCompletions: 0,
+	feedsToday: 0,
+	lastFedDate: new Date().toISOString().split('T')[0]
 };
 
 // ============================================================================
