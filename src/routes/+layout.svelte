@@ -126,7 +126,7 @@
 			<MonsterDisplay monster={$monster} />
 			<!-- Transparent tap zone covering the monster visual area — opens chat -->
 			<button
-				class="pointer-events-auto absolute inset-x-0 bottom-0 h-[45%] cursor-pointer"
+				class="pointer-events-auto absolute inset-x-0 bottom-0 mx-auto h-[45%] w-full max-w-lg cursor-pointer"
 				style="background: transparent; border: none;"
 				onclick={() => (chatVisible = true)}
 				aria-label="Chat with Gonn"

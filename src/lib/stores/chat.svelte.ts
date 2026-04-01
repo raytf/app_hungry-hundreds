@@ -13,8 +13,8 @@ import { gonnState } from '$lib/stores/gonn';
 import { globalSnapshot } from '$lib/stores/mascot';
 import { getMemoryContext } from '$lib/ai/memory';
 import { trimHistory, summariseTurns } from '$lib/ai/chatHistory';
-import { supabase } from '$lib/supabase/client';
-import { PUBLIC_SUPABASE_URL } from '$env/static/public';
+import { auth } from '$lib/stores/auth';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
 import type { ChatMessage, ChatSession } from '$lib/types/mascot';
 
 const WINDOW_SIZE = 10;
@@ -45,6 +45,13 @@ class ChatStore {
 
 	async send(userInput: string) {
 		if (!userInput.trim() || this.streaming || !this.session) return;
+
+		const token = get(auth).session?.access_token;
+
+		if (!token) {
+			this.error = 'Sign in to chat with Gonn.';
+			return;
+		}
 
 		const userMsg: ChatMessage = { role: 'user', content: userInput };
 
@@ -94,16 +101,12 @@ class ChatStore {
 		};
 
 		try {
-			const {
-				data: { session: authSession }
-			} = await supabase.auth.getSession();
-			const token = authSession?.access_token ?? '';
-
 			const res = await fetch(`${PUBLIC_SUPABASE_URL}/functions/v1/gonn-chat`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
+					Authorization: `Bearer ${token}`,
+					apikey: PUBLIC_SUPABASE_PUBLISHABLE_KEY
 				},
 				body: JSON.stringify(payload)
 			});
@@ -130,16 +133,42 @@ class ChatStore {
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
 			let fullResponse = '';
+			let pendingLine = '';
+			let streamComplete = false;
 
-			while (true) {
+			while (!streamComplete) {
 				const { done, value } = await reader.read();
-				if (done) break;
+				if (done) {
+					const finalChunk = decoder.decode();
+					const finalBuffer = pendingLine + finalChunk;
+					if (finalBuffer) {
+						const raw = finalBuffer.startsWith('data: ') ? finalBuffer.slice(6).trim() : '';
+						if (raw && raw !== '[DONE]') {
+							try {
+								const data = JSON.parse(raw);
+								if (data.type === 'content_block_delta' && data.delta?.text) {
+									fullResponse += data.delta.text;
+									this.streamingContent = fullResponse;
+								}
+							} catch {
+								/* ignore malformed SSE lines */
+							}
+						}
+					}
+					break;
+				}
 
-				const chunk = decoder.decode(value, { stream: true });
-				for (const line of chunk.split('\n')) {
+				const chunk = pendingLine + decoder.decode(value, { stream: true });
+				const lines = chunk.split('\n');
+				pendingLine = lines.pop() ?? '';
+
+				for (const line of lines) {
 					if (!line.startsWith('data: ')) continue;
 					const raw = line.slice(6).trim();
-					if (raw === '[DONE]') break;
+					if (raw === '[DONE]') {
+						streamComplete = true;
+						break;
+					}
 					try {
 						const data = JSON.parse(raw);
 						if (data.type === 'content_block_delta' && data.delta?.text) {
