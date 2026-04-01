@@ -7,7 +7,7 @@
  * @see docs/API.md for full data model documentation
  */
 import Dexie, { type Table } from 'dexie';
-import type { GonnState, MemoryEntry, DialogueCacheEntry } from '$lib/types/mascot';
+import type { GonnState, MemoryEntry, DialogueCacheEntry, ChatSession } from '$lib/types/mascot';
 import { DEFAULT_GONN_STATE } from '$lib/types/mascot';
 
 // ============================================================================
@@ -101,6 +101,7 @@ export class HungryHundredsDB extends Dexie {
 	gonnState!: Table<GonnState>;
 	mascotMemory!: Table<MemoryEntry>;
 	dialogueCache!: Table<DialogueCacheEntry>;
+	chatSessions!: Table<ChatSession>;
 
 	constructor() {
 		super('HungryHundreds');
@@ -154,6 +155,17 @@ export class HungryHundredsDB extends Dexie {
 					});
 				}
 			});
+
+		// Version 4: Add chatSessions table (Phase 8 — Chatbot)
+		this.version(4).stores({
+			habits: '++id, serverId, createdAt',
+			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced',
+			syncQueue: '++id, timestamp',
+			gonnState: 'id',
+			mascotMemory: '++id, type, key, createdAt',
+			dialogueCache: 'contextHash, createdAt',
+			chatSessions: '++id, createdAt'
+		});
 	}
 }
 
@@ -196,7 +208,15 @@ export function now(): number {
 export async function clearAllUserData(): Promise<void> {
 	await db.transaction(
 		'rw',
-		[db.habits, db.logs, db.syncQueue, db.gonnState, db.mascotMemory, db.dialogueCache],
+		[
+			db.habits,
+			db.logs,
+			db.syncQueue,
+			db.gonnState,
+			db.mascotMemory,
+			db.dialogueCache,
+			db.chatSessions
+		],
 		async () => {
 			await db.habits.clear();
 			await db.logs.clear();
@@ -204,6 +224,7 @@ export async function clearAllUserData(): Promise<void> {
 			await db.gonnState.clear();
 			await db.mascotMemory.clear();
 			await db.dialogueCache.clear();
+			await db.chatSessions.clear();
 		}
 	);
 	console.log('[db] All user data cleared');

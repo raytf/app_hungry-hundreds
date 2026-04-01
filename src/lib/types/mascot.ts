@@ -253,3 +253,20 @@ export interface DialogueResponse {
 	dialogue: string; // max 80 characters
 	emotion?: string; // optional override of rule engine emotion
 }
+
+// ============================================================================
+// Chat Types (Phase 8)
+// ============================================================================
+
+export interface ChatMessage {
+	role: 'user' | 'assistant';
+	content: string;
+}
+
+export interface ChatSession {
+	id?: number;
+	messages: ChatMessage[];
+	summary?: string; // compressed summary of turns older than WINDOW_SIZE
+	createdAt: string;
+	updatedAt: string;
+}

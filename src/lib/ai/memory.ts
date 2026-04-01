@@ -23,7 +23,9 @@ import type { HabitSnapshot } from '$lib/types/mascot';
  */
 export async function writeCompletionMemory(habit: HabitSnapshot): Promise<void> {
 	if (!browser) return;
-	const dangerNote = habit.dangerZone ? `, in danger zone (${habit.dangerZoneLabel ?? 'dropout window'})` : '';
+	const dangerNote = habit.dangerZone
+		? `, in danger zone (${habit.dangerZoneLabel ?? 'dropout window'})`
+		: '';
 	await db.mascotMemory.add({
 		type: 'short-term',
 		key: 'completion',
@@ -87,13 +89,43 @@ export async function getMemoryContext(): Promise<{
 
 	const permanent = await db.mascotMemory.where('type').equals('permanent').toArray();
 	// sortBy returns a new array sorted ascending; we want most recent first
-	const allShortTerm = await db.mascotMemory
-		.where('type')
-		.equals('short-term')
-		.sortBy('createdAt');
+	const allShortTerm = await db.mascotMemory.where('type').equals('short-term').sortBy('createdAt');
 	const shortTerm = allShortTerm.reverse().slice(0, 10);
 
 	return { permanent, shortTerm };
+}
+
+// ============================================================================
+// Chat Memory (Phase 8)
+// ============================================================================
+
+/**
+ * Write a permanent memory when the user reveals something meaningful in chat.
+ * Overwrites any existing permanent entry with the same key (singletons).
+ * Call when user messages contain intent signals such as:
+ *   "I keep missing because...", "my goal is...", "I struggle with..."
+ *
+ * @param key   - Semantic key, e.g. 'chat_goal', 'chat_struggle', 'anchor_habit'
+ * @param value - The insight text to persist
+ */
+export async function writeChatMemory(key: string, value: string): Promise<void> {
+	if (!browser) return;
+	const existing = await db.mascotMemory
+		.where('key')
+		.equals(key)
+		.and((e) => e.type === 'permanent')
+		.first();
+
+	if (existing?.id !== undefined) {
+		await db.mascotMemory.update(existing.id, { value, createdAt: new Date().toISOString() });
+	} else {
+		await db.mascotMemory.add({
+			type: 'permanent',
+			key,
+			value,
+			createdAt: new Date().toISOString()
+		});
+	}
 }
 
 // ============================================================================
@@ -113,4 +145,3 @@ export async function trimShortTermMemory(): Promise<void> {
 		.and((entry) => entry.createdAt < cutoff)
 		.delete();
 }
-

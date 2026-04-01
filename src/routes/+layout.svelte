@@ -8,6 +8,7 @@
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import UpdatePrompt from '$lib/components/UpdatePrompt.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
+	import GonnChat from '$lib/components/GonnChat.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
 	import { pushStore } from '$lib/notifications';
@@ -16,6 +17,9 @@
 	import { monster } from '$lib/stores/monster';
 
 	let { children } = $props();
+
+	// Chat panel visibility
+	let chatVisible = $state(false);
 
 	// Routes that require authentication (empty for now - can be enabled later)
 	// Set to ['/habits', '/dashboard', '/settings'] to require auth for those routes
@@ -120,9 +124,19 @@
 		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
 		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
 			<MonsterDisplay monster={$monster} />
+			<!-- Transparent tap zone covering the monster visual area — opens chat -->
+			<button
+				class="pointer-events-auto absolute inset-x-0 bottom-0 h-[45%] cursor-pointer"
+				style="background: transparent; border: none;"
+				onclick={() => (chatVisible = true)}
+				aria-label="Chat with Gonn"
+			></button>
 		</div>
 
 		{@render children()}
+
+		<!-- Gonn Chat panel -->
+		<GonnChat bind:visible={chatVisible} />
 	</div>
 
 	<!-- PWA Install Prompt -->

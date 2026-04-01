@@ -16,10 +16,10 @@
 | 5     | Rule Engine & Rive | ✅ Complete    | 6/6      |
 | 6     | PWA                | ✅ Complete    | 5/5      |
 | 7     | AI Dialogue        | 🚧 In Progress | 4/5      |
-| 8     | Chatbot            | 📋 Planned     | 0/5      |
+| 8     | Chatbot            | ✅ Complete    | 5/5      |
 
-**Current Phase:** Phase 7 (AI Dialogue) — In Progress
-**Last Updated:** 2026-03-28
+**Current Phase:** Phase 8 (Chatbot) — Complete
+**Last Updated:** 2026-04-01
 
 ---
 
@@ -257,13 +257,13 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
 8. ⏳ **Migration push** — `supabase db push` pending (timed out; run manually)
 
-### Phase 8: Chatbot (After Phase 7)
+### Phase 8: Chatbot ✅ Complete
 
-1. **Dexie schema update** - Add `chatSessions` table, `ChatMessage`/`ChatSession` types
-2. **Chat history utility** - `src/lib/ai/chatHistory.ts` with sliding window + summary
-3. **Supabase Edge Function** - `supabase/functions/gonn-chat/index.ts` streaming LLM proxy with auth + rate limiting
-4. **Chat store** - `src/lib/stores/chat.ts` (Svelte 5 runes, SSE streaming)
-5. **GonnChat.svelte** - Chat panel UI with suggestion chips and streaming renderer
+1. ✅ **Dexie schema update** - `chatSessions` table (version 4), `ChatMessage`/`ChatSession` types in `src/lib/types/mascot.ts`
+2. ✅ **Chat history utility** - `src/lib/ai/chatHistory.ts` with sliding window (10 turns) + summariseTurns()
+3. ✅ **Supabase Edge Function** - `supabase/functions/gonn-chat/index.ts` — Claude Haiku streaming proxy with auth, rate limiting, and habit context injection
+4. ✅ **Chat store** - `src/lib/stores/chat.ts` — Svelte 5 runes class, SSE stream parsing, Dexie persistence
+5. ✅ **GonnChat.svelte** - Slide-up chat panel with suggestion chips, streaming cursor, and monster tap trigger in layout
 
 See `docs/features/chatbot-spec.md` for full implementation spec.
 
