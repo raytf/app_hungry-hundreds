@@ -43,8 +43,8 @@
 </script>
 
 <div class="relative flex h-full w-full items-end justify-center" style="">
-	<!-- Monster container - full height and width -->
-	<div class="relative flex h-full w-full items-end justify-center">
+	<!-- Monster container - constrained to app max-width -->
+	<div class="relative flex h-full w-full max-w-lg items-end justify-center">
 		<!-- Monster animation (Rive with emoji fallback) -->
 		<Monster bind:this={monsterRef} stage={monster.stage} />
 		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">

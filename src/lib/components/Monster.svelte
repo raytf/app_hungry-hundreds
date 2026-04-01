@@ -129,7 +129,7 @@
 				autoBind: true,
 				layout: new Layout({
 					fit: Fit.Cover,
-					alignment: Alignment.Center
+					alignment: Alignment.BottomCenter
 				}),
 				onLoad: () => {
 					// Scale the drawing surface for high-DPI / Retina displays
