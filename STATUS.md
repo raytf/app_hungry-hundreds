@@ -255,7 +255,7 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 5. ✅ **Edge Function** - `supabase/functions/gonn-dialogue/index.ts` — Claude Haiku proxy with auth + rate limiting
 6. ✅ **Monster.svelte** - `setDialogue()` export with typewriter effect via Rive `dialogueText`/`dialogueVisible` VM props
 7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
-8. ⏳ **Migration push** — `supabase db push` pending (timed out; run manually)
+8. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
 ### Phase 8: Chatbot ✅ Complete
 

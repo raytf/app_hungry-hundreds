@@ -189,8 +189,9 @@ class ChatStore {
 				summary,
 				updatedAt: new Date().toISOString()
 			};
-			db.chatSessions.put(updatedSession);
 			this.session = updatedSession;
+			// Use $state.snapshot to get a plain cloneable object for IndexedDB
+			db.chatSessions.put($state.snapshot(this.session) as ChatSession);
 			this.streaming = false;
 			this.streamingContent = '';
 		} catch {

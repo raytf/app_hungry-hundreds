@@ -166,6 +166,17 @@ export class HungryHundredsDB extends Dexie {
 			dialogueCache: 'contextHash, createdAt',
 			chatSessions: '++id, createdAt'
 		});
+
+		// Version 5: Add standalone 'date' index to logs (needed for advancedStats range queries)
+		this.version(5).stores({
+			habits: '++id, serverId, createdAt',
+			logs: '++id, serverId, [habitId+date], habitId, completedAt, synced, date',
+			syncQueue: '++id, timestamp',
+			gonnState: 'id',
+			mascotMemory: '++id, type, key, createdAt',
+			dialogueCache: 'contextHash, createdAt',
+			chatSessions: '++id, createdAt'
+		});
 	}
 }
 
