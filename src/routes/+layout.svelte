@@ -9,11 +9,22 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import { pushStore } from '$lib/notifications';
 	import { refreshStatus } from '$lib/stores/habits';
 	import { refreshStats } from '$lib/stores/stats';
 
 	let { children } = $props();
+
+	// Show a toast whenever sync transitions into an error state
+	let prevSyncStatus = $state($syncStore.status);
+	$effect(() => {
+		const status = $syncStore.status;
+		if (status === 'error' && prevSyncStatus !== 'error') {
+			showToast('Sync failed — changes saved locally');
+		}
+		prevSyncStatus = status;
+	});
 
 	// Auth is not enforced on any route currently.
 	// To protect routes, restore the page import from $app/state and add paths here.
