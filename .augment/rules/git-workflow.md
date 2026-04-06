@@ -104,17 +104,21 @@ Follow the Conventional Commits format:
 - `chore` — housekeeping (deleting files, renaming, etc.)
 - `docs` — documentation only
 
-**Wait for explicit approval**, then run all three steps automatically:
+**Wait for explicit approval**, then run all four steps automatically:
 
 ```bash
 # 1. Commit
 git add -A
 git commit -m "<approved message>"
 
-# 2. Push
+# 2. Update README.md and STATUS.md to reflect the changes, then commit
+git add README.md STATUS.md
+git commit -m "docs: update README and STATUS for <feature>"
+
+# 3. Push
 git push origin <branch-name>
 
-# 3. Open pull request into main
+# 4. Open pull request into main
 gh pr create \
   --base main \
   --title "<type>(<scope>): <short summary>" \
@@ -145,9 +149,11 @@ push, or open a PR without explicit user approval of the commit message.
 [next phase...]               [Full summary + push msg]
         ↓                     → USER APPROVES
         ...                           ↓
-[All phases done]             [git push + gh pr create]
-[push + PR msg]
-→ USER APPROVES
+[All phases done]             [Update README + STATUS.md]
+[push + PR msg]               [git commit docs]
+→ USER APPROVES                       ↓
+[Update README + STATUS.md]   [git push + gh pr create]
+[git commit docs]
 [git push + gh pr create]
         ↓
 [PR open on GitHub] → USER manually reviews and merges
