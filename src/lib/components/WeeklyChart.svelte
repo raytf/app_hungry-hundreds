@@ -28,7 +28,7 @@
 		</div>
 	{:else}
 		<div class="flex items-end justify-between gap-2">
-			{#each data as day, i}
+			{#each data as day, i (day.day)}
 				{@const height = (day.total / maxTotal) * 100}
 				{@const completedHeight = (day.completed / maxTotal) * 100}
 				{@const isComplete = day.total > 0 && day.completed >= day.total}
