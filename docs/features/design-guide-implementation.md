@@ -36,14 +36,14 @@ As a user, the app feels warm, focused, and character-driven — Gonn is the vis
 
 | Phase | Status | Commit(s) |
 |---|---|---|
-| A — Foundation | ✅ Complete | design-system/implementation branch |
-| B — Home Screen Layout | ✅ Complete | design-system/implementation branch |
+| A — Foundation | ✅ Complete | `7e76933`, `a27f987` |
+| B — Home Screen Layout | ✅ Complete | `5e18a89`, `6b62f14` |
 | C — Speech Bubble System | ✅ Complete | `df3bed0`, `7c5fd93` |
-| D — HabitCard Redesign | 🔲 Next | — |
-| E — Top Bar + Drawer | 🔲 Pending | — |
-| F — Component Library | 🔲 Pending | — |
-| G — Confetti | 🔲 Pending | — |
-| H — Route Rename | 🔲 Pending | — |
+| D — HabitCard Redesign | ✅ Complete | `ef8b36e`, `890fdaf` |
+| E — Top Bar + Drawer | ✅ Complete | `ef8b36e`, `cd64882` |
+| F — Component Library | ✅ Complete | `ef8b36e` + layout wiring |
+| G — Confetti | ✅ Complete | `ef8b36e` |
+| H — Route Rename | ✅ Complete | `cd64882` |
 
 **Branch:** `design-system/implementation`
 

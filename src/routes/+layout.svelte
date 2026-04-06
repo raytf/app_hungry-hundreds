@@ -6,6 +6,7 @@
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import UpdatePrompt from '$lib/components/UpdatePrompt.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
 	import { pushStore } from '$lib/notifications';
@@ -110,4 +111,7 @@
 
 	<!-- PWA Update Prompt -->
 	<UpdatePrompt />
+
+	<!-- Global toast notifications -->
+	<Toast />
 </AuthGuard>
