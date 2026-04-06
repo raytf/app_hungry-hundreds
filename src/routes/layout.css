@@ -88,15 +88,15 @@
 	--radius-input: 12px;
 	--radius-sheet: 24px;
 
-	/* ── Z-index scale ── */
-	--z-index-ground: 5;
-	--z-index-rive: 10;
-	--z-index-bubble: 15;
-	--z-index-habits: 20;
-	--z-index-fire-bar: 25;
-	--z-index-top-bar: 30;
-	--z-index-drawer: 40;
-	--z-index-modal: 50;
+	/* ── Z-index scale (--z-{name} generates z-{name} utilities in Tailwind 4) ── */
+	--z-ground: 5;
+	--z-rive: 10;
+	--z-bubble: 15;
+	--z-habits: 20;
+	--z-fire-bar: 25;
+	--z-top-bar: 30;
+	--z-drawer: 40;
+	--z-modal: 50;
 
 	/* ── Background image gradients ── */
 	--background-image-fire-gradient: linear-gradient(to right, #e8713a, #d03731);
@@ -108,6 +108,15 @@
 		#e8dcc8 75%,
 		#d6cbae 100%
 	);
+}
+
+/* =============================================================================
+   Layout constants (not design tokens — live in :root, not @theme)
+   ============================================================================= */
+:root {
+	/* Square canvas size for Gonn: full viewport width, capped at 430px.
+	   Used as padding-bottom on scroll areas and for fixed element positioning. */
+	--gonn-size: min(100vw, 430px);
 }
 
 /* =============================================================================

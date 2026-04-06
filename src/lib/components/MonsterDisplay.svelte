@@ -42,25 +42,12 @@
 	});
 </script>
 
-<div class="relative flex h-full w-full items-end justify-center" style="">
-	<!-- Monster container - constrained to app max-width -->
-	<div class="relative flex h-full w-full max-w-lg items-end justify-center">
-		<!-- Monster animation (Rive with emoji fallback) -->
-		<Monster bind:this={monsterRef} stage={monster.stage} />
-		<div class="absolute right-0 bottom-2 left-0 z-10 h-1.5 bg-black/10">
-			<div
-				class="h-full bg-white/80 transition-all duration-500"
-				style="width: {monster.evolutionProgress}%"
-			></div>
-		</div>
-	</div>
-
-	<!-- Evolution progress bar - full width at bottom -->
-
-	<!-- Stage badge -->
-	<span
-		class="absolute top-2 right-4 rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium capitalize"
-	>
-		{monster.stage}
-	</span>
+<!--
+	MonsterDisplay — renders Gonn filling its parent container.
+	Sizing and positioning are handled entirely by the parent in +layout.svelte.
+	Evolution progress bar and stage badge removed (design guide §4.3:
+	Gonn's state is communicated through animation, not chrome).
+-->
+<div class="h-full w-full">
+	<Monster bind:this={monsterRef} stage={monster.stage} />
 </div>

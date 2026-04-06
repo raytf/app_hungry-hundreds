@@ -121,17 +121,30 @@
 
 <AuthGuard requireAuth={requiresAuth}>
 	<div class="h-screen bg-surface">
-		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
-		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
-			<MonsterDisplay monster={$monster} />
-			<!-- Transparent tap zone covering the monster visual area — opens chat -->
+		{#if showMonster}
+			<!-- Layer 1 (z-ground=5): Ground surface behind Gonn — full viewport width -->
+			<div
+				class="pointer-events-none fixed inset-x-0 bottom-0 z-ground bg-ground-gradient"
+				style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
+				aria-hidden="true"
+			></div>
+
+			<!-- Layer 2 (z-rive=10): Gonn canvas — square, centered, max 430px -->
+			<div
+				class="pointer-events-none fixed bottom-0 left-1/2 z-rive -translate-x-1/2"
+				style="width: var(--gonn-size); height: var(--gonn-size);"
+			>
+				<MonsterDisplay monster={$monster} />
+			</div>
+
+			<!-- Layer 3 (z-11): Tap zone — lower half of Gonn opens chat -->
 			<button
-				class="pointer-events-auto absolute inset-x-0 bottom-0 mx-auto h-[45%] w-full max-w-lg cursor-pointer"
-				style="background: transparent; border: none;"
+				class="fixed bottom-0 left-1/2 z-[11] -translate-x-1/2 cursor-pointer"
+				style="width: var(--gonn-size); height: calc(var(--gonn-size) * 0.5); background: transparent; border: none;"
 				onclick={() => (chatVisible = true)}
 				aria-label="Chat with Gonn"
 			></button>
-		</div>
+		{/if}
 
 		{@render children()}
 

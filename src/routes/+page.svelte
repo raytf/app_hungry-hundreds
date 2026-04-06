@@ -1,17 +1,17 @@
 <script lang="ts">
 	import Header from '$lib/components/Header.svelte';
+	import FireProgressBar from '$lib/components/FireProgressBar.svelte';
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
-	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import { resolve } from '$app/paths';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
 	import { monsterLookAt } from '$lib/stores/monster';
 
-	// Get current date for header
+	// Get current date for header (Phase E will move formatting to Header itself)
 	const now = new Date();
 	const dateOptions: Intl.DateTimeFormatOptions = {
 		weekday: 'long',
-		month: 'long',
+		month: 'short',
 		day: 'numeric'
 	};
 	const formattedDate = now.toLocaleDateString('en-US', dateOptions);
@@ -48,46 +48,47 @@
 	<title>Today | Hungry Hundreds</title>
 </svelte:head>
 
-<!-- Full page grid layout: Header (auto) | Main (1fr) -->
+<!--
+	Home screen layout (Phase B):
+	┌─────────────────────────────┐
+	│  Header (sticky)            │
+	│  FireProgressBar            │
+	├─────────────────────────────┤
+	│  Habits scroll (sky bg)     │  flex-1, overflow-y-auto
+	│                             │
+	│  [padding-bottom clears     │
+	│   Gonn canvas + bubble]     │
+	├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
+	│  SpeechBubble (Phase C)     │  fixed, z-bubble
+	│  Gonn canvas (layout)       │  fixed, z-rive
+	│  Ground (layout)            │  fixed, z-ground
+	└─────────────────────────────┘
+-->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-	class="relative grid h-full"
-	style="grid-template-rows: auto 1fr auto;"
-	onmousemove={handlePageMouseMove}
->
-	<Header title={formattedDate} showSyncStatus>
-		{#snippet right()}
-			<!-- <ProgressRing pct={$todaysProgress.pct} size={40} /> -->
-		{/snippet}
-	</Header>
+<div class="flex h-screen flex-col" onmousemove={handlePageMouseMove}>
+	<!-- Sticky header + fire bar zone -->
+	<Header title={formattedDate} showSyncStatus />
+	<FireProgressBar pct={$todaysProgress.pct} />
 
-	<!-- Scrollable main content area - takes remaining space -->
-	<div class="relative h-[60%]">
+	<!-- Scrollable habits area with sky gradient -->
+	<div class="relative flex-1 overflow-hidden">
 		<main
-			class="scrollable-main h-full overflow-y-auto overscroll-contain"
+			class="scrollable-main h-full overflow-y-auto overscroll-contain bg-sky-gradient"
 			bind:this={mainEl}
 			onscroll={checkScroll}
 		>
-			<div class="mx-auto w-full max-w-lg px-4 pt-4 pb-4">
-				<!-- Progress Summary -->
-				<section class="card mb-6 flex items-center justify-between">
-					<div>
-						<p class="text-sm text-gray-500">Today's Progress</p>
-						<p class="text-xl font-bold text-gray-900">
-							{$todaysProgress.completed} of {$todaysProgress.total} habits
-						</p>
-					</div>
-					<ProgressRing pct={$todaysProgress.pct} size={64} />
-				</section>
-
+			<div
+				class="mx-auto w-full max-w-lg px-4 pt-4"
+				style="padding-bottom: calc(var(--gonn-size) + 80px)"
+			>
 				<!-- Habits List -->
 				<section>
 					{#if $sortedHabits.length > 0}
 						<div class="mb-3 flex items-center justify-between">
-							<h3 class="font-semibold text-gray-700">Your Habits</h3>
+							<h3 class="font-semibold text-content-muted">Your Habits</h3>
 							<a
 								href={resolve('/habits/new')}
-								class="text-sm font-medium text-hungry-600 hover:text-hungry-700"
+								class="text-body-sm font-medium text-accent-warm hover:text-accent-warm-hover"
 							>
 								+ Add New
 							</a>
@@ -106,10 +107,11 @@
 				</section>
 			</div>
 		</main>
-		<!-- Scroll-more indicator: fades away once scrolled to the bottom -->
+
+		<!-- Scroll-more horizon fade: visible when content overflows -->
 		{#if canScrollMore}
 			<div
-				class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-gray-50/90 to-transparent transition-opacity duration-300"
+				class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-surface/80 to-transparent transition-opacity duration-300"
 			></div>
 		{/if}
 	</div>
