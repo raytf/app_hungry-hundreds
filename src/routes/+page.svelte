@@ -3,6 +3,7 @@
 	import FireProgressBar from '$lib/components/FireProgressBar.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
 	import GonnChat from '$lib/components/GonnChat.svelte';
+	import SpeechBubble from '$lib/components/SpeechBubble.svelte';
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import { resolve } from '$app/paths';
@@ -64,7 +65,7 @@
 	│  [padding-bottom clears     │
 	│   Gonn canvas + bubble]     │
 	├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
-	│  SpeechBubble (Phase C)     │  fixed, z-bubble
+	│  SpeechBubble               │  fixed, z-[15]
 	│  Gonn canvas (layout)       │  fixed, z-rive
 	│  Ground (layout)            │  fixed, z-ground
 	└─────────────────────────────┘
@@ -93,6 +94,9 @@
 	onclick={() => (chatVisible = true)}
 	aria-label="Chat with Gonn"
 ></button>
+
+<!-- Layer 3.5 (z-[15]): HTML Speech Bubble — sits above Gonn, below tap zone -->
+<SpeechBubble />
 
 <!-- Gonn Chat panel -->
 <GonnChat bind:visible={chatVisible} />
