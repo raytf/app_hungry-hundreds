@@ -13,14 +13,7 @@
 	// Gonn chat panel visibility
 	let chatVisible = $state(false);
 
-	// Get current date for header (Phase E will move formatting to Header itself)
-	const now = new Date();
-	const dateOptions: Intl.DateTimeFormatOptions = {
-		weekday: 'long',
-		month: 'short',
-		day: 'numeric'
-	};
-	const formattedDate = now.toLocaleDateString('en-US', dateOptions);
+
 
 	/**
 	 * Convert a pointer's viewport position to monster head coordinates (-1..1).
@@ -75,7 +68,7 @@
 <!-- Layer 1 (z-ground=5): Ground surface — full viewport width -->
 <div
 	class="pointer-events-none fixed inset-x-0 bottom-0 z-[5] bg-ground-gradient"
-	style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
+	style="height: calc(var(--gonn-size) / 2 + env(safe-area-inset-bottom, 0px))"
 	aria-hidden="true"
 ></div>
 
@@ -105,7 +98,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="flex h-screen flex-col" onmousemove={handlePageMouseMove}>
 	<!-- Sticky header + fire bar zone -->
-	<Header title={formattedDate} showSyncStatus />
+	<Header showSyncStatus />
 	<FireProgressBar pct={$todaysProgress.pct} />
 
 	<!-- Scrollable habits area with sky gradient -->
