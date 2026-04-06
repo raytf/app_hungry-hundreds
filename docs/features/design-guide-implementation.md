@@ -32,9 +32,35 @@ As a user, the app feels warm, focused, and character-driven — Gonn is the vis
 
 ---
 
+## Implementation Status
+
+| Phase | Status | Commit(s) |
+|---|---|---|
+| A — Foundation | ✅ Complete | design-system/implementation branch |
+| B — Home Screen Layout | ✅ Complete | design-system/implementation branch |
+| C — Speech Bubble System | ✅ Complete | `df3bed0`, `7c5fd93` |
+| D — HabitCard Redesign | 🔲 Next | — |
+| E — Top Bar + Drawer | 🔲 Pending | — |
+| F — Component Library | 🔲 Pending | — |
+| G — Confetti | 🔲 Pending | — |
+| H — Route Rename | 🔲 Pending | — |
+
+**Branch:** `design-system/implementation`
+
+### Key Implementation Deviations (resolved)
+
+| Phase | Original Plan | Actual Implementation | Reason |
+|---|---|---|---|
+| B | Gonn canvas stays in `+layout.svelte` | Moved to `+page.svelte` (home) and `/monster/+page.svelte` | Layout had no "always mounted" benefit; home-only Gonn is cleaner |
+| B | `z-ground`, `z-rive` Tailwind utility classes | Explicit `z-[5]`, `z-10` in templates | Tailwind 4 does not reliably generate utility classes from `--z-*` @theme tokens |
+| B | `@rive-app/canvas` 2.34.3 | Upgraded to 2.37.0 | Newer `.riv` file used format features introduced after 2.34.3; "may be corrupt" parse error |
+| C | Store file `dialogue.ts` | Named `dialogue.svelte.ts` | `$state` runes require `.svelte.ts` extension for non-component files (same pattern as `chat.svelte.ts`) |
+
+---
+
 ## Phase Breakdown
 
-### Phase A — Foundation
+### Phase A — Foundation ✅
 **Goal:** Install dependencies, establish design tokens, load fonts. Zero visible UI changes.
 
 **Install:**
@@ -54,14 +80,14 @@ pnpm add -D @types/canvas-confetti
 All design guide colors map to `--color-*` custom properties. Type scale maps to `--text-*`. Shadows map to `--shadow-*`. Full mapping in Appendix A below.
 
 **Acceptance criteria:**
-- [ ] DM Sans and Fredoka both load correctly (verify in Network tab)
-- [ ] All `--color-*`, `--shadow-*`, `--text-*` tokens present in computed styles
-- [ ] No `hungry-*` green tokens remain (replaced by design system tokens)
-- [ ] Build passes (`pnpm check`)
+- [x] DM Sans and Fredoka both load correctly (verify in Network tab)
+- [x] All `--color-*`, `--shadow-*`, `--text-*` tokens present in computed styles
+- [x] No `hungry-*` green tokens remain (replaced by design system tokens)
+- [x] Build passes (`pnpm check`)
 
 ---
 
-### Phase B — Home Screen Layout
+### Phase B — Home Screen Layout ✅
 **Goal:** Restructure the home screen to match design guide §4.2–4.4. Gonn fixed at bottom as a full-width square, fire bar below top bar, sky gradient on habits scroll, ground behind Gonn.
 
 **Files to modify:**
@@ -94,23 +120,23 @@ All design guide colors map to `--color-*` custom properties. Type scale maps to
 ```
 
 **Acceptance criteria:**
-- [ ] Gonn canvas is a full-width square fixed to the bottom, capped at 430px, centered
-- [ ] Ground gradient fills behind Gonn and extends behind the home indicator
-- [ ] Habits list has a sky gradient background that scrolls with the cards
-- [ ] Fire progress bar appears as a 6px stripe directly below the header
-- [ ] Habit cards never overlap Gonn or the speech bubble zone
-- [ ] No layout breakage on iPhone SE (375px) or wide screens (768px+)
+- [x] Gonn canvas is a full-width square fixed to the bottom, capped at 430px, centered
+- [x] Ground gradient fills behind Gonn and extends behind the home indicator
+- [x] Habits list has a sky gradient background that scrolls with the cards
+- [x] Fire progress bar appears as a 6px stripe directly below the header
+- [x] Habit cards never overlap Gonn or the speech bubble zone
+- [x] No layout breakage on iPhone SE (375px) or wide screens (768px+)
 
 ---
 
-### Phase C — Speech Bubble System
+### Phase C — Speech Bubble System ✅
 **Goal:** Create the Svelte-side HTML/CSS speech bubble that shows Gonn's dialogue. Rewire the existing dialogue pipeline to a reactive store.
 
-**Files to create:**
+**Files created:**
 
 | File | Purpose |
 |---|---|
-| `src/lib/stores/dialogue.ts` | Svelte 5 `$state`-based store exposing `{ text, visible, charDelayMs, displayMs }`. Exports `showDialogue(text, opts?)` and `hideDialogue()`. |
+| `src/lib/stores/dialogue.svelte.ts` | Svelte 5 `$state`-based store exposing `{ text, visible, charDelayMs, displayMs }`. Exports `showDialogue(text, opts?)` and `hideDialogue()`. ⚠️ Named `.svelte.ts` (not `.ts`) — required for `$state` rune usage outside components. |
 | `src/lib/components/SpeechBubble.svelte` | HTML/CSS bubble subscribing to `dialogueStore`. Typewriter reveal (character-by-character at `charDelayMs`ms). CSS triangle tail pointing down. Fade in (250ms) + scale 0.9→1.0 on appear; fade out (200ms) on dismiss. `role="status"` `aria-live="polite"`. Positioned in the fixed zone between habits scroll and Gonn canvas. |
 
 **Files to modify:**
@@ -137,16 +163,16 @@ All design guide colors map to `--color-*` custom properties. Type scale maps to
 **Typewriter logic:** On `text` change, iterate characters with `setTimeout` at `charDelayMs` intervals. On `displayMs` elapsed after typing completes, call `hideDialogue()`. Respect `prefers-reduced-motion`: show full text instantly.
 
 **Acceptance criteria:**
-- [ ] Gonn's dialogue from `monsterSetDialogue()` appears in the HTML bubble above Gonn
-- [ ] Text streams in character-by-character (30ms default)
-- [ ] Bubble fades in/out with correct animations
-- [ ] Bubble never overlaps habit cards or Gonn's body
-- [ ] `aria-live="polite"` announces text to screen readers
-- [ ] `prefers-reduced-motion`: text appears instantly
+- [x] Gonn's dialogue from `monsterSetDialogue()` appears in the HTML bubble above Gonn
+- [x] Text streams in character-by-character (30ms default)
+- [x] Bubble fades in/out with correct animations
+- [x] Bubble never overlaps habit cards or Gonn's body
+- [x] `aria-live="polite"` announces text to screen readers
+- [x] `prefers-reduced-motion`: text appears instantly
 
 ---
 
-### Phase D — HabitCard Redesign (Home Screen)
+### Phase D — HabitCard Redesign (Home Screen) 👈 Next
 **Goal:** Redesign `HabitCardCompact.svelte` to match design guide §5.2. Keep `HabitCard.svelte` (used on `/habits` list) unchanged.
 
 **Files to modify:** `src/lib/components/HabitCardCompact.svelte`
