@@ -14,15 +14,9 @@
 
 	let { children } = $props();
 
-	// Routes that require authentication (empty for now - can be enabled later)
-	// Set to ['/habits', '/dashboard', '/settings'] to require auth for those routes
-	const protectedRoutes: string[] = [];
-
-	// Check if current route requires auth
-	const requiresAuth = $derived.by(() => {
-		const path = page.url.pathname;
-		return protectedRoutes.some((route) => path === route || path.startsWith(route + '/'));
-	});
+	// Auth is not enforced on any route currently.
+	// To protect routes, restore the page import from $app/state and add paths here.
+	const requiresAuth = false;
 
 	// Track the date when the app was last active to detect day changes
 	let lastActiveDate = '';
