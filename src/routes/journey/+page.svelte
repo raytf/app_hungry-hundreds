@@ -17,10 +17,10 @@
 </script>
 
 <svelte:head>
-	<title>Statistics | Hungry Hundreds</title>
+	<title>Journey | Hungry Hundreds</title>
 </svelte:head>
 
-<Header title="Statistics" />
+<Header title="Journey" />
 
 <main class="page-container pt-4">
 	<!-- Today's Progress Card -->

@@ -25,8 +25,8 @@
 
 	const navItems = [
 		{ href: '/', label: 'Home', Icon: Home },
-		{ href: '/journey', label: 'Journey', Icon: TrendingUp },
 		{ href: '/habits/new', label: 'Add Habit', Icon: Plus },
+		{ href: '/journey', label: 'Journey', Icon: TrendingUp },
 		{ href: '/settings', label: 'Settings', Icon: Settings }
 	] as const;
 
@@ -74,28 +74,31 @@
 
 <!-- Top bar: 48px, warm surface, backdrop blur -->
 <header class="sticky top-0 z-30 bg-surface/90 backdrop-blur-sm">
-	<div class="mx-auto flex h-12 max-w-lg items-center px-6">
+	<!-- Grid ensures center is truly centered regardless of left/right widths -->
+	<div class="mx-auto grid h-12 max-w-lg grid-cols-[1fr_auto_1fr] items-center px-6">
 		<!-- Left: back arrow or hamburger -->
-		{#if showBack}
-			<a
-				href={resolve('/')}
-				class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
-				aria-label="Go back"
-			>
-				<span class="text-xl">←</span>
-			</a>
-		{:else}
-			<button
-				onclick={openDrawer}
-				class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
-				aria-label="Open navigation menu"
-			>
-				<Menu size={24} />
-			</button>
-		{/if}
+		<div class="flex items-center">
+			{#if showBack}
+				<a
+					href={resolve('/')}
+					class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
+					aria-label="Go back"
+				>
+					<span class="text-xl">←</span>
+				</a>
+			{:else}
+				<button
+					onclick={openDrawer}
+					class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
+					aria-label="Open navigation menu"
+				>
+					<Menu size={24} />
+				</button>
+			{/if}
+		</div>
 
 		<!-- Center: page title or today's date -->
-		<div class="flex flex-1 justify-center">
+		<div class="flex justify-center">
 			{#if title}
 				<span class="text-body font-medium text-content">{title}</span>
 			{:else}
@@ -106,7 +109,7 @@
 		</div>
 
 		<!-- Right: optional snippet + sync dot -->
-		<div class="flex items-center gap-3">
+		<div class="flex items-center justify-end gap-3">
 			{#if right}
 				{@render right()}
 			{/if}
