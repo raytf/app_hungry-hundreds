@@ -121,7 +121,8 @@
 			const { Rive, Layout, Fit, Alignment } = await import('@rive-app/canvas');
 
 			riveInstance = new Rive({
-				src: '/animations/monster_hatchling.riv',
+				src: '/animations/monster.riv',
+				artboard: 'artboard1',
 				canvas,
 				autoplay: true,
 				stateMachines: 'State Machine 1',
