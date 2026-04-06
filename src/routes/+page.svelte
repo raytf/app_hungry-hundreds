@@ -2,16 +2,12 @@
 	import Header from '$lib/components/Header.svelte';
 	import FireProgressBar from '$lib/components/FireProgressBar.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
-	import GonnChat from '$lib/components/GonnChat.svelte';
 	import SpeechBubble from '$lib/components/SpeechBubble.svelte';
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
 	import { resolve } from '$app/paths';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
 	import { monster, monsterLookAt } from '$lib/stores/monster';
-
-	// Gonn chat panel visibility
-	let chatVisible = $state(false);
 
 
 
@@ -80,19 +76,16 @@
 	<MonsterDisplay monster={$monster} />
 </div>
 
-<!-- Layer 3 (z-11): Tap zone — lower half of Gonn opens chat -->
-<button
-	class="fixed bottom-0 left-1/2 z-[11] -translate-x-1/2 cursor-pointer"
-	style="width: var(--gonn-size); height: calc(var(--gonn-size) * 0.5); background: transparent; border: none;"
-	onclick={() => (chatVisible = true)}
+<!-- Layer 3 (z-11): Tap zone — lower half of Gonn navigates to /chat -->
+<a
+	href="/chat"
+	class="fixed bottom-0 left-1/2 z-[11] -translate-x-1/2 block"
+	style="width: var(--gonn-size); height: calc(var(--gonn-size) * 0.5); background: transparent;"
 	aria-label="Chat with Gonn"
-></button>
+></a>
 
 <!-- Layer 3.5 (z-[15]): HTML Speech Bubble — sits above Gonn, below tap zone -->
 <SpeechBubble />
-
-<!-- Gonn Chat panel -->
-<GonnChat bind:visible={chatVisible} />
 
 <!-- ── Page layout ─────────────────────────────────────────────────────────── -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->

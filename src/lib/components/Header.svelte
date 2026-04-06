@@ -6,7 +6,7 @@
 	import { dev } from '$app/environment';
 	import { iconTap } from '$lib/animations/transitions';
 	import { isOnline, isSyncing, hasPendingChanges } from '$lib/sync';
-	import { Menu, Home, TrendingUp, Plus, Settings, X } from 'lucide-svelte';
+	import { Menu, Home, TrendingUp, Plus, Settings, X, MessageCircle } from 'lucide-svelte';
 
 	type StaticRouteId = Exclude<RouteId, '/habits/[id]' | '/habits/[id]/edit'>;
 
@@ -26,6 +26,7 @@
 	const navItems = [
 		{ href: '/', label: 'Home', Icon: Home },
 		{ href: '/habits/new', label: 'Add Habit', Icon: Plus },
+		{ href: '/chat', label: 'Chat with Gonn', Icon: MessageCircle },
 		{ href: '/journey', label: 'Journey', Icon: TrendingUp },
 		{ href: '/settings', label: 'Settings', Icon: Settings }
 	] as const;

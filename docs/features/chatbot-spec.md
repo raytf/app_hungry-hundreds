@@ -1,6 +1,11 @@
 Gonn Chat — AI Agent Implementation Spec
 Agent reference for implementing the interactive Gonn chatbot feature on the existing Hungry Hundreds SvelteKit + Dexie + Supabase MVP.
 
+> **⚠️ UI APPROACH SUPERSEDED:** The GonnChat overlay described in Step 5 has been replaced
+> by a dedicated `/chat` route. The store (Step 4), edge function (Step 3), and history
+> utility (Step 2) are unchanged and still canonical. For the new page-based UI approach,
+> see `docs/features/chat-page.md`.
+
 > **⚠️ PREREQUISITES: This spec requires Phase 5 (Rule Engine & Rive) and Phase 7 (AI Dialogue) to be complete before implementation.**
 >
 > Check `STATUS.md` to verify these phases are marked ✅ Complete before proceeding.

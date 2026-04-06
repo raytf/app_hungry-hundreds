@@ -75,20 +75,32 @@
 		class="speech-bubble-zone pointer-events-none fixed inset-x-0 z-[15] flex justify-center"
 		style="bottom: calc(var(--gonn-size) + 8px)"
 	>
-		<button
-			class="speech-bubble pointer-events-auto relative max-w-xs rounded-2xl px-4 py-3 text-left shadow-bubble"
+		<div
+			class="speech-bubble pointer-events-auto relative max-w-xs cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
 			style="background: var(--color-surface); border: 1.5px solid var(--color-edge);"
 			onclick={dismiss}
-			role="status"
-			aria-live="polite"
-			aria-label="Gonn says: {dialogueStore.text}"
+			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && dismiss()}
+			role="button"
+			tabindex="0"
+			aria-label="Gonn says: {dialogueStore.text}. Press to dismiss."
 		>
+			<!-- Screen reader announcement -->
+			<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
 			<p
 				class="m-0 font-body"
 				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
 			>
 				{displayText}
 			</p>
+
+			<!-- Reply affordance: navigates to /chat without dismissing bubble -->
+			<a
+				href="/chat"
+				class="mt-1 block text-right text-body-sm font-medium text-accent-warm"
+				onclick={(e) => e.stopPropagation()}
+			>
+				Reply →
+			</a>
 
 			<!-- Triangle tail pointing down toward Gonn -->
 			<span
@@ -111,7 +123,7 @@
 				"
 				aria-hidden="true"
 			></span>
-		</button>
+		</div>
 	</div>
 {/if}
 

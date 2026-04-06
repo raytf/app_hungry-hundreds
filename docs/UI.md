@@ -23,19 +23,20 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route               | Page          | Purpose                              | Status                  |
-| ------------------- | ------------- | ------------------------------------ | ----------------------- |
-| `/`                 | Home          | Daily habit check-in with Gonn       | ✅ Complete (redesign pending) |
-| `/habits`           | Habits List   | Detailed view of all habits          | ✅ Complete             |
-| `/habits/new`       | New Habit     | Create a new habit (full-page form)  | ✅ Complete             |
-| `/habits/[id]`      | Habit Detail  | View habit details and history       | ✅ Complete             |
-| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit               | ✅ Complete             |
-| `/journey`          | Journey       | Stats, history, and milestones       | 🚧 Rename from /dashboard |
-| `/settings`         | Settings      | App preferences and sync             | ✅ Complete             |
-| `/onboard`          | Onboarding    | First-time setup wizard              | 📋 Redesign deferred    |
-| `/auth/signin`      | Sign In       | User authentication                  | ✅ Complete             |
-| `/auth/signup`      | Sign Up       | Account creation                     | ✅ Complete             |
-| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools     | ✅ Complete             |
+| Route               | Page          | Purpose                              | Status      |
+| ------------------- | ------------- | ------------------------------------ | ----------- |
+| `/`                 | Home          | Daily habit check-in with Gonn       | ✅ Complete |
+| `/chat`             | Chat          | Full-screen conversation with Gonn   | ✅ Complete |
+| `/habits`           | Habits List   | Detailed view of all habits          | ✅ Complete |
+| `/habits/new`       | New Habit     | Create a new habit (full-page form)  | ✅ Complete |
+| `/habits/[id]`      | Habit Detail  | View habit details and history       | ✅ Complete |
+| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit               | ✅ Complete |
+| `/journey`          | Journey       | Stats, history, and milestones       | ✅ Complete |
+| `/settings`         | Settings      | App preferences and sync             | ✅ Complete |
+| `/onboard`          | Onboarding    | First-time setup wizard              | 📋 Redesign deferred |
+| `/auth/signin`      | Sign In       | User authentication                  | ✅ Complete |
+| `/auth/signup`      | Sign Up       | Account creation                     | ✅ Complete |
+| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools     | ✅ Complete |
 
 ### Page Details
 
@@ -61,7 +62,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - `Header` (48px, date-only center, sync dot, hamburger → drawer)
 - `FireProgressBar` (consumes `todaysProgress.pct`)
 - `HabitCardCompact` (redesigned: circle indicator, success-soft tint)
-- `SpeechBubble` (Svelte HTML/CSS, fixed zone above Gonn)
+- `SpeechBubble` (Svelte HTML/CSS, fixed zone above Gonn; includes "Reply →" link to `/chat`)
 - `MonsterDisplay` → `Monster.svelte` (Rive canvas, fixed bottom)
 
 **Key Features:**
@@ -74,8 +75,46 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - All-done state: full fire bar + Gonn happy state (no banner needed)
 - Real-time progress tracking
 - Quick add habit link
-- Empty state with habit suggestions (HabitSuggestions component)
 - Monster head tracking — gaze follows cursor via `onmousemove` → `monsterLookAt()`
+- **Chat triggers:** Transparent `<a href="/chat">` over Gonn's lower half (tap zone); "Reply →" link in SpeechBubble when visible
+
+---
+
+#### Chat (`/chat`)
+
+**File:** `src/routes/chat/+page.svelte`
+
+**Purpose:** Full-screen multi-turn conversation with Gonn. Aware of habit data, streaks, memory entries, and mascot state. Streams responses token-by-token.
+
+**Layout:**
+
+| Zone | Description |
+|---|---|
+| Header | Back arrow → `/`, title "Gonn", sync dot |
+| Message list | `flex-1`, `overflow-y-auto`; suggestion chips on empty state |
+| Input bar | `textarea` + send button; sticky to bottom; respects safe-area-inset-bottom |
+
+**Components Used:**
+
+- `Header` (with `showBack`)
+
+**Entry Points:**
+
+- Tap zone `<a>` over Gonn's lower half on the homepage
+- "Reply →" link in `SpeechBubble` when Gonn is speaking
+- Drawer nav item "Chat with Gonn" (accessible from every page)
+
+**Key Features:**
+
+- Session persisted to Dexie `chatSessions` table; resumed across app opens
+- SSE streaming with live cursor `▊`
+- Suggestion chips on empty state
+- Error banner with dismiss
+- `chatStore.newSession()` available for future "Start fresh" UI
+
+**Navigation:**
+
+- Back button → Home (`/`)
 
 ---
 
@@ -167,9 +206,9 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ---
 
-#### Dashboard (`/dashboard`)
+#### Journey (`/journey`)
 
-**File:** `src/routes/dashboard/+page.svelte`
+**File:** `src/routes/journey/+page.svelte`
 
 **Purpose:** Statistics and analytics view.
 
@@ -257,7 +296,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **Files:**
 
-- `src/routes/auth/+layout.svelte` - Minimal layout without BottomNav
+- `src/routes/auth/+layout.svelte` - Minimal layout (no drawer, no sync)
 - `src/routes/auth/signin/+page.svelte` - Sign in form
 - `src/routes/auth/signup/+page.svelte` - Sign up form
 
@@ -325,13 +364,8 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 - Favicon and meta tags
 - AuthGuard wrapper for protected routes
-- BottomNav (conditionally shown)
 - Sync initialization on mount
-
-**Configuration:**
-
-- `noNavRoutes`: Routes without BottomNav (`/auth`, `/onboard`)
-- `protectedRoutes`: Routes requiring auth (currently empty for optional auth)
+- Toast component (global, rendered once here)
 
 ### Auth Layout (`src/routes/auth/+layout.svelte`)
 
@@ -339,7 +373,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **Features:**
 
-- No BottomNav
+- No drawer navigation
 - Full-height flex container
 - Consistent styling with main app
 
@@ -388,33 +422,27 @@ All components are located in `src/lib/components/`.
 
 ---
 
-#### BottomNav
+#### Drawer Navigation (inside Header)
 
-**File:** `src/lib/components/BottomNav.svelte`
+The hamburger drawer is the sole top-level navigation. Accessed via the `Menu` icon in every `Header`.
 
-**Purpose:** Fixed bottom navigation bar.
+**Nav Items:**
 
-**Navigation Items:**
-
-| Route        | Label    | Icon | Page        |
-| ------------ | -------- | ---- | ----------- |
-| `/`          | Today    | 🏠   | Home        |
-| `/habits`    | Habits   | 📋   | Habits List |
-| `/dashboard` | Stats    | 📊   | Dashboard   |
-| `/settings`  | Settings | ⚙️   | Settings    |
+| Route          | Label           | Icon (Lucide)   |
+| -------------- | --------------- | --------------- |
+| `/`            | Home            | `Home`          |
+| `/habits/new`  | Add Habit       | `Plus`          |
+| `/chat`        | Chat with Gonn  | `MessageCircle` |
+| `/journey`     | Journey         | `TrendingUp`    |
+| `/settings`    | Settings        | `Settings`      |
 
 **Features:**
 
-- Fixed bottom positioning
-- Safe area inset support (`pb-[env(safe-area-inset-bottom)]`)
-- Active state highlighting (`text-hungry-500`)
-- Keyboard accessible with `aria-current`
-
-**Styling:**
-
-- Height: 64px (`h-16`)
-- Max width: `max-w-lg`
-- White background with top border
+- 280px wide, `bg-surface-raised`, `border-radius: 0 20px 20px 0`
+- 250ms `cubic-bezier(0.25, 0.1, 0.25, 1)` slide-in from left
+- Overlay: `bg-overlay`; dismiss by clicking backdrop or pressing Escape
+- Active state: `text-accent-warm` + `rgba(232,113,58,0.08)` background
+- Dev-only "Monster Debug" section at bottom
 
 ---
 
@@ -709,11 +737,12 @@ interface WeeklyDataPoint {
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
-│                    MAIN APP (BottomNav)                      │
+│           MAIN APP (Hamburger Drawer Navigation)             │
 │                                                              │
-│   / (Today) ←──→ /habits ←──→ /dashboard ←──→ /settings     │
-│       ↓              ↓                              ↓        │
-│   /habits/new   /habits/new                  /auth/signin    │
+│   / (Home) ←──→ /chat ←──→ /journey ←──→ /settings          │
+│       ↓                                        ↓            │
+│   /habits/new                            /auth/signin        │
+│   /habits/[id]                                               │
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
@@ -727,7 +756,7 @@ interface WeeklyDataPoint {
 
 ### Navigation Patterns
 
-1. **Bottom Navigation** - Main app sections (persistent, except auth/onboard)
+1. **Drawer Navigation** - Main app sections (hamburger menu in Header, available on all pages)
 2. **Back Button** - Return to previous/home page (in Header)
 3. **Deep Links** - Direct action links (e.g., "+ Add New" → `/habits/new`)
 4. **Redirects** - Post-action navigation (e.g., create habit → habits list)
@@ -792,8 +821,8 @@ Defined in `src/routes/layout.css`:
 ### Responsive Behavior
 
 - **Max Width:** All content constrained to `max-w-lg` (512px)
-- **Padding:** `px-4` horizontal, `pb-24` bottom (for BottomNav clearance)
-- **Safe Areas:** Bottom nav respects `safe-area-inset-bottom`
+- **Padding:** `px-4` horizontal, `pb-6` bottom (no bottom nav)
+- **Safe Areas:** Input bars and fixed elements respect `safe-area-inset-bottom`
 - **Touch Targets:** Minimum 44px for interactive elements
 
 ### Mobile Considerations
@@ -854,7 +883,7 @@ Hungry Hundreds uses a two-tier animation system:
 | Monster fallback | CSS        | Monster.svelte | WebGL unavailable           |
 | Button spring    | Motion One | HabitCard      | Toggle button tap           |
 | Celebrate        | Motion One | HabitCard      | Streak milestone (7/30/100) |
-| Icon tap         | Motion One | BottomNav      | Navigation icon tap         |
+| Icon tap         | Motion One | Header drawer  | Navigation icon tap         |
 | Progress ring    | CSS        | ProgressRing   | Progress change             |
 | Sync spinner     | CSS        | Loading states | Sync in progress            |
 | Chart bars       | CSS        | WeeklyChart    | Data change                 |
@@ -920,7 +949,7 @@ Based on the roadmap phases and current implementation:
 - [x] **Head tracking** - Cursor tracking on homepage via `onmousemove` → `monsterLookAt()`
 - [x] **HiDPI support** - `resizeDrawingSurfaceToCanvas()` on load and resize
 - [x] **Monster asset** - `monster_hatchling.riv` with CharacterVM view model
-- [x] **Micro-interactions** - Button springs on HabitCard, icon taps on BottomNav
+- [x] **Micro-interactions** - Button springs on HabitCard, icon taps in drawer nav
 - [x] **Milestone celebrations** - Celebrate animation on streak milestones
 - [x] **Animation utilities** - `transitions.ts` and `rive-utils.ts`
 - [x] **Rive utilities** - WebGL detection, visibility observers, state machine helpers
@@ -978,7 +1007,7 @@ Based on the roadmap phases and current implementation:
 | `HabitCard`           | Milestone celebration       | High     | ✅ Complete |
 | `HabitCard`           | Swipe actions (edit/delete) | Medium   | 📋 Planned  |
 | `HabitCard`           | Long-press context menu     | Low      | 📋 Planned  |
-| `BottomNav`           | Icon tap animation          | Medium   | ✅ Complete |
+| `Header` drawer       | Icon tap animation          | Medium   | ✅ Complete |
 | `Header`              | Animated title transitions  | Low      | 📋 Planned  |
 | `ProgressRing`        | Animated count-up           | Medium   | 📋 Planned  |
 | `MonsterDisplay`      | Rive animation integration  | High     | ✅ Complete |
@@ -1074,7 +1103,7 @@ Based on the roadmap phases and current implementation:
 2. Import Header and required components
 3. Add `<svelte:head>` for page title
 4. Use `.page-container` for content wrapper
-5. Include bottom padding (`pb-24`) for BottomNav clearance
+5. Use `.page-container` for content wrapper
 
 ### Creating a New Component
 
