@@ -5,6 +5,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { habits, habitsLoaded, sortedHabits } from '$lib/stores/habits';
 	import { monsterSetExpression } from '$lib/stores/monster';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import { browser } from '$app/environment';
 
 	// Get habit ID from URL params
@@ -85,6 +86,7 @@
 		if (habit?.id !== undefined) {
 			isDeleting = true;
 			await habits.remove(habit.id);
+			showToast('Habit deleted');
 			goto(resolve('/'));
 		}
 	}
