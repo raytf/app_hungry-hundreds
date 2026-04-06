@@ -28,16 +28,16 @@
 		<div class="flex items-center gap-4">
 			<ProgressRing pct={$todaysProgress.pct} size={80} />
 			<div>
-				<h3 class="text-lg font-semibold text-gray-800">Today's Progress</h3>
-				<p class="text-gray-500">
+				<h3 class="text-lg font-semibold text-content">Today's Progress</h3>
+				<p class="text-content-muted">
 					{$todaysProgress.completed} of {$todaysProgress.total} habits completed
 				</p>
 				{#if $todaysProgress.pct === 100}
-					<p class="mt-1 font-medium text-hungry-600">🎉 Perfect day!</p>
+					<p class="mt-1 font-medium text-success">🎉 Perfect day!</p>
 				{:else if $todaysProgress.pct >= 75}
-					<p class="mt-1 font-medium text-hungry-600">Almost there!</p>
+					<p class="mt-1 font-medium text-success">Almost there!</p>
 				{:else if $todaysProgress.pct >= 50}
-					<p class="mt-1 font-medium text-orange-500">Keep going!</p>
+					<p class="mt-1 font-medium text-accent-warm">Keep going!</p>
 				{/if}
 			</div>
 		</div>
@@ -130,21 +130,21 @@
 		<!-- Loading skeleton -->
 		<section class="mb-6 space-y-3">
 			<div class="card animate-pulse">
-				<div class="h-24 rounded bg-gray-200"></div>
+				<div class="h-24 rounded bg-surface-sunken"></div>
 			</div>
 			<div class="grid grid-cols-2 gap-3">
-				<div class="card animate-pulse"><div class="h-20 rounded bg-gray-200"></div></div>
-				<div class="card animate-pulse"><div class="h-20 rounded bg-gray-200"></div></div>
+				<div class="card animate-pulse"><div class="h-20 rounded bg-surface-sunken"></div></div>
+				<div class="card animate-pulse"><div class="h-20 rounded bg-surface-sunken"></div></div>
 			</div>
 		</section>
 	{/if}
 
 	<!-- Motivation Section -->
-	<section class="card bg-linear-to-br from-hungry-50 to-hungry-100">
+	<section class="card bg-linear-to-br from-surface-raised to-surface-sunken">
 		<div class="text-center">
 			<p class="mb-2 text-4xl">💪</p>
-			<h3 class="mb-1 font-semibold text-gray-800">Keep it up!</h3>
-			<p class="text-sm text-gray-600">
+			<h3 class="mb-1 font-semibold text-content">Keep it up!</h3>
+			<p class="text-sm text-content-muted">
 				Consistency is key. Every habit completed brings you closer to your goals.
 			</p>
 		</div>
