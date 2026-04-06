@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@rive-app/canvas':
-        specifier: ^2.34.3
-        version: 2.34.3
+        specifier: ^2.37.0
+        version: 2.37.0
       '@supabase/supabase-js':
         specifier: ^2.90.1
         version: 2.90.1
@@ -956,8 +956,8 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@rive-app/canvas@2.34.3':
-    resolution: {integrity: sha512-4VUJ1ZMP+5C2usFvG4SndzbNK5NSYVRtdVGP2fVL38T2Htz/2vaVLAWbvjJYcgr64nIE5STMaahun8qfCJdviA==}
+  '@rive-app/canvas@2.37.0':
+    resolution: {integrity: sha512-+a434ZIB2+TGvakpkgtX/fZYAFISY0qp5rfIRXQFCsid3v39ES7QHCiZyM0JlHJNAdlgD7vmEN65I4sdU+jbvg==}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     resolution: {integrity: sha512-9R0DM/ykwfGIlNu6+2U09ga0WXeZ9MRC2Ter8jnz8415VbuIykVuc6bhdrbORFZANDmTDvq26mJrEVTl8TdnDg==}
@@ -3291,7 +3291,7 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@rive-app/canvas@2.34.3': {}
+  '@rive-app/canvas@2.37.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     optional: true

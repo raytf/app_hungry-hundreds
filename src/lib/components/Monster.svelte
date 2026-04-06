@@ -122,7 +122,7 @@
 
 			riveInstance = new Rive({
 				src: '/animations/monster.riv',
-				artboard: 'artboard1',
+				artboard: 'Artboard',
 				canvas,
 				autoplay: true,
 				stateMachines: 'State Machine 1',

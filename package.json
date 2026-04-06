@@ -51,7 +51,7 @@
 		"wrangler": "^4.56.0"
 	},
 	"dependencies": {
-		"@rive-app/canvas": "^2.34.3",
+		"@rive-app/canvas": "^2.37.0",
 		"@supabase/supabase-js": "^2.90.1",
 		"canvas-confetti": "^1.9.4",
 		"dexie": "^4.2.1",

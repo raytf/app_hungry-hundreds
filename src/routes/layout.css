@@ -88,15 +88,19 @@
 	--radius-input: 12px;
 	--radius-sheet: 24px;
 
-	/* ── Z-index scale (--z-{name} generates z-{name} utilities in Tailwind 4) ── */
-	--z-ground: 5;
-	--z-rive: 10;
-	--z-bubble: 15;
-	--z-habits: 20;
-	--z-fire-bar: 25;
-	--z-top-bar: 30;
-	--z-drawer: 40;
-	--z-modal: 50;
+	/* ── Z-index scale ──
+	   These are CSS custom properties for documentation and style= usage.
+	   Use explicit Tailwind classes in templates (z-[5], z-10, z-[15] etc.)
+	   rather than z-ground/z-rive — Tailwind 4 does not reliably generate
+	   named z-index utilities from --z-* @theme tokens. ── */
+	--z-ground: 5;    /* z-[5]  */
+	--z-rive: 10;     /* z-10   */
+	--z-bubble: 15;   /* z-[15] */
+	--z-habits: 20;   /* z-20   */
+	--z-fire-bar: 25; /* z-[25] */
+	--z-top-bar: 30;  /* z-30   */
+	--z-drawer: 40;   /* z-40   */
+	--z-modal: 50;    /* z-50   */
 
 	/* ── Background image gradients ── */
 	--background-image-fire-gradient: linear-gradient(to right, #e8713a, #d03731);

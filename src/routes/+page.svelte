@@ -73,14 +73,14 @@
 
 <!-- Layer 1 (z-ground=5): Ground surface — full viewport width -->
 <div
-	class="z-ground pointer-events-none fixed inset-x-0 bottom-0 bg-ground-gradient"
+	class="pointer-events-none fixed inset-x-0 bottom-0 z-[5] bg-ground-gradient"
 	style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
 	aria-hidden="true"
 ></div>
 
 <!-- Layer 2 (z-rive=10): Gonn canvas — square, centered, max 430px -->
 <div
-	class="z-rive pointer-events-none fixed bottom-0 left-1/2 -translate-x-1/2"
+	class="pointer-events-none fixed bottom-0 left-1/2 z-10 -translate-x-1/2"
 	style="width: var(--gonn-size); height: var(--gonn-size);"
 >
 	<MonsterDisplay monster={$monster} />

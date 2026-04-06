@@ -193,14 +193,14 @@
 
 <!-- Layer 1 (z-ground=5): Ground surface -->
 <div
-	class="pointer-events-none fixed inset-x-0 bottom-0 z-ground bg-ground-gradient"
+	class="pointer-events-none fixed inset-x-0 bottom-0 z-[5] bg-ground-gradient"
 	style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
 	aria-hidden="true"
 ></div>
 
 <!-- Layer 2 (z-rive=10): Gonn canvas — mounts MonsterDisplay so debug callbacks register -->
 <div
-	class="pointer-events-none fixed bottom-0 left-1/2 z-rive -translate-x-1/2"
+	class="pointer-events-none fixed bottom-0 left-1/2 z-10 -translate-x-1/2"
 	style="width: var(--gonn-size); height: var(--gonn-size);"
 >
 	<MonsterDisplay monster={$monster} />
