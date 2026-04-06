@@ -8,10 +8,14 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **Design Principles:**
 
-- **Mobile-first** - Optimized for touch interactions and smaller screens
-- **Offline-capable** - UI provides clear feedback for sync status
-- **Playful** - Fun, gamified aesthetic with monster companion
-- **Accessible** - Keyboard navigation, ARIA labels, sufficient contrast
+- **Gonn-centric** — The mascot is the visual anchor; the UI frames Gonn, not the other way around
+- **Mobile-first** — Optimized for touch interactions and smaller screens
+- **Offline-capable** — UI provides clear feedback for sync status
+- **Warm and playful** — Warm neutral palette, rounded forms, generous whitespace; no clinical precision
+- **No guilt** — Missed habits are communicated through Gonn's mood, never through red badges or warning UI
+- **Accessible** — Keyboard navigation, ARIA labels, WCAG 2.1 AA contrast, focus rings
+
+> **Design authority:** `docs/DESIGN_GUIDE.md` is the single source of truth for all visual and interaction decisions. This file documents the implemented state; the design guide documents the intent.
 
 ---
 
@@ -19,18 +23,19 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route               | Page          | Purpose                 | Status      |
-| ------------------- | ------------- | ----------------------- | ----------- |
-| `/`                 | Home (Today)  | Daily habit check-in    | ✅ Complete |
-| `/habits`           | Habits List   | View and manage habits  | ✅ Complete |
-| `/habits/new`       | New Habit     | Create a new habit      | ✅ Complete |
-| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit  | ✅ Complete |
-| `/dashboard`        | Statistics    | Analytics and streaks   | ✅ Complete |
-| `/settings`         | Settings      | App preferences         | ✅ Complete |
-| `/onboard`          | Onboarding    | First-time setup wizard | ✅ Complete |
-| `/auth/signin`      | Sign In       | User authentication     | ✅ Complete |
-| `/auth/signup`      | Sign Up       | Account creation        | ✅ Complete |
-| `/monster`          | Monster Debug | Dev-only debug tools    | ✅ Complete |
+| Route               | Page          | Purpose                              | Status                  |
+| ------------------- | ------------- | ------------------------------------ | ----------------------- |
+| `/`                 | Home          | Daily habit check-in with Gonn       | ✅ Complete (redesign pending) |
+| `/habits`           | Habits List   | Detailed view of all habits          | ✅ Complete             |
+| `/habits/new`       | New Habit     | Create a new habit (full-page form)  | ✅ Complete             |
+| `/habits/[id]`      | Habit Detail  | View habit details and history       | ✅ Complete             |
+| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit               | ✅ Complete             |
+| `/journey`          | Journey       | Stats, history, and milestones       | 🚧 Rename from /dashboard |
+| `/settings`         | Settings      | App preferences and sync             | ✅ Complete             |
+| `/onboard`          | Onboarding    | First-time setup wizard              | 📋 Redesign deferred    |
+| `/auth/signin`      | Sign In       | User authentication                  | ✅ Complete             |
+| `/auth/signup`      | Sign Up       | Account creation                     | ✅ Complete             |
+| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools     | ✅ Complete             |
 
 ### Page Details
 
@@ -38,26 +43,35 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **File:** `src/routes/+page.svelte`
 
-**Purpose:** Primary daily interaction surface for habit tracking.
+**Purpose:** Primary daily interaction surface. The only screen showing the Rive canvas. Resting state for 95% of usage.
 
-**Layout:**
+**Layout (target — Phase B/C/D of design system implementation):**
 
-1. Header with title "Today" and ProgressRing
-2. Time-based greeting section
-3. MonsterDisplay component
-4. Progress summary card
-5. Habits list with HabitCard components
+| Zone | Height | Scrolls | z-index | Content |
+|---|---|---|---|---|
+| Top bar | 48px | No (fixed) | 30 | Hamburger, date `<time>`, sync dot |
+| Fire progress bar | 6px | No (fixed) | 25 | Today's completion gradient |
+| Habits scroll area | flex-1 | **Yes** | 20 | Habit cards on sky gradient |
+| Speech bubble zone | ~60–80px when visible | No (fixed) | 15 | Gonn's HTML dialogue bubble |
+| Rive canvas | `min(100vw, 430px)` square | No (fixed bottom) | 10 | Gonn on ground surface |
+| Ground / safe area | canvas height + safe area | No (fixed) | 5 | Ground gradient behind Gonn |
 
 **Components Used:**
 
-- `Header` (with `showSyncStatus` enabled)
-- `HabitCard` (for each habit)
-- `MonsterDisplay`
-- `ProgressRing` (in header and summary)
+- `Header` (48px, date-only center, sync dot, hamburger → drawer)
+- `FireProgressBar` (consumes `todaysProgress.pct`)
+- `HabitCardCompact` (redesigned: circle indicator, success-soft tint)
+- `SpeechBubble` (Svelte HTML/CSS, fixed zone above Gonn)
+- `MonsterDisplay` → `Monster.svelte` (Rive canvas, fixed bottom)
 
 **Key Features:**
 
-- Time-aware greeting (morning/afternoon/evening)
+- Sky gradient background on habits scroll area
+- Ground gradient behind fixed Gonn canvas
+- Habits scroll uses `padding-bottom: calc(var(--gonn-size) + 80px)` to avoid overlapping Gonn
+- No bottom navigation bar (drawer only)
+- Empty state: centered message + HabitSuggestions
+- All-done state: full fire bar + Gonn happy state (no banner needed)
 - Real-time progress tracking
 - Quick add habit link
 - Empty state with habit suggestions (HabitSuggestions component)

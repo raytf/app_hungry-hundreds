@@ -7,19 +7,20 @@
 
 ## Quick Status
 
-| Phase | Name               | Status         | Progress |
-| ----- | ------------------ | -------------- | -------- |
-| 1     | UI Foundation      | ✅ Complete    | 5/5      |
-| 2     | Data Layer         | ✅ Complete    | 5/5      |
-| 3     | Backend            | ✅ Complete    | 5/5      |
-| 4     | Sync               | ✅ Complete    | 4/4      |
-| 5     | Rule Engine & Rive | ✅ Complete    | 6/6      |
-| 6     | PWA                | ✅ Complete    | 5/5      |
-| 7     | AI Dialogue        | 🚧 In Progress | 4/5      |
-| 8     | Chatbot            | ✅ Complete    | 5/5      |
+| Phase   | Name                  | Status         | Progress |
+| ------- | --------------------- | -------------- | -------- |
+| 1       | UI Foundation         | ✅ Complete    | 5/5      |
+| 2       | Data Layer            | ✅ Complete    | 5/5      |
+| 3       | Backend               | ✅ Complete    | 5/5      |
+| 4       | Sync                  | ✅ Complete    | 4/4      |
+| 5       | Rule Engine & Rive    | ✅ Complete    | 6/6      |
+| 6       | PWA                   | ✅ Complete    | 5/5      |
+| 7       | AI Dialogue           | 🚧 In Progress | 4/5      |
+| 8       | Chatbot               | ✅ Complete    | 5/5      |
+| 9       | Design System         | 🚧 In Progress | 0/8      |
 
-**Current Phase:** Phase 8 (Chatbot) — Complete
-**Last Updated:** 2026-04-01
+**Current Phase:** Phase 9 (Design System) — In Progress
+**Last Updated:** 2026-04-06
 
 ---
 
@@ -257,6 +258,18 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
 8. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
+### Design System Implementation 🚧 In Progress
+
+- 📋 **Phase A: Foundation** — Design tokens, DM Sans font, lucide-svelte, canvas-confetti
+- 📋 **Phase B: Home Screen Layout** — Fixed Gonn viewport, fire bar, sky/ground environment, speech bubble zone
+- 📋 **Phase C: Speech Bubble** — Svelte-side dialogue store + SpeechBubble.svelte component
+- 📋 **Phase D: HabitCard Redesign** — Circle indicator, success-soft tint, streak line (home screen card)
+- 📋 **Phase E: Top Bar + Drawer** — 48px header, date center, sync dot, warm drawer with Lucide icons
+- 📋 **Phase F: Component Library** — Button/input/toast/bottom-sheet utilities
+- 📋 **Phase G: Confetti** — canvas-confetti integration for milestone completions
+- 📋 **Phase H: Route Rename** — /dashboard → /journey, nav updates
+- 📄 **Feature Documentation** — `docs/features/design-guide-implementation.md`
+
 ### Phase 8: Chatbot ✅ Complete
 
 1. ✅ **Dexie schema update** - `chatSessions` table (version 4), `ChatMessage`/`ChatSession` types in `src/lib/types/mascot.ts`
@@ -280,6 +293,20 @@ All prerequisites met:
 - [x] Supabase project created with credentials in .env (for full testing)
 - [x] Firebase project created with credentials in .env (for push notifications)
 - [x] Phase 5 animation system implemented (using placeholder asset)
+
+---
+
+## 🔮 Future Todos (Post-MVP)
+
+These items are deliberately deferred. They are documented here so they are not forgotten.
+
+| Feature                     | Reason Deferred                              | Design Reference              |
+| --------------------------- | -------------------------------------------- | ----------------------------- |
+| **Onboarding redesign**     | Conversational flow (Gonn-driven, one screen per question) requires design system to be complete first | `docs/DESIGN_GUIDE.md` §6.2  |
+| **Evolution cutscene**      | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay | `docs/DESIGN_GUIDE.md` §6.5  |
+| **Dark mode**               | Deferred per design guide; requires token inversion system | `docs/DESIGN_GUIDE.md` §12   |
+| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP | `docs/DESIGN_GUIDE.md` §4.4  |
+| **Rive speech bubble artboard** | `dialogueText`/`dialogueVisible` text run needs adding in Rive editor (Phase 7 remainder) | Phase 7 notes in STATUS.md   |
 
 ---
 
