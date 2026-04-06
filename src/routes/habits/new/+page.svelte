@@ -4,6 +4,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import HabitForm from '$lib/components/HabitForm.svelte';
 	import { habits } from '$lib/stores/habits';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import type { FrequencyType } from '$lib/db';
 
 	import type { HabitSchedule } from '$lib/db/db';
@@ -22,6 +23,7 @@
 			reminderTime: habit.reminderTime ?? undefined,
 			schedule: habit.schedule
 		});
+		showToast('Habit created!');
 		goto(resolve('/habits'));
 	}
 </script>

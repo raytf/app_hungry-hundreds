@@ -7,19 +7,20 @@
 
 ## Quick Status
 
-| Phase | Name               | Status         | Progress |
-| ----- | ------------------ | -------------- | -------- |
-| 1     | UI Foundation      | ✅ Complete    | 5/5      |
-| 2     | Data Layer         | ✅ Complete    | 5/5      |
-| 3     | Backend            | ✅ Complete    | 5/5      |
-| 4     | Sync               | ✅ Complete    | 4/4      |
-| 5     | Rule Engine & Rive | ✅ Complete    | 6/6      |
-| 6     | PWA                | ✅ Complete    | 5/5      |
-| 7     | AI Dialogue        | 🚧 In Progress | 4/5      |
-| 8     | Chatbot            | ✅ Complete    | 5/5      |
+| Phase   | Name                  | Status         | Progress |
+| ------- | --------------------- | -------------- | -------- |
+| 1       | UI Foundation         | ✅ Complete    | 5/5      |
+| 2       | Data Layer            | ✅ Complete    | 5/5      |
+| 3       | Backend               | ✅ Complete    | 5/5      |
+| 4       | Sync                  | ✅ Complete    | 4/4      |
+| 5       | Rule Engine & Rive    | ✅ Complete    | 6/6      |
+| 6       | PWA                   | ✅ Complete    | 5/5      |
+| 7       | AI Dialogue           | 🚧 In Progress | 4/5      |
+| 8       | Chatbot               | ✅ Complete    | 5/5      |
+| 9       | Design System         | ✅ Complete    | 8/8      |
 
-**Current Phase:** Phase 8 (Chatbot) — Complete
-**Last Updated:** 2026-04-01
+**Current Phase:** All phases complete — post-MVP polish ongoing
+**Last Updated:** 2026-04-06
 
 ---
 
@@ -28,10 +29,10 @@
 ### Phase 1: UI Foundation (Complete)
 
 - ✅ **SvelteKit Project** - Cloudflare adapter, TypeScript, Tailwind CSS 4
-- ✅ **Component Library** - HabitCard, Header, BottomNav, EmptyState, ProgressRing, SyncStatusIndicator
-- ✅ **File-based Routing** - Home, habits/, dashboard/, settings/
-- ✅ **Mock Data & Stores** - Svelte 5 runes with `$state()` and derived values
-- ✅ **Tailwind Styling** - Dark theme, Fredoka font, mobile-first responsive
+- ✅ **Component Library** - HabitCard, Header, SyncStatusIndicator, and more
+- ✅ **File-based Routing** - Home, habits/, journey/, chat/, settings/
+- ✅ **Svelte 5 Stores** - `$state()` and `$derived()` runes throughout
+- ✅ **Tailwind Styling** - Warm neutral design system, DM Sans + Fredoka fonts
 
 ### Phase 2: Data Layer (Complete)
 
@@ -136,10 +137,11 @@
 - ✅ **View Model Binding** - CharacterVM with `headX`/`headY` number properties (-1 to 1) for head tracking
 - ✅ **Head Tracking** - Monster gaze follows cursor on homepage via `onmousemove` → `monsterLookAt()` store API
 - ✅ **HiDPI Rendering** - `resizeDrawingSurfaceToCanvas()` on load and window resize for crisp Retina display
-- ✅ **Animation Utilities** - `src/lib/animations/transitions.ts` with buttonSpring, celebrate, iconTap
+- ✅ **Animation Utilities** - `src/lib/animations/transitions.ts` with buttonSpring, iconTap
+- ✅ **Confetti** - `src/lib/animations/confetti.ts` wrapping canvas-confetti; warm palette; fires on 7/30/100 streak milestones
 - ✅ **Rive Utilities** - `src/lib/animations/rive-utils.ts` with WebGL detection, visibility observers
-- ✅ **HabitCard Animations** - Spring animation on toggle, celebrate on milestones
-- ✅ **BottomNav Animations** - Icon tap animation
+- ✅ **HabitCard Animations** - Spring animation on toggle, confetti on milestones
+- ✅ **Drawer Nav Animations** - Icon tap animation on nav items
 - ✅ **Vite Lazy Loading** - Rive chunk configured for lazy loading
 - ✅ **Monster Asset** - Using `monster_hatchling.riv` with CharacterVM view model
 - ✅ **Type Definitions** - `src/lib/types/mascot.ts` with GonnState, MascotState, HabitSnapshot, GlobalSnapshot
@@ -203,8 +205,8 @@
 | Service worker          | ✅ Implemented | Offline caching, background sync                  |
 | PWA update flow         | ✅ Implemented | User-confirmed update prompt, no asset mismatches |
 | Custom monster.riv      | ✅ Implemented | monster_hatchling.riv with CharacterVM            |
-| Page transitions        | ❌ Not built   | Phase 5 - Planned                                 |
-| Confetti effects        | ❌ Not built   | Phase 5 - Planned                                 |
+| Page transitions        | ❌ Not built   | Post-MVP                                          |
+| Confetti effects        | ✅ Implemented | canvas-confetti, milestone bursts (7/30/100 days) |
 
 ---
 
@@ -257,13 +259,32 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
 8. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
+### Phase 9: Design System ✅ Complete
+
+All 8 phases complete. See `docs/features/design-guide-implementation.md` for full details.
+
+1. ✅ **Phase A: Foundation** — Warm neutral `@theme` tokens, DM Sans font, lucide-svelte, canvas-confetti
+2. ✅ **Phase B: Home Screen Layout** — Fixed Gonn viewport, FireProgressBar, sky/ground environment
+3. ✅ **Phase C: Speech Bubble** — `dialogueStore` + `SpeechBubble.svelte` with typewriter reveal
+4. ✅ **Phase D: HabitCard Redesign** — 28px circle indicator, success-soft tint, streak line, all 4 schedule types
+5. ✅ **Phase E: Top Bar + Drawer** — 48px header, CSS grid center, date auto-format, sync dot, warm drawer with Lucide icons
+6. ✅ **Phase F: Component Library** — `Toast.svelte`, `BottomSheet.svelte`, `toast.svelte.ts`; `<Toast>` in root layout
+7. ✅ **Phase G: Confetti** — `confetti.ts` wrapper, warm palette, 30–50 particles, milestone bursts
+8. ✅ **Phase H: Route Rename** — `/dashboard` → `/journey`; `BottomNav` removed; drawer nav is sole navigation
+
+**Additional work on this branch:**
+- `/chat` dedicated page replacing the GonnChat overlay (B+A tap zone + SpeechBubble "Reply →" + drawer nav)
+- Toast notifications wired to: habit created, habit deleted, manual sync, sync error
+- Weekly `frequencyTarget` bug fixed — falls back to `schedule.timesPerWeek`
+- Compact card streak labels for all 4 schedule types
+
 ### Phase 8: Chatbot ✅ Complete
 
 1. ✅ **Dexie schema update** - `chatSessions` table (version 4), `ChatMessage`/`ChatSession` types in `src/lib/types/mascot.ts`
 2. ✅ **Chat history utility** - `src/lib/ai/chatHistory.ts` with sliding window (10 turns) + summariseTurns()
 3. ✅ **Supabase Edge Function** - `supabase/functions/gonn-chat/index.ts` — Claude Haiku streaming proxy with auth, rate limiting, and habit context injection
 4. ✅ **Chat store** - `src/lib/stores/chat.ts` — Svelte 5 runes class, SSE stream parsing, Dexie persistence
-5. ✅ **GonnChat.svelte** - Slide-up chat panel with suggestion chips, streaming cursor, and monster tap trigger in layout
+5. ✅ **`/chat` page** - Full-screen dedicated chat route (`src/routes/chat/+page.svelte`) with suggestion chips, streaming cursor, and safe-area input bar. Replaces the former GonnChat.svelte overlay.
 
 See `docs/features/chatbot-spec.md` for full implementation spec.
 
@@ -280,6 +301,20 @@ All prerequisites met:
 - [x] Supabase project created with credentials in .env (for full testing)
 - [x] Firebase project created with credentials in .env (for push notifications)
 - [x] Phase 5 animation system implemented (using placeholder asset)
+
+---
+
+## 🔮 Future Todos (Post-MVP)
+
+These items are deliberately deferred. They are documented here so they are not forgotten.
+
+| Feature                     | Reason Deferred                              | Design Reference              |
+| --------------------------- | -------------------------------------------- | ----------------------------- |
+| **Onboarding redesign**     | Conversational flow (Gonn-driven, one screen per question) requires design system to be complete first | `docs/DESIGN_GUIDE.md` §6.2  |
+| **Evolution cutscene**      | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay | `docs/DESIGN_GUIDE.md` §6.5  |
+| **Dark mode**               | Deferred per design guide; requires token inversion system | `docs/DESIGN_GUIDE.md` §12   |
+| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP | `docs/DESIGN_GUIDE.md` §4.4  |
+| **Rive speech bubble artboard** | `dialogueText`/`dialogueVisible` text run needs adding in Rive editor (Phase 7 remainder) | Phase 7 notes in STATUS.md   |
 
 ---
 

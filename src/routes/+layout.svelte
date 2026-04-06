@@ -1,41 +1,34 @@
 <script lang="ts">
 	import './layout.css';
-	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
 	import UpdatePrompt from '$lib/components/UpdatePrompt.svelte';
-	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
-	import GonnChat from '$lib/components/GonnChat.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { syncStore } from '$lib/sync';
 	import { pwaStore } from '$lib/stores/pwa';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import { pushStore } from '$lib/notifications';
 	import { refreshStatus } from '$lib/stores/habits';
 	import { refreshStats } from '$lib/stores/stats';
-	import { monster } from '$lib/stores/monster';
 
 	let { children } = $props();
 
-	// Chat panel visibility
-	let chatVisible = $state(false);
-
-	// Routes that require authentication (empty for now - can be enabled later)
-	// Set to ['/habits', '/dashboard', '/settings'] to require auth for those routes
-	const protectedRoutes: string[] = [];
-
-	// Check if current route should show monster (homepage and monster test page)
-	const showMonster = $derived.by(() => {
-		const path = page.url.pathname;
-		return path === '/' || path === '/monster';
+	// Show a toast whenever sync transitions into an error state
+	let prevSyncStatus = $state($syncStore.status);
+	$effect(() => {
+		const status = $syncStore.status;
+		if (status === 'error' && prevSyncStatus !== 'error') {
+			showToast('Sync failed — changes saved locally');
+		}
+		prevSyncStatus = status;
 	});
 
-	// Check if current route requires auth
-	const requiresAuth = $derived.by(() => {
-		const path = page.url.pathname;
-		return protectedRoutes.some((route) => path === route || path.startsWith(route + '/'));
-	});
+	// Auth is not enforced on any route currently.
+	// To protect routes, restore the page import from $app/state and add paths here.
+	const requiresAuth = false;
 
 	// Track the date when the app was last active to detect day changes
 	let lastActiveDate = '';
@@ -101,8 +94,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<!-- Theme colors -->
-	<meta name="theme-color" content="#22c55e" media="(prefers-color-scheme: light)" />
-	<meta name="theme-color" content="#166534" media="(prefers-color-scheme: dark)" />
+	<meta name="theme-color" content="#E8713A" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#1A1412" media="(prefers-color-scheme: dark)" />
 
 	<!-- PWA meta tags -->
 	<meta name="mobile-web-app-capable" content="yes" />
@@ -120,23 +113,8 @@
 </svelte:head>
 
 <AuthGuard requireAuth={requiresAuth}>
-	<div class="h-screen bg-gray-50">
-		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
-		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
-			<MonsterDisplay monster={$monster} />
-			<!-- Transparent tap zone covering the monster visual area — opens chat -->
-			<button
-				class="pointer-events-auto absolute inset-x-0 bottom-0 mx-auto h-[45%] w-full max-w-lg cursor-pointer"
-				style="background: transparent; border: none;"
-				onclick={() => (chatVisible = true)}
-				aria-label="Chat with Gonn"
-			></button>
-		</div>
-
+	<div class="h-screen bg-surface">
 		{@render children()}
-
-		<!-- Gonn Chat panel -->
-		<GonnChat bind:visible={chatVisible} />
 	</div>
 
 	<!-- PWA Install Prompt -->
@@ -144,4 +122,7 @@
 
 	<!-- PWA Update Prompt -->
 	<UpdatePrompt />
+
+	<!-- Global toast notifications -->
+	<Toast />
 </AuthGuard>

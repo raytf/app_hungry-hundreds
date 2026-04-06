@@ -5,6 +5,7 @@
 	import Header from '$lib/components/Header.svelte';
 	import { habits, habitsLoaded, sortedHabits } from '$lib/stores/habits';
 	import { monsterSetExpression } from '$lib/stores/monster';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import { browser } from '$app/environment';
 
 	// Get habit ID from URL params
@@ -24,7 +25,8 @@
 			return `Every ${habit.schedule.intervalDays} days`;
 		}
 		if (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly') {
-			return `${habit.frequencyTarget}x per week`;
+			const t = habit.frequencyTarget ?? habit.schedule?.timesPerWeek ?? 1;
+			return `${t}x per week`;
 		} else if ((habit.frequencyTarget ?? 1) > 1) {
 			return `${habit.frequencyTarget}x per day`;
 		}
@@ -84,6 +86,7 @@
 		if (habit?.id !== undefined) {
 			isDeleting = true;
 			await habits.remove(habit.id);
+			showToast('Habit deleted');
 			goto(resolve('/'));
 		}
 	}
@@ -156,7 +159,7 @@
 					<p class="text-sm text-orange-700">
 						{habit.schedule?.type === 'every-x-days'
 							? 'Interval Streak'
-							: habit.frequencyType === 'weekly'
+							: (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
 								? 'Week Streak'
 								: 'Day Streak'}
 					</p>
@@ -197,7 +200,7 @@
 							{habit.periodProgress}/{habit.periodTarget}
 						</p>
 						<p class="text-sm text-green-700">
-							{habit.frequencyType === 'weekly' ? 'This Week' : 'Today'}
+							{habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly' ? 'This Week' : 'Today'}
 						</p>
 					</div>
 				{/if}

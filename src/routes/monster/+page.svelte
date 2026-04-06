@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { monsterLookAt, monsterSetExpression, monsterSetDialogue } from '$lib/stores/monster';
+	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
+	import { monster, monsterLookAt, monsterSetExpression, monsterSetDialogue } from '$lib/stores/monster';
 	import { gonnState, feedGonn, resetGonnState, debugSetGonn } from '$lib/stores/gonn';
 	import { mascotState } from '$lib/stores/mascot';
 	import { EVOLUTION_STAGE_NAMES, type EvolutionStage } from '$lib/types/mascot';
@@ -188,21 +189,38 @@
 	<title>Monster Debug | Hungry Hundreds</title>
 </svelte:head>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- ── Gonn fixed layers (debug: canvas only, no chat tap zone) ──────────── -->
+
+<!-- Layer 1 (z-ground=5): Ground surface -->
 <div
-	class="relative grid"
-	style="height: calc(100vh - env(safe-area-inset-bottom, 0px)); grid-template-rows: auto 1fr auto;"
-	onmousemove={handlePageMouseMove}
+	class="pointer-events-none fixed inset-x-0 bottom-0 z-[5] bg-ground-gradient"
+	style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
+	aria-hidden="true"
+></div>
+
+<!-- Layer 2 (z-rive=10): Gonn canvas — mounts MonsterDisplay so debug callbacks register -->
+<div
+	class="pointer-events-none fixed bottom-0 left-1/2 z-10 -translate-x-1/2"
+	style="width: var(--gonn-size); height: var(--gonn-size);"
 >
+	<MonsterDisplay monster={$monster} />
+</div>
+
+<!-- ── Page layout ─────────────────────────────────────────────────────────── -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="flex h-screen flex-col" onmousemove={handlePageMouseMove}>
 	<Header title="Monster Debug" />
 
-	<div class="relative h-[60%] overflow-hidden">
+	<div class="relative flex-1 overflow-hidden">
 		<main
 			class="scrollable-main h-full overflow-y-auto overscroll-contain"
 			bind:this={mainEl}
 			onscroll={checkScroll}
 		>
-			<div class="mx-auto w-full max-w-lg space-y-4 px-4 pt-4 pb-4">
+			<div
+				class="mx-auto w-full max-w-lg space-y-4 px-4 pt-4"
+				style="padding-bottom: calc(var(--gonn-size) + 24px)"
+			>
 				<!-- ── Expression ──────────────────────────────────────────────── -->
 				<div class="card">
 					<h3 class="mb-3 text-sm font-semibold text-gray-700">Expression (3 s override)</h3>
@@ -480,10 +498,10 @@
 				</div>
 			</div>
 		</main>
-		<!-- Scroll-more indicator: fades away once scrolled to the bottom -->
+		<!-- Scroll-more indicator -->
 		{#if canScrollMore}
 			<div
-				class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-gray-50/90 to-transparent transition-opacity duration-300"
+				class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-surface/80 to-transparent transition-opacity duration-300"
 			></div>
 		{/if}
 	</div>

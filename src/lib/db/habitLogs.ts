@@ -638,7 +638,7 @@ export async function calculateFlexibleStreak(habit: Habit): Promise<FlexibleStr
 	// Determine effective frequency type (schedule takes precedence for backward compat)
 	const effectiveType =
 		habit.frequencyType ?? (habit.schedule?.type === 'weekly' ? 'weekly' : 'daily');
-	const target = habit.frequencyTarget ?? 1;
+	const target = habit.frequencyTarget ?? habit.schedule?.timesPerWeek ?? 1;
 
 	// Get total completions (works for both daily and weekly)
 	const totalCompletions = await getTotalCompletions(habitId);

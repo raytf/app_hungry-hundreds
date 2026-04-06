@@ -3,30 +3,50 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import type { RouteId } from '$app/types';
-	import SyncStatusIndicator from './SyncStatusIndicator.svelte';
 	import { dev } from '$app/environment';
 	import { iconTap } from '$lib/animations/transitions';
+	import { isOnline, isSyncing, hasPendingChanges } from '$lib/sync';
+	import { Menu, Home, TrendingUp, Plus, Settings, X, MessageCircle } from 'lucide-svelte';
 
 	type StaticRouteId = Exclude<RouteId, '/habits/[id]' | '/habits/[id]/edit'>;
 
 	interface Props {
 		title?: string;
 		showBack?: boolean;
-		/** Show compact sync status indicator in header */
+		/** @deprecated Sync dot is always visible in the redesigned header */
 		showSyncStatus?: boolean;
 		right?: Snippet;
 	}
 
-	let { title = '', showBack = false, showSyncStatus = false, right }: Props = $props();
+	let { title = '', showBack = false, showSyncStatus: _showSyncStatus = false, right }: Props =
+		$props();
 
 	let drawerOpen = $state(false);
 
 	const navItems = [
-		{ href: '/', label: 'Today', icon: '🏠' },
-		{ href: '/habits', label: 'Habits', icon: '📋' },
-		{ href: '/dashboard', label: 'Stats', icon: '📊' },
-		{ href: '/settings', label: 'Settings', icon: '⚙️' }
-	];
+		{ href: '/', label: 'Home', Icon: Home },
+		{ href: '/habits/new', label: 'Add Habit', Icon: Plus },
+		{ href: '/chat', label: 'Chat with Gonn', Icon: MessageCircle },
+		{ href: '/journey', label: 'Journey', Icon: TrendingUp },
+		{ href: '/settings', label: 'Settings', Icon: Settings }
+	] as const;
+
+	/** Today's date formatted as "Thursday, Apr 6" */
+	const formattedDate = new Intl.DateTimeFormat('en-US', {
+		weekday: 'long',
+		month: 'short',
+		day: 'numeric'
+	}).format(new Date());
+
+	/** ISO date string for the <time> element's datetime attribute */
+	const isoDate = new Date().toISOString().split('T')[0];
+
+	/** Sync dot appearance based on connection + sync state */
+	const syncDotClass = $derived.by(() => {
+		if (!$isOnline) return 'bg-content-subtle';
+		if ($isSyncing || $hasPendingChanges) return 'bg-accent-soft animate-pulse';
+		return 'bg-success';
+	});
 
 	const isActive = (href: string, currentPath: string): boolean => {
 		if (href === '/') return currentPath === '/';
@@ -43,117 +63,138 @@
 
 	function handleNavClick(event: MouseEvent) {
 		const target = event.currentTarget as HTMLElement;
-		const iconSpan = target.querySelector('.nav-icon') as HTMLElement;
-		if (iconSpan) {
-			iconTap(iconSpan);
-		}
+		const iconEl = target.querySelector('.nav-icon') as HTMLElement | null;
+		if (iconEl) iconTap(iconEl);
 		closeDrawer();
 	}
 
 	function handleBackdropKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			closeDrawer();
-		}
+		if (event.key === 'Escape') closeDrawer();
 	}
 </script>
 
-<header class="sticky top-0 z-50 border-b border-gray-100 bg-gray-50/80 backdrop-blur-lg">
-	<div class="mx-auto flex h-14 max-w-lg items-center gap-3 px-4">
-		{#if showBack}
-			<a
-				href={resolve('/')}
-				class="-ml-2 p-2 text-gray-600 transition-colors hover:text-gray-900"
-				aria-label="Go back"
-			>
-				<span class="text-xl">←</span>
-			</a>
-		{:else}
-			<button
-				onclick={openDrawer}
-				class="-ml-2 p-2 text-gray-600 transition-colors hover:text-gray-900"
-				aria-label="Open navigation menu"
-			>
-				<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-				</svg>
-			</button>
-		{/if}
-		<h1 class="flex-1 truncate text-lg font-semibold">{title}</h1>
-		<div class="flex items-center gap-2">
-			{#if showSyncStatus}
-				<SyncStatusIndicator compact />
+<!-- Top bar: 48px, warm surface, backdrop blur -->
+<header class="sticky top-0 z-30 bg-surface/90 backdrop-blur-sm">
+	<!-- Grid ensures center is truly centered regardless of left/right widths -->
+	<div class="mx-auto grid h-12 max-w-lg grid-cols-[1fr_auto_1fr] items-center px-6">
+		<!-- Left: back arrow or hamburger -->
+		<div class="flex items-center">
+			{#if showBack}
+				<a
+					href={resolve('/')}
+					class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
+					aria-label="Go back"
+				>
+					<span class="text-xl">←</span>
+				</a>
+			{:else}
+				<button
+					onclick={openDrawer}
+					class="-ml-2 p-2 text-content-muted transition-colors hover:text-content"
+					aria-label="Open navigation menu"
+				>
+					<Menu size={24} />
+				</button>
 			{/if}
+		</div>
+
+		<!-- Center: page title or today's date -->
+		<div class="flex justify-center">
+			{#if title}
+				<span class="text-body font-medium text-content">{title}</span>
+			{:else}
+				<time datetime={isoDate} class="text-body font-medium text-content">
+					{formattedDate}
+				</time>
+			{/if}
+		</div>
+
+		<!-- Right: optional snippet + sync dot -->
+		<div class="flex items-center justify-end gap-3">
 			{#if right}
 				{@render right()}
 			{/if}
+			<div
+				class="h-2 w-2 rounded-full {syncDotClass}"
+				title="Sync status"
+				aria-hidden="true"
+			></div>
 		</div>
 	</div>
 </header>
 
-<!-- Side Drawer Navigation -->
+<!-- Backdrop -->
 {#if drawerOpen}
-	<!-- Backdrop -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm transition-opacity"
+		class="fixed inset-0 z-40 bg-overlay"
 		onclick={closeDrawer}
 		onkeydown={handleBackdropKeydown}
 	></div>
 {/if}
 
+<!-- Side Drawer Navigation -->
 <nav
-	class="fixed top-0 left-0 z-70 flex h-full w-72 flex-col bg-white shadow-xl transition-transform duration-300 ease-in-out"
+	class="fixed top-0 left-0 z-40 flex h-full w-[280px] flex-col bg-surface-raised shadow-sheet transition-transform duration-[250ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+	style="border-radius: 0 20px 20px 0;"
 	class:translate-x-0={drawerOpen}
 	class:-translate-x-full={!drawerOpen}
 	aria-label="Main navigation"
 >
-	<!-- Drawer header -->
-	<div class="flex h-14 items-center justify-between border-b border-gray-100 px-4">
-		<span class="text-lg font-bold text-hungry-600">Hungry Hundreds</span>
+	<!-- Spacer matching header height -->
+	<div class="h-12 shrink-0" aria-hidden="true"></div>
+
+	<!-- Drawer title + close -->
+	<div class="flex items-center justify-between px-6 pb-4 pt-2">
+		<span class="font-display text-display-md text-content">Menu</span>
 		<button
 			onclick={closeDrawer}
-			class="p-2 text-gray-500 transition-colors hover:text-gray-900"
+			class="p-2 text-content-muted transition-colors hover:text-content"
 			aria-label="Close navigation menu"
 		>
-			<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-			</svg>
+			<X size={20} />
 		</button>
 	</div>
 
 	<!-- Nav links -->
-	<div class="flex-1 overflow-y-auto px-3 py-4">
+	<div class="flex-1 overflow-y-auto px-3">
 		{#each navItems as item (item.href)}
 			{@const active = isActive(item.href, page.url.pathname)}
 			<a
 				href={resolve(item.href as StaticRouteId)}
 				onclick={handleNavClick}
-				class="mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium transition-colors"
-				class:bg-hungry-50={active}
-				class:text-hungry-700={active}
-				class:text-gray-600={!active}
-				class:hover:bg-gray-50={!active}
-				class:hover:text-gray-900={!active}
+				class="mb-1 flex h-12 items-center gap-3 rounded-xl px-3 text-body-lg font-medium transition-colors"
+				class:text-accent-warm={active}
+				class:bg-[rgba(232,113,58,0.08)]={active}
+				class:text-content={!active}
+				class:hover:bg-surface-sunken={!active}
 				aria-current={active ? 'page' : undefined}
 			>
-				<span class="nav-icon text-xl">{item.icon}</span>
+				<span
+					class="nav-icon"
+					class:text-accent-warm={active}
+					class:text-content-muted={!active}
+				>
+					<item.Icon size={24} />
+				</span>
 				<span>{item.label}</span>
 			</a>
 		{/each}
 
 		{#if dev}
-			<!-- Debug section — only visible in development -->
-			<div class="mt-4 border-t border-dashed border-gray-200 pt-4">
-				<p class="mb-1 px-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">Debug</p>
+			<!-- Debug section — dev only -->
+			<div class="mt-4 border-t border-dashed border-edge pt-4">
+				<p class="mb-1 px-3 text-body-sm font-medium tracking-wider text-content-subtle uppercase">
+					Debug
+				</p>
 				<a
 					href={resolve('/monster')}
 					onclick={handleNavClick}
-					class="mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium transition-colors"
-					class:bg-orange-50={isActive('/monster', page.url.pathname)}
-					class:text-orange-700={isActive('/monster', page.url.pathname)}
-					class:text-gray-400={!isActive('/monster', page.url.pathname)}
-					class:hover:bg-gray-50={!isActive('/monster', page.url.pathname)}
-					class:hover:text-gray-600={!isActive('/monster', page.url.pathname)}
+					class="mb-1 flex h-12 items-center gap-3 rounded-xl px-3 text-body-lg font-medium transition-colors"
+					class:text-accent-warm={isActive('/monster', page.url.pathname)}
+					class:bg-[rgba(232,113,58,0.08)]={isActive('/monster', page.url.pathname)}
+					class:text-content={!isActive('/monster', page.url.pathname)}
+					class:hover:bg-surface-sunken={!isActive('/monster', page.url.pathname)}
 					aria-current={isActive('/monster', page.url.pathname) ? 'page' : undefined}
 				>
 					<span class="nav-icon text-xl">🐉</span>

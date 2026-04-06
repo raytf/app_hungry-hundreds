@@ -9,17 +9,23 @@ importers:
   .:
     dependencies:
       '@rive-app/canvas':
-        specifier: ^2.34.3
-        version: 2.34.3
+        specifier: ^2.37.0
+        version: 2.37.0
       '@supabase/supabase-js':
         specifier: ^2.90.1
         version: 2.90.1
+      canvas-confetti:
+        specifier: ^1.9.4
+        version: 1.9.4
       dexie:
         specifier: ^4.2.1
         version: 4.2.1
       firebase:
         specifier: ^12.8.0
         version: 12.8.0
+      lucide-svelte:
+        specifier: ^1.0.1
+        version: 1.0.1(svelte@5.46.1)
       motion:
         specifier: ^12.31.0
         version: 12.31.0
@@ -48,6 +54,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.17
         version: 4.1.18(vite@7.3.1(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2))
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/node':
         specifier: ^24
         version: 24.10.7
@@ -947,8 +956,8 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@rive-app/canvas@2.34.3':
-    resolution: {integrity: sha512-4VUJ1ZMP+5C2usFvG4SndzbNK5NSYVRtdVGP2fVL38T2Htz/2vaVLAWbvjJYcgr64nIE5STMaahun8qfCJdviA==}
+  '@rive-app/canvas@2.37.0':
+    resolution: {integrity: sha512-+a434ZIB2+TGvakpkgtX/fZYAFISY0qp5rfIRXQFCsid3v39ES7QHCiZyM0JlHJNAdlgD7vmEN65I4sdU+jbvg==}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     resolution: {integrity: sha512-9R0DM/ykwfGIlNu6+2U09ga0WXeZ9MRC2Ter8jnz8415VbuIykVuc6bhdrbORFZANDmTDvq26mJrEVTl8TdnDg==}
@@ -1263,6 +1272,9 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
+  '@types/canvas-confetti@1.9.0':
+    resolution: {integrity: sha512-aBGj/dULrimR1XDZLtG9JwxX1b4HPRF6CX9Yfwh3NvstZEm1ZL7RBnel4keCPSqs1ANRu1u2Aoz9R+VmtjYuTg==}
+
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -1452,6 +1464,9 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  canvas-confetti@1.9.4:
+    resolution: {integrity: sha512-yxQbJkAVrFXWNbTUjPqjF7G+g6pDotOUHGbkZq2NELZUMDpiJ85rIEazVb8GTaAptNW2miJAXbs1BtioA251Pw==}
 
   chai@6.2.2:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
@@ -1904,6 +1919,11 @@ packages:
 
   long@5.3.2:
     resolution: {integrity: sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==}
+
+  lucide-svelte@1.0.1:
+    resolution: {integrity: sha512-WvzZgk0pqzgda+AErLvgWxHkfg/+GgUwqKMRHvzt0IqyMdmyEDzDCk3Z+Wo/3y753oIgx8u9Q4eUbWkghFa8Jg==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -3271,7 +3291,7 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@rive-app/canvas@2.34.3': {}
+  '@rive-app/canvas@2.37.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.55.1':
     optional: true
@@ -3514,6 +3534,8 @@ snapshots:
       tailwindcss: 4.1.18
       vite: 7.3.1(@types/node@24.10.7)(jiti@2.6.1)(lightningcss@1.30.2)
 
+  '@types/canvas-confetti@1.9.0': {}
+
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -3748,6 +3770,8 @@ snapshots:
       balanced-match: 1.0.2
 
   callsites@3.1.0: {}
+
+  canvas-confetti@1.9.4: {}
 
   chai@6.2.2: {}
 
@@ -4202,6 +4226,10 @@ snapshots:
   lodash.merge@4.6.2: {}
 
   long@5.3.2: {}
+
+  lucide-svelte@1.0.1(svelte@5.46.1):
+    dependencies:
+      svelte: 5.46.1
 
   magic-string@0.30.21:
     dependencies:

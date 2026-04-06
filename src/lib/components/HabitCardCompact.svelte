@@ -2,8 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
-	import { buttonSpring, celebrate } from '$lib/animations/transitions';
+	import { prefersReducedMotion } from '$lib/animations/transitions';
 	import { monsterSetExpression } from '$lib/stores/monster';
+	import { animate } from 'motion';
 
 	interface Props {
 		habit: HabitWithStatus;
@@ -15,46 +16,72 @@
 
 	let expressionTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	// Completion type states
 	const isFullyCompleted = $derived(habit.completionType === 'full');
 	const isPartiallyCompleted = $derived(habit.completionType === 'partial');
-	const hasAnyCompletion = $derived(habit.completionType !== null);
 
-	// Check if this is a weekly habit
-	const isWeekly = $derived(habit.frequencyType === 'weekly');
+	// Mirror the 4-case schedule detection from HabitCard.svelte
+	const isIntervalBased = $derived(habit.schedule?.type === 'every-x-days');
+	const isWeekly = $derived(
+		!isIntervalBased &&
+			(habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
+	);
+	const isMultiDaily = $derived(
+		!isIntervalBased && habit.frequencyType === 'daily' && (habit.frequencyTarget ?? 1) > 1
+	);
 
-	function handleToggle(event: MouseEvent) {
-		// Stop propagation so card click doesn't fire
-		event.stopPropagation();
-
-		if (habit.id !== undefined) {
-			// Animate the button
-			const target = event.currentTarget as HTMLElement;
-			buttonSpring(target);
-
-			// Check for milestone celebration (7 or 30 day streak)
-			const newStreak = habit.completedToday ? habit.streak - 1 : habit.streak + 1;
-			if (!habit.completedToday && (newStreak === 7 || newStreak === 30 || newStreak === 100)) {
-				// Delay celebration slightly for better effect
-				setTimeout(() => celebrate(target), 200);
-			}
-
-			// Trigger monster excited expression when completing (not uncompleting)
-			if (!habit.completedToday) {
-				if (expressionTimeout) clearTimeout(expressionTimeout);
-				monsterSetExpression('excited');
-				expressionTimeout = setTimeout(() => {
-					monsterSetExpression('normal');
-					expressionTimeout = null;
-				}, 2000);
-				// Also trigger optional callback if provided
-				if (onComplete) {
-					onComplete();
-				}
-			}
-
-			habits.toggle(habit.id);
+	/** Streak-line text shown below the habit name */
+	const streakLabel = $derived.by(() => {
+		if (isIntervalBased) {
+			const interval = habit.schedule?.intervalDays;
+			const prefix = `Every ${interval} day${interval !== 1 ? 's' : ''}`;
+			if (habit.completedToday) return `${prefix} · Done ✓`;
+			if (habit.dueInDays === undefined) return prefix;
+			if (habit.dueInDays > 0)
+				return `${prefix} · Due in ${habit.dueInDays} day${habit.dueInDays !== 1 ? 's' : ''}`;
+			if (habit.dueInDays === 0) return `${prefix} · Due today`;
+			return `${prefix} · Overdue by ${Math.abs(habit.dueInDays)} day${Math.abs(habit.dueInDays) !== 1 ? 's' : ''}`;
 		}
+		const done = habit.periodProgress >= habit.periodTarget;
+		if (isWeekly)
+			return `This week: ${habit.periodProgress}/${habit.periodTarget}${done ? ' ✓' : ''}`;
+		if (isMultiDaily)
+			return `Today: ${habit.periodProgress}/${habit.periodTarget}${done ? ' ✓' : ''}`;
+		// Single-daily
+		if (habit.streak === 0) return 'No streak yet';
+		return `🔥 ${habit.streak} day${habit.streak === 1 ? '' : 's'}`;
+	});
+
+	function animateCircle(element: HTMLElement) {
+		if (prefersReducedMotion()) return;
+		animate(element, { scale: [1, 1.2, 1] }, { type: 'spring', stiffness: 400, damping: 15 });
+	}
+
+	async function handleToggle(event: MouseEvent) {
+		event.stopPropagation();
+		if (habit.id === undefined) return;
+
+		const target = event.currentTarget as HTMLElement;
+		animateCircle(target);
+
+		// Milestone celebration on completing
+		const newStreak = habit.completedToday ? habit.streak - 1 : habit.streak + 1;
+		if (!habit.completedToday && (newStreak === 7 || newStreak === 30 || newStreak === 100)) {
+			const { celebrateMilestone } = await import('$lib/animations/confetti');
+			setTimeout(() => celebrateMilestone(target), 200);
+		}
+
+		// Monster reaction on completing (not uncompleting)
+		if (!habit.completedToday) {
+			if (expressionTimeout) clearTimeout(expressionTimeout);
+			monsterSetExpression('excited');
+			expressionTimeout = setTimeout(() => {
+				monsterSetExpression('normal');
+				expressionTimeout = null;
+			}, 2000);
+			onComplete?.();
+		}
+
+		habits.toggle(habit.id);
 	}
 
 	function handleCardClick() {
@@ -67,93 +94,45 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
 	onclick={handleCardClick}
-	class="card flex w-full cursor-pointer items-center gap-4 overflow-hidden text-left transition-all hover:shadow-md active:scale-[0.99]"
-	class:ring-2={hasAnyCompletion}
-	class:ring-hungry-500={isFullyCompleted}
-	class:ring-amber-400={isPartiallyCompleted}
-	class:bg-hungry-50={isFullyCompleted}
+	class="card flex w-full cursor-pointer items-center gap-3 text-left transition-colors active:scale-[0.99]"
+	class:bg-success-soft={isFullyCompleted}
 	class:bg-amber-50={isPartiallyCompleted}
 	role="link"
 	tabindex="0"
 >
-	<!-- Habit emoji indicator -->
-	<div
-		class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform"
-		style="background-color: {isFullyCompleted
-			? habit.color
-			: isPartiallyCompleted
-				? habit.color + '70'
-				: habit.color + '20'}"
-	>
-		{#if isFullyCompleted}
-			<span class="text-lg text-white">✓</span>
-		{:else if isPartiallyCompleted}
-			<span class="text-lg text-white">½</span>
-		{:else}
-			<span class="text-lg">{habit.emoji}</span>
-		{/if}
+	<!-- Flavor icon: 32×32px emoji in bg-surface-sunken pill -->
+	<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-sunken">
+		<span class="text-base leading-none">{habit.emoji}</span>
 	</div>
 
-	<!-- Habit name -->
-	<p
-		class="min-w-0 flex-1 truncate font-medium"
-		class:line-through={isFullyCompleted}
-		class:text-gray-500={isFullyCompleted}
-		class:text-amber-700={isPartiallyCompleted}
-		title={habit.name}
-	>
-		{habit.name}
-	</p>
+	<!-- Name + streak line -->
+	<div class="min-w-0 flex-1">
+		<p class="truncate text-body-lg text-content" title={habit.name}>
+			{habit.name}
+		</p>
+		<p class="text-body-sm text-content-subtle">{streakLabel}</p>
+	</div>
 
-	<!-- Streak badge or weekly progress -->
-	{#if isWeekly}
-		<!-- Weekly progress: show X/Y this week -->
-		<div
-			class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium"
-			class:bg-green-100={habit.periodProgress >= habit.periodTarget}
-			class:text-green-600={habit.periodProgress >= habit.periodTarget}
-			class:bg-blue-100={habit.periodProgress > 0 && habit.periodProgress < habit.periodTarget}
-			class:text-blue-600={habit.periodProgress > 0 && habit.periodProgress < habit.periodTarget}
-			class:bg-gray-100={habit.periodProgress === 0}
-			class:text-gray-500={habit.periodProgress === 0}
-			aria-label="This week: {habit.periodProgress} of {habit.periodTarget}"
-		>
-			<span>{habit.periodProgress}/{habit.periodTarget}</span>
-		</div>
-	{:else}
-		<!-- Daily habit: show streak -->
-		<div
-			class="flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium"
-			class:bg-orange-100={habit.streak > 0}
-			class:text-orange-600={habit.streak > 0}
-			class:bg-gray-100={habit.streak === 0}
-			class:text-gray-500={habit.streak === 0}
-			aria-label="Streak: {habit.streak}"
-		>
-			{#if habit.streak > 0}
-				<span>🔥</span>
-			{/if}
-			<span>{habit.streak}</span>
-		</div>
-	{/if}
-
-	<!-- Complete button -->
+	<!-- Completion circle: 28×28px -->
 	<button
 		type="button"
 		onclick={handleToggle}
-		class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg font-semibold transition-all active:scale-95"
-		class:bg-hungry-500={!isFullyCompleted}
-		class:text-white={!isFullyCompleted}
-		class:bg-gray-200={isFullyCompleted}
-		class:text-gray-500={isFullyCompleted}
+		class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all"
+		class:bg-success={isFullyCompleted}
+		class:border-2={!isFullyCompleted}
+		class:border-edge={!isPartiallyCompleted && !isFullyCompleted}
+		class:border-amber-400={isPartiallyCompleted}
+		class:bg-amber-100={isPartiallyCompleted}
 		aria-label={isFullyCompleted
 			? `Mark ${habit.name} as incomplete`
 			: `Mark ${habit.name} as complete`}
 	>
 		{#if isFullyCompleted}
-			<span>✓</span>
-		{:else}
-			<span>○</span>
+			<svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+			</svg>
+		{:else if isPartiallyCompleted}
+			<span class="text-xs font-bold text-amber-600">½</span>
 		{/if}
 	</button>
 </div>

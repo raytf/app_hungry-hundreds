@@ -7,12 +7,15 @@
 	import { mockMonster } from '$lib/data/mockData';
 	import { auth, isAuthenticated, userEmail } from '$lib/stores/auth';
 	import { syncStore, isOnline, isSyncing } from '$lib/sync';
+	import { showToast } from '$lib/stores/toast.svelte';
 	import { pushStore } from '$lib/notifications';
 
 	let monsterName = $state(mockMonster.name);
 	let showResetConfirm = $state(false);
 	let signingOut = $state(false);
 	let showToken = $state(false);
+	let waitingForSync = $state(false);
+	let prevSyncStatus = $state($syncStore.status);
 
 	function handleReset() {
 		habits.reset();
@@ -30,7 +33,18 @@
 
 	function handleManualSync() {
 		syncStore.sync();
+		waitingForSync = true;
+		showToast('Syncing…');
 	}
+
+	$effect(() => {
+		const status = $syncStore.status;
+		if (waitingForSync && prevSyncStatus === 'syncing' && status === 'idle') {
+			showToast('All synced ✓');
+			waitingForSync = false;
+		}
+		prevSyncStatus = status;
+	});
 
 	// Format last sync time for display
 	function formatLastSyncTime(timestamp: number | null): string {
