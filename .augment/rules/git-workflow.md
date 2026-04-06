@@ -50,23 +50,39 @@ Begin implementation only after the branch is created.
 
 ## Stage 3 — Implementation (one commit per phase)
 
-Implement the feature following the approved documentation.
+Before beginning a multi-phase feature, ask the user:
 
-**Stop after each logical phase** and summarise:
+> "This feature has N phases. Would you like to:
+> **A)** Approve each phase individually before I continue to the next, or
+> **B)** Let me implement and commit all phases, leaving approval for the PR only?"
+
+Then proceed according to their choice.
+
+### Mode A — Phase-by-phase approval (default if single phase)
+
+Stop after each phase and summarise:
 - What was changed and why
 - Any deviations from the documented plan
 - Files created, modified, or deleted
 - A suggested commit message for that phase
 
-**Wait for approval**, then commit that phase immediately before starting the next one:
+**Wait for approval**, then commit before starting the next phase:
 
 ```bash
 git add -A
 git commit -m "<type>(<scope>): <phase summary>"
 ```
 
-Do not batch multiple phases into a single commit. Each phase should be independently
-committed so the history is bisectable and rollbacks are surgical.
+### Mode B — Implement all, approve at PR
+
+Implement and commit all phases without stopping for approval. Use the same per-phase
+commit structure. Once all phases are done, summarise the full set of changes and suggest
+a push + PR message for final approval.
+
+---
+
+Do not batch multiple phases into a single commit regardless of mode. Each phase should be
+independently committed so the history is bisectable and rollbacks are surgical.
 
 ---
 
@@ -116,17 +132,23 @@ push, or open a PR without explicit user approval of the commit message.
 ```
 [Doc created/updated] → USER APPROVES
         ↓
-[Branch from main created] → implementation begins
+[Branch from main created]
         ↓
-[Phase N complete — summary + commit message] → USER APPROVES
+[Multi-phase? Ask: Mode A or Mode B?] → USER CHOOSES
         ↓
-[git commit] ← automatic, then next phase begins
-        ↓
-        ... repeat for each phase ...
-        ↓
-[All phases done — push + PR message suggested] → USER APPROVES
-        ↓
-[git push + gh pr create] ← automatic, no further prompt
+        MODE A                        MODE B
+        ↓                             ↓
+[Phase N done]                [Phase N done → git commit]
+[summary + commit msg]        [Phase N+1 done → git commit]
+→ USER APPROVES               [...all phases complete...]
+[git commit]                          ↓
+[next phase...]               [Full summary + push msg]
+        ↓                     → USER APPROVES
+        ...                           ↓
+[All phases done]             [git push + gh pr create]
+[push + PR msg]
+→ USER APPROVES
+[git push + gh pr create]
         ↓
 [PR open on GitHub] → USER manually reviews and merges
 ```
