@@ -13,7 +13,7 @@
 	 * @see docs/ANIMATION.md for animation system documentation
 	 * @see src/lib/stores/mascot.ts — reactive MascotState source
 	 */
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { monsterStages, type MonsterStage } from '$lib/stores/monster';
 	import {
 		mascotState,
@@ -133,13 +133,19 @@
 					alignment: Alignment.BottomCenter
 				}),
 				onLoad: () => {
-					// Scale the drawing surface for high-DPI / Retina displays
-					riveInstance?.resizeDrawingSurfaceToCanvas();
-
 					// Set up CharacterVM view model properties
 					initViewModel();
 
+					// Make the canvas visible — class:hidden is removed once riveLoaded = true
 					riveLoaded = true;
+
+					// The canvas was display:none until riveLoaded = true, so
+					// clientWidth/clientHeight were 0 when Rive initialised. Wait for
+					// Svelte to flush the DOM (tick), then resize the drawing surface
+					// to the now-visible canvas dimensions.
+					tick().then(() => {
+						riveInstance?.resizeDrawingSurfaceToCanvas();
+					});
 
 					// Set up visibility observers for performance
 					if (riveInstance && canvas) {
