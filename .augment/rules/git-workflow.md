@@ -48,7 +48,7 @@ Begin implementation only after the branch is created.
 
 ---
 
-## Stage 3 — Implementation
+## Stage 3 — Implementation (one commit per phase)
 
 Implement the feature following the approved documentation.
 
@@ -56,8 +56,17 @@ Implement the feature following the approved documentation.
 - What was changed and why
 - Any deviations from the documented plan
 - Files created, modified, or deleted
+- A suggested commit message for that phase
 
-Then **wait for approval** before continuing to the next phase.
+**Wait for approval**, then commit that phase immediately before starting the next one:
+
+```bash
+git add -A
+git commit -m "<type>(<scope>): <phase summary>"
+```
+
+Do not batch multiple phases into a single commit. Each phase should be independently
+committed so the history is bisectable and rollbacks are surgical.
 
 ---
 
@@ -109,11 +118,15 @@ push, or open a PR without explicit user approval of the commit message.
         ↓
 [Branch from main created] → implementation begins
         ↓
-[Phase summary] → USER APPROVES (repeat per phase)
+[Phase N complete — summary + commit message] → USER APPROVES
         ↓
-[Commit message suggested] → USER APPROVES
+[git commit] ← automatic, then next phase begins
         ↓
-[git commit + git push + gh pr create] ← all automatic, no further prompt
+        ... repeat for each phase ...
+        ↓
+[All phases done — push + PR message suggested] → USER APPROVES
+        ↓
+[git push + gh pr create] ← automatic, no further prompt
         ↓
 [PR open on GitHub] → USER manually reviews and merges
 ```
