@@ -121,7 +121,7 @@
 			const { Rive, Layout, Fit, Alignment } = await import('@rive-app/canvas');
 
 			riveInstance = new Rive({
-				src: '/animations/monster.riv',
+				src: '/animations/gonn.riv',
 				artboard: 'Artboard',
 				canvas,
 				autoplay: true,
