@@ -101,8 +101,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<!-- Theme colors -->
-	<meta name="theme-color" content="#22c55e" media="(prefers-color-scheme: light)" />
-	<meta name="theme-color" content="#166534" media="(prefers-color-scheme: dark)" />
+	<meta name="theme-color" content="#E8713A" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#1A1412" media="(prefers-color-scheme: dark)" />
 
 	<!-- PWA meta tags -->
 	<meta name="mobile-web-app-capable" content="yes" />
@@ -120,7 +120,7 @@
 </svelte:head>
 
 <AuthGuard requireAuth={requiresAuth}>
-	<div class="h-screen bg-gray-50">
+	<div class="h-screen bg-bg-primary">
 		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
 		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
 			<MonsterDisplay monster={$monster} />
