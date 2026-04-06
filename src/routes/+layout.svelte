@@ -120,7 +120,7 @@
 </svelte:head>
 
 <AuthGuard requireAuth={requiresAuth}>
-	<div class="h-screen bg-bg-primary">
+	<div class="h-screen bg-surface">
 		<!-- Monster Display - Fixed layer, always mounted but only visible on homepage -->
 		<div class="pointer-events-none fixed inset-0 z-40" class:hidden={!showMonster}>
 			<MonsterDisplay monster={$monster} />

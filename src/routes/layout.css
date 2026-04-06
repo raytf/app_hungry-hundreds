@@ -13,14 +13,14 @@
 	--color-gonn-dark: #240302;
 
 	/* ── UI surface palette ── */
-	--color-bg-primary: #fefcf8;
-	--color-bg-secondary: #f5f0e8;
-	--color-bg-tertiary: #ede6d8;
+	--color-surface: #fefcf8;
+	--color-surface-raised: #f5f0e8;
+	--color-surface-sunken: #ede6d8;
 
-	/* ── Text palette ── */
-	--color-text-primary: #1a1412;
-	--color-text-secondary: #6b5e52;
-	--color-text-tertiary: #9c8e80;
+	/* ── Content (text) palette ── */
+	--color-content: #1a1412;
+	--color-content-muted: #6b5e52;
+	--color-content-subtle: #9c8e80;
 
 	/* ── Accent ── */
 	--color-accent-warm: #e8713a;
@@ -30,9 +30,9 @@
 	/* ── Semantic ── */
 	--color-success: #5ba867;
 	--color-success-soft: #e8f5e9;
-	--color-border-light: #e8e0d4;
-	--color-border-focus: #e8713a;
-	--color-surface-overlay: rgba(26, 20, 18, 0.4);
+	--color-edge: #e8e0d4;
+	--color-focus: #e8713a;
+	--color-overlay: rgba(26, 20, 18, 0.4);
 
 	/* ── Environment palette ── */
 	--color-sky-top: #d6ecfa;
@@ -116,20 +116,20 @@
 @layer components {
 	/* ── Buttons ── */
 	.btn-primary {
-		@apply flex h-[52px] w-full items-center justify-center rounded-[var(--radius-button)] bg-accent-warm px-6 font-body text-label font-bold text-bg-primary shadow-button transition-all hover:bg-accent-warm-hover hover:shadow-button-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
+		@apply flex h-[52px] w-full items-center justify-center rounded-[var(--radius-button)] bg-accent-warm px-6 font-body text-label font-bold text-surface shadow-button transition-all hover:bg-accent-warm-hover hover:shadow-button-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40;
 	}
 
 	.btn-secondary {
-		@apply flex h-11 items-center justify-center rounded-[var(--radius-button-sm)] border border-[1.5px] border-border-light bg-transparent px-5 font-body text-label font-medium text-accent-warm transition-all hover:bg-bg-secondary active:scale-[0.98] disabled:opacity-40;
+		@apply flex h-11 items-center justify-center rounded-[var(--radius-button-sm)] border border-[1.5px] border-edge bg-transparent px-5 font-body text-label font-medium text-accent-warm transition-all hover:bg-surface-raised active:scale-[0.98] disabled:opacity-40;
 	}
 
 	.btn-ghost {
-		@apply flex h-10 items-center justify-center rounded-lg bg-transparent px-3 font-body text-label font-medium text-text-secondary transition-all hover:bg-bg-tertiary active:scale-[0.98];
+		@apply flex h-10 items-center justify-center rounded-lg bg-transparent px-3 font-body text-label font-medium text-content-muted transition-all hover:bg-surface-sunken active:scale-[0.98];
 	}
 
 	/* ── Cards ── */
 	.card {
-		@apply rounded-[var(--radius-card)] bg-bg-secondary p-4 shadow-card;
+		@apply rounded-[var(--radius-card)] bg-surface-raised p-4 shadow-card;
 	}
 
 	/* ── Page container ── */
@@ -139,6 +139,6 @@
 
 	/* ── Form inputs ── */
 	.input-field {
-		@apply h-12 w-full rounded-[var(--radius-input)] border border-[1.5px] border-border-light bg-bg-secondary px-4 font-body text-body-lg text-text-primary caret-accent-warm placeholder:text-text-tertiary transition-colors focus:border-border-focus focus:outline-none;
+		@apply h-12 w-full rounded-[var(--radius-input)] border border-[1.5px] border-edge bg-surface-raised px-4 font-body text-body-lg text-content caret-accent-warm placeholder:text-content-subtle transition-colors focus:border-focus focus:outline-none;
 	}
 }

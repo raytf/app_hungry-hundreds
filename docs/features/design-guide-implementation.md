@@ -357,15 +357,15 @@ The design guide's `tailwind.config.js` (v3 format) translates to Tailwind 4 `@t
   --color-gonn-gold: #EFD67C;
   --color-gonn-dark: #240302;
 
-  /* UI surface palette */
-  --color-bg-primary: #FEFCF8;
-  --color-bg-secondary: #F5F0E8;
-  --color-bg-tertiary: #EDE6D8;
+  /* UI surface palette — bg-surface, bg-surface-raised, bg-surface-sunken */
+  --color-surface: #FEFCF8;
+  --color-surface-raised: #F5F0E8;
+  --color-surface-sunken: #EDE6D8;
 
-  /* Text palette */
-  --color-text-primary: #1A1412;
-  --color-text-secondary: #6B5E52;
-  --color-text-tertiary: #9C8E80;
+  /* Content (text) palette — text-content, text-content-muted, text-content-subtle */
+  --color-content: #1A1412;
+  --color-content-muted: #6B5E52;
+  --color-content-subtle: #9C8E80;
 
   /* Accent */
   --color-accent-warm: #E8713A;
@@ -375,9 +375,9 @@ The design guide's `tailwind.config.js` (v3 format) translates to Tailwind 4 `@t
   /* Semantic */
   --color-success: #5BA867;
   --color-success-soft: #E8F5E9;
-  --color-border-light: #E8E0D4;
-  --color-border-focus: #E8713A;
-  --color-surface-overlay: rgba(26, 20, 18, 0.4);
+  --color-edge: #E8E0D4;        /* border-edge */
+  --color-focus: #E8713A;       /* border-focus / ring-focus */
+  --color-overlay: rgba(26, 20, 18, 0.4); /* bg-overlay */
 
   /* Environment */
   --color-sky-top: #D6ECFA;
@@ -442,7 +442,7 @@ The design guide's `tailwind.config.js` (v3 format) translates to Tailwind 4 `@t
 }
 ```
 
-> **Note on `--color-text-*` tokens:** Tailwind 4 reserves `--color-*` for all color utilities. Using `--color-text-primary` means the Tailwind class is `text-text-primary` (verbose). An alternative is to use semantic aliases like `--color-content-primary`. Decide at implementation time which naming feels cleaner and apply consistently.
+> **Naming convention:** Tailwind 4 generates all utility variants (`bg-`, `text-`, `border-`, etc.) from every `--color-*` name. To avoid doubled words like `text-text-primary` or `bg-bg-primary`, surface and content tokens use context-free semantic names: `surface`/`surface-raised`/`surface-sunken` (backgrounds), `content`/`content-muted`/`content-subtle` (text), `edge`/`focus` (borders), `overlay` (modal scrim). These differ from the design guide's `bg-*`/`text-*`/`border-*` naming convention — treat these CSS names as the implementation equivalent.
 
 ---
 
