@@ -18,13 +18,38 @@
 
 	const isFullyCompleted = $derived(habit.completionType === 'full');
 	const isPartiallyCompleted = $derived(habit.completionType === 'partial');
-	const isWeekly = $derived(habit.frequencyType === 'weekly');
 
-	const streakLabel = $derived(
-		isWeekly
-			? `This week: ${habit.periodProgress}/${habit.periodTarget}`
-			: `Streak: ${habit.streak} day${habit.streak === 1 ? '' : 's'}`
+	// Mirror the 4-case schedule detection from HabitCard.svelte
+	const isIntervalBased = $derived(habit.schedule?.type === 'every-x-days');
+	const isWeekly = $derived(
+		!isIntervalBased &&
+			(habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
 	);
+	const isMultiDaily = $derived(
+		!isIntervalBased && habit.frequencyType === 'daily' && (habit.frequencyTarget ?? 1) > 1
+	);
+
+	/** Streak-line text shown below the habit name */
+	const streakLabel = $derived.by(() => {
+		if (isIntervalBased) {
+			const interval = habit.schedule?.intervalDays;
+			const prefix = `Every ${interval} day${interval !== 1 ? 's' : ''}`;
+			if (habit.completedToday) return `${prefix} · Done ✓`;
+			if (habit.dueInDays === undefined) return prefix;
+			if (habit.dueInDays > 0)
+				return `${prefix} · Due in ${habit.dueInDays} day${habit.dueInDays !== 1 ? 's' : ''}`;
+			if (habit.dueInDays === 0) return `${prefix} · Due today`;
+			return `${prefix} · Overdue by ${Math.abs(habit.dueInDays)} day${Math.abs(habit.dueInDays) !== 1 ? 's' : ''}`;
+		}
+		const done = habit.periodProgress >= habit.periodTarget;
+		if (isWeekly)
+			return `This week: ${habit.periodProgress}/${habit.periodTarget}${done ? ' ✓' : ''}`;
+		if (isMultiDaily)
+			return `Today: ${habit.periodProgress}/${habit.periodTarget}${done ? ' ✓' : ''}`;
+		// Single-daily
+		if (habit.streak === 0) return 'No streak yet';
+		return `🔥 ${habit.streak} day${habit.streak === 1 ? '' : 's'}`;
+	});
 
 	function animateCircle(element: HTMLElement) {
 		if (prefersReducedMotion()) return;

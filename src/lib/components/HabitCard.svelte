@@ -127,7 +127,7 @@
 					{#if habit.completedToday}✓ Done for this interval{:else}{dueLabel}{/if}
 				</p>
 			{:else if isWeekly}
-				<p class="text-sm text-gray-500">{habit.frequencyTarget}x per week</p>
+				<p class="text-sm text-gray-500">{habit.frequencyTarget ?? habit.schedule?.timesPerWeek ?? 1}x per week</p>
 			{:else if isMultiDaily}
 				<p class="text-sm text-gray-500">{habit.frequencyTarget}x per day</p>
 			{:else if isPartiallyCompleted}
