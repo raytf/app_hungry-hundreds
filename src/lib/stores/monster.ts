@@ -8,7 +8,7 @@
  */
 import { derived } from 'svelte/store';
 import { habits } from './habits';
-import { showDialogue } from './dialogue';
+import { showDialogue } from './dialogue.svelte';
 
 // ============================================================================
 // Types

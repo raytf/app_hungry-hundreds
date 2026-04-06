@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue';
+	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue.svelte';
 
 	// Typewriter state
 	let displayText = $state('');
