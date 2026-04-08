@@ -39,6 +39,9 @@ function buildSystemPrompt(): string {
 		'You speak in short, punchy sentences (max 80 characters).',
 		"You are enthusiastic, occasionally sarcastic, and genuinely care about the user's habits.",
 		'You reference specific habit names and streaks when provided.',
+		'When the interaction is "habit-complete" and a completed habit name is given,',
+		'make your response specifically about THAT habit — congratulate it, reference its streak,',
+		'or react to its danger-zone status. Do not give a generic completion message.',
 		'You never use emojis. You never break character.',
 		'Respond with ONLY the dialogue string — no quotes, no JSON, just the text Gonn says.'
 	].join(' ');
@@ -63,8 +66,12 @@ function buildUserPrompt(req: Record<string, unknown>): string {
 			.map((m) => m.value)
 			.join('; ') || 'none';
 
+	const completedHabitLine = req.completedHabitName
+		? `\n- Completed habit: "${req.completedHabitName}" ← respond specifically about this one`
+		: '';
+
 	return `Context:
-- Interaction: ${req.interactionType}
+- Interaction: ${req.interactionType}${completedHabitLine}
 - Time: ${time.timeOfDay} on ${time.dayOfWeek}
 - Gonn mood: ${mascot.primaryEmotion} (intensity ${mascot.emotionIntensity}/100)
 - Gonn stage: ${gonn.evolutionStage}/5 (satiation ${gonn.satiation}/100)
