@@ -2,14 +2,13 @@
  * AI Dialogue Pipeline (Phase 7)
  *
  * Client-side orchestration for Gonn's LLM-powered speech.
- * Applies a 4-hour response cache (Dexie dialogueCache), a 30-second
- * client-side tap cooldown, and a 12-second per-call throttle to keep
- * requests off the edge function as much as possible.
+ * Applies a 4-hour response cache (Dexie dialogueCache) and a per-habit
+ * 12-second throttle to keep requests off the edge function as much as possible.
  *
  * The actual LLM call is proxied through the Supabase Edge Function
  * `gonn-dialogue` so the Anthropic API key stays server-side.
  *
- * @see docs/features/ai-dialogue-notes.md — rate-limiting strategy
+ * @see docs/features/ai-dialogue-notes.md — rate-limiting strategy + per-habit context design
  * @see supabase/functions/gonn-dialogue/index.ts — edge function proxy
  */
 import { browser } from '$app/environment';
@@ -29,11 +28,23 @@ import { getMemoryContext, writeCompletionMemory } from '$lib/ai/memory';
 // Client-Side Rate Limiting State
 // ============================================================================
 
-/** Timestamp of the last LLM call made this session */
-let lastCallAt = 0;
+/**
+ * Per-key throttle map. Keys are `habit-complete:<habitName>` for habit events
+ * and `<interactionType>` for everything else. This lets two *different* habits
+ * completed in quick succession both reach the LLM, while repeated calls for
+ * the *same* habit are still throttled.
+ */
+const throttleMap = new Map<string, number>();
 
-/** Minimum ms between any two LLM calls (≈5 calls/min enforced server-side, 1/12s client-side) */
+/** Minimum ms between calls for the same throttle key (≈5 calls/min server-side) */
 const MIN_CALL_INTERVAL_MS = 12_000;
+
+/** Derive a stable throttle key from the request */
+function getThrottleKey(req: DialogueRequest): string {
+	return req.completedHabitName
+		? `habit-complete:${req.completedHabitName}`
+		: req.interactionType;
+}
 
 // ============================================================================
 // Time Context Helper
@@ -62,6 +73,7 @@ const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 function hashContext(req: DialogueRequest): string {
 	const key = [
 		req.interactionType,
+		req.completedHabitName ?? '',
 		req.mascotState.primaryEmotion,
 		req.timeContext.hourOfDay,
 		req.mascotState.evolutionStage,
@@ -109,9 +121,10 @@ async function storeCache(hash: string, response: DialogueResponse): Promise<voi
 export async function generateDialogue(request: DialogueRequest): Promise<DialogueResponse | null> {
 	if (!browser) return null;
 
-	// 1. Client-side throttle
+	// 1. Per-key client-side throttle
 	const now = Date.now();
-	if (now - lastCallAt < MIN_CALL_INTERVAL_MS) return null;
+	const throttleKey = getThrottleKey(request);
+	if (now - (throttleMap.get(throttleKey) ?? 0) < MIN_CALL_INTERVAL_MS) return null;
 
 	// 2. Cache check
 	const hash = hashContext(request);
@@ -142,8 +155,8 @@ export async function generateDialogue(request: DialogueRequest): Promise<Dialog
 		const data = (await res.json()) as DialogueResponse;
 		if (!data.dialogue) return null;
 
-		// 5. Update throttle timestamp and cache
-		lastCallAt = Date.now();
+		// 5. Update per-key throttle timestamp and cache
+		throttleMap.set(throttleKey, Date.now());
 		await storeCache(hash, data);
 		return data;
 	} catch {
@@ -194,11 +207,14 @@ export async function triggerGonnDialogue(
 
 	const habitSnapshots = $habits.map(buildHabitSnapshot);
 
-	// Write completion memory for habit-complete events (does not block dialogue)
-	if (interactionType === 'habit-complete' && completedHabitId) {
-		const snap = habitSnapshots.find((s) => s.habitId === completedHabitId);
-		if (snap) writeCompletionMemory(snap); // intentionally not awaited
-	}
+	// Resolve the completed habit snapshot once — used for memory + request field
+	const completedSnap =
+		interactionType === 'habit-complete' && completedHabitId
+			? habitSnapshots.find((s) => s.habitId === completedHabitId)
+			: undefined;
+
+	// Write completion memory (does not block dialogue)
+	if (completedSnap) writeCompletionMemory(completedSnap); // intentionally not awaited
 
 	const request: DialogueRequest = {
 		mascotState: $mascotState,
@@ -219,7 +235,8 @@ export async function triggerGonnDialogue(
 		})),
 		memory,
 		timeContext: getTimeContext(),
-		interactionType
+		interactionType,
+		completedHabitName: completedSnap?.habitName
 	};
 
 	const result = await generateDialogue(request);
