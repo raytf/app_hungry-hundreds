@@ -103,16 +103,16 @@
 		<!-- Loading state -->
 		<div class="card py-12 text-center">
 			<div
-				class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-hungry-500 border-t-transparent"
+				class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-accent-warm border-t-transparent"
 			></div>
-			<p class="text-gray-500">Loading...</p>
+			<p class="text-content-muted">Loading...</p>
 		</div>
 	{:else if !habit}
 		<!-- Habit not found -->
 		<div class="card py-12 text-center">
 			<p class="mb-2 text-5xl">🔍</p>
-			<h3 class="mb-2 text-lg font-semibold text-gray-800">Habit not found</h3>
-			<p class="mb-4 text-gray-500">The habit you're looking for doesn't exist.</p>
+			<h3 class="mb-2 text-lg font-semibold text-content">Habit not found</h3>
+			<p class="mb-4 text-content-muted">The habit you're looking for doesn't exist.</p>
 			<a href={resolve('/')} class="btn-primary inline-block">Back to Home</a>
 		</div>
 	{:else}
@@ -125,12 +125,12 @@
 				{habit.emoji}
 			</div>
 			<div class="flex-1">
-				<h1 class="text-xl font-bold text-gray-900">{habit.name}</h1>
-				<p class="text-sm text-gray-500">{frequencyDescription()}</p>
+				<h1 class="text-xl font-bold text-content">{habit.name}</h1>
+				<p class="text-sm text-content-muted">{frequencyDescription()}</p>
 			</div>
 			<a
 				href={resolve(`/habits/${habit.id}/edit`)}
-				class="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+				class="flex h-10 w-10 items-center justify-center rounded-lg text-content-subtle hover:bg-surface-sunken hover:text-content-muted"
 				aria-label="Edit habit"
 			>
 				<svg
@@ -152,11 +152,11 @@
 
 		<!-- Stats Section -->
 		<div class="card mb-4">
-			<h2 class="mb-3 font-semibold text-gray-700">Statistics</h2>
+			<h2 class="mb-3 font-semibold text-content-muted">Statistics</h2>
 			<div class="grid grid-cols-2 gap-4">
-				<div class="rounded-xl bg-orange-50 p-3 text-center">
-					<p class="text-2xl font-bold text-orange-600">🔥 {habit.streak}</p>
-					<p class="text-sm text-orange-700">
+				<div class="rounded-xl bg-surface-sunken p-3 text-center">
+					<p class="text-2xl font-bold text-accent-warm">🔥 {habit.streak}</p>
+					<p class="text-sm text-content-muted">
 						{habit.schedule?.type === 'every-x-days'
 							? 'Interval Streak'
 							: (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
@@ -164,29 +164,29 @@
 								: 'Day Streak'}
 					</p>
 				</div>
-				<div class="rounded-xl bg-blue-50 p-3 text-center">
-					<p class="text-2xl font-bold text-blue-600">{habit.totalCompletions}</p>
-					<p class="text-sm text-blue-700">Total Completions</p>
+				<div class="rounded-xl bg-surface-sunken p-3 text-center">
+					<p class="text-2xl font-bold text-content">{habit.totalCompletions}</p>
+					<p class="text-sm text-content-muted">Total Completions</p>
 				</div>
 				{#if habit.schedule?.type === 'every-x-days'}
 					<div
 						class="col-span-2 rounded-xl p-3 text-center"
-						class:bg-green-50={habit.completedToday}
-						class:bg-blue-50={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+						class:bg-success-soft={habit.completedToday}
+						class:bg-surface-sunken={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
 						class:bg-red-50={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
 					>
 						<p
 							class="text-2xl font-bold"
-							class:text-green-600={habit.completedToday}
-							class:text-blue-600={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+							class:text-success={habit.completedToday}
+							class:text-content-muted={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
 							class:text-red-500={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
 						>
 							{habit.completedToday ? '✓ Done' : dueLabelDetail()}
 						</p>
 						<p
 							class="text-sm"
-							class:text-green-700={habit.completedToday}
-							class:text-blue-700={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
+							class:text-success={habit.completedToday}
+							class:text-content-subtle={!habit.completedToday && (habit.dueInDays ?? 0) >= 0}
 							class:text-red-600={!habit.completedToday && (habit.dueInDays ?? 0) < 0}
 						>
 							{habit.completedToday
@@ -195,18 +195,18 @@
 						</p>
 					</div>
 				{:else}
-					<div class="col-span-2 rounded-xl bg-green-50 p-3 text-center">
-						<p class="text-2xl font-bold text-green-600">
+					<div class="col-span-2 rounded-xl bg-success-soft p-3 text-center">
+						<p class="text-2xl font-bold text-success">
 							{habit.periodProgress}/{habit.periodTarget}
 						</p>
-						<p class="text-sm text-green-700">
+						<p class="text-sm text-success">
 							{habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly' ? 'This Week' : 'Today'}
 						</p>
 					</div>
 				{/if}
 			</div>
 			{#if habit.reminderTime}
-				<div class="mt-4 flex items-center gap-2 text-gray-600">
+				<div class="mt-4 flex items-center gap-2 text-content-muted">
 					<span>⏰</span>
 					<span>Reminder at {habit.reminderTime}</span>
 				</div>
@@ -216,8 +216,8 @@
 		<!-- Partial Completion Section -->
 		{#if habit.partialCriteria}
 			<div class="card mb-4">
-				<h2 class="mb-2 font-semibold text-gray-700">Partial Completion</h2>
-				<p class="mb-3 rounded-lg bg-amber-50 p-3 text-amber-800">
+				<h2 class="mb-2 font-semibold text-content-muted">Partial Completion</h2>
+				<p class="mb-3 rounded-lg bg-surface-sunken p-3 text-content-muted">
 					"{habit.partialCriteria}"
 				</p>
 				<button
@@ -230,8 +230,8 @@
 					class:hover:bg-amber-600={!isPartiallyCompleted && !isFullyCompleted}
 					class:bg-amber-100={isPartiallyCompleted}
 					class:text-amber-700={isPartiallyCompleted}
-					class:bg-gray-100={isFullyCompleted}
-					class:text-gray-400={isFullyCompleted}
+					class:bg-surface-sunken={isFullyCompleted}
+					class:text-content-subtle={isFullyCompleted}
 					class:cursor-not-allowed={isFullyCompleted}
 				>
 					{#if isPartiallyCompleted}
@@ -251,11 +251,11 @@
 				type="button"
 				onclick={handleFullComplete}
 				class="w-full rounded-xl py-4 text-lg font-semibold transition-all"
-				class:bg-hungry-500={!isFullyCompleted}
+				class:bg-accent-warm={!isFullyCompleted}
 				class:text-white={!isFullyCompleted}
-				class:hover:bg-hungry-600={!isFullyCompleted}
-				class:bg-green-100={isFullyCompleted}
-				class:text-green-700={isFullyCompleted}
+				class:hover:bg-accent-warm-hover={!isFullyCompleted}
+				class:bg-success-soft={isFullyCompleted}
+				class:text-success={isFullyCompleted}
 			>
 				{#if isFullyCompleted}
 					{habit.schedule?.type === 'every-x-days'
@@ -273,8 +273,8 @@
 					class="w-full rounded-xl py-3 font-semibold transition-all"
 					class:bg-amber-100={isPartiallyCompleted}
 					class:text-amber-700={isPartiallyCompleted}
-					class:bg-gray-100={!isPartiallyCompleted}
-					class:text-gray-600={!isPartiallyCompleted}
+					class:bg-surface-sunken={!isPartiallyCompleted}
+					class:text-content-muted={!isPartiallyCompleted}
 					class:hover:bg-amber-50={!isPartiallyCompleted}
 				>
 					{#if isPartiallyCompleted}
@@ -297,7 +297,7 @@
 						<button
 							type="button"
 							onclick={() => (showDeleteConfirm = false)}
-							class="flex-1 rounded-xl bg-gray-200 py-3 font-semibold text-gray-700 hover:bg-gray-300"
+							class="flex-1 rounded-xl bg-surface-sunken py-3 font-semibold text-content-muted hover:bg-edge"
 						>
 							Cancel
 						</button>
