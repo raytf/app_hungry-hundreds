@@ -1,55 +1,64 @@
 <script lang="ts">
 	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue.svelte';
 
-	// Typewriter state
+	// Typewriter + transition state
 	let displayText = $state('');
+	let fading = $state(false);
 	let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
-	let hideTimer: ReturnType<typeof setTimeout> | null = null;
 	let reducedMotion = $state(false);
 
-	function clearTimers() {
+	function clearTimer() {
 		if (typewriterTimer !== null) {
 			clearTimeout(typewriterTimer);
 			typewriterTimer = null;
 		}
-		if (hideTimer !== null) {
-			clearTimeout(hideTimer);
-			hideTimer = null;
-		}
+		// Always snap out of fading if a new call interrupts mid-transition
+		fading = false;
 	}
 
-	function startTypewriter(text: string, charDelayMs: number, displayMs: number) {
-		clearTimers();
+	function beginTyping(text: string, charDelayMs: number) {
 		displayText = '';
-
-		if (reducedMotion) {
-			// Respect prefers-reduced-motion: show full text instantly
-			displayText = text;
-			hideTimer = setTimeout(() => hideDialogue(), displayMs);
-			return;
-		}
-
 		let i = 0;
 		function typeNext() {
 			i++;
 			displayText = text.slice(0, i);
 			if (i < text.length) {
 				typewriterTimer = setTimeout(typeNext, charDelayMs);
-			} else {
-				// Typing done — start display timer
-				hideTimer = setTimeout(() => hideDialogue(), displayMs);
 			}
+			// No hide timer — bubble stays until user dismisses or next message arrives
 		}
 		typewriterTimer = setTimeout(typeNext, charDelayMs);
 	}
 
+	function startTypewriter(text: string, charDelayMs: number) {
+		clearTimer();
+
+		if (reducedMotion) {
+			// Respect prefers-reduced-motion: show full text instantly, no fade
+			displayText = text;
+			return;
+		}
+
+		if (displayText.length > 0) {
+			// A message is already visible — fade it out briefly, then type the new one
+			fading = true;
+			typewriterTimer = setTimeout(() => {
+				fading = false;
+				beginTyping(text, charDelayMs);
+			}, 150);
+		} else {
+			beginTyping(text, charDelayMs);
+		}
+	}
+
 	// Start/reset typewriter whenever the store text changes while visible
 	$effect(() => {
-		const { text, visible, charDelayMs, displayMs } = dialogueStore;
+		const { text, visible, charDelayMs } = dialogueStore;
 		if (visible && text) {
-			startTypewriter(text, charDelayMs, displayMs);
+			startTypewriter(text, charDelayMs);
 		} else if (!visible) {
-			clearTimers();
+			clearTimer();
+			displayText = '';
 		}
 	});
 
@@ -64,7 +73,8 @@
 	});
 
 	function dismiss() {
-		clearTimers();
+		clearTimer();
+		displayText = '';
 		hideDialogue();
 	}
 </script>
@@ -88,7 +98,7 @@
 			<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
 			<p
 				class="m-0 font-body"
-				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
+				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content); opacity: {fading ? 0 : 1}; transition: opacity 150ms ease;"
 			>
 				{displayText}
 			</p>

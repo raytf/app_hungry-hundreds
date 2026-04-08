@@ -5,9 +5,11 @@
 	import SpeechBubble from '$lib/components/SpeechBubble.svelte';
 	import HabitCardCompact from '$lib/components/HabitCardCompact.svelte';
 	import HabitSuggestions from '$lib/components/HabitSuggestions.svelte';
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { sortedHabits, todaysProgress } from '$lib/stores/habits';
 	import { monster, monsterLookAt } from '$lib/stores/monster';
+	import { triggerGonnDialogue } from '$lib/ai/dialogue';
 
 
 
@@ -20,6 +22,14 @@
 		const y = (event.clientY / window.innerHeight - 1) * 2;
 		monsterLookAt(x, y);
 	}
+
+	// ── App-open dialogue ────────────────────────────────────────────────────
+	// Delay 1.5 s to let Rive finish loading and Dexie habits hydrate before
+	// we snapshot the stores. triggerGonnDialogue() handles throttling/auth.
+	onMount(() => {
+		const t = setTimeout(() => triggerGonnDialogue('app-open'), 1500);
+		return () => clearTimeout(t);
+	});
 
 	// ── Scroll indicator ─────────────────────────────────────────────────────
 	let mainEl = $state<HTMLElement | null>(null);

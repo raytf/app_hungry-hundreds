@@ -13,10 +13,17 @@
  * @see supabase/functions/gonn-dialogue/index.ts — edge function proxy
  */
 import { browser } from '$app/environment';
+import { get } from 'svelte/store';
 import { db } from '$lib/db/db';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
-import type { DialogueRequest, DialogueResponse, TimeOfDay } from '$lib/types/mascot';
+import type { DialogueRequest, DialogueResponse, InteractionType, TimeOfDay } from '$lib/types/mascot';
 import { supabase } from '$lib/supabase/client';
+import { mascotState } from '$lib/stores/mascot';
+import { gonnState } from '$lib/stores/gonn';
+import { habits } from '$lib/stores/habits';
+import { monsterSetDialogue } from '$lib/stores/monster';
+import { buildHabitSnapshot } from '$lib/ai/snapshots';
+import { getMemoryContext, writeCompletionMemory } from '$lib/ai/memory';
 
 // ============================================================================
 // Client-Side Rate Limiting State
@@ -151,4 +158,72 @@ export async function generateDialogue(request: DialogueRequest): Promise<Dialog
 export async function clearDialogueCache(): Promise<void> {
 	if (!browser) return;
 	await db.dialogueCache.clear();
+}
+
+// ============================================================================
+// Production Trigger
+// ============================================================================
+
+/**
+ * Fire-and-forget orchestrator for Gonn's AI dialogue.
+ *
+ * Reads current store state, builds a DialogueRequest, calls the LLM pipeline,
+ * and (if a response comes back) shows it in the Svelte speech bubble via
+ * monsterSetDialogue(). All failures are silent — the UI is never blocked.
+ *
+ * Safe to call without awaiting. The generateDialogue() function handles:
+ * - 12 s client-side throttle (returns null if called too soon)
+ * - 4-hour response cache
+ * - Auth check (no-op for unauthenticated users)
+ * - Network / edge-function errors
+ *
+ * @param interactionType   - Why dialogue was triggered ('habit-complete', 'app-open', etc.)
+ * @param completedHabitId  - Optional: ID of the just-completed habit (habit-complete events).
+ *                            Used to write short-term completion memory.
+ */
+export async function triggerGonnDialogue(
+	interactionType: InteractionType,
+	completedHabitId?: string
+): Promise<void> {
+	if (!browser) return;
+
+	const $mascotState = get(mascotState);
+	const $gonnState = get(gonnState);
+	const $habits = get(habits);
+	const memory = await getMemoryContext();
+
+	const habitSnapshots = $habits.map(buildHabitSnapshot);
+
+	// Write completion memory for habit-complete events (does not block dialogue)
+	if (interactionType === 'habit-complete' && completedHabitId) {
+		const snap = habitSnapshots.find((s) => s.habitId === completedHabitId);
+		if (snap) writeCompletionMemory(snap); // intentionally not awaited
+	}
+
+	const request: DialogueRequest = {
+		mascotState: $mascotState,
+		gonn: $gonnState,
+		habits: habitSnapshots.map((s) => ({
+			name: s.habitName,
+			flavorTag: s.flavorTag,
+			completionCount: s.completionCount,
+			streakLength: s.streakLength,
+			dangerZone: s.dangerZone,
+			dangerZoneLabel: s.dangerZoneLabel,
+			window: {
+				isScheduledToday: s.window.isScheduledToday,
+				completionsInWindow: s.window.completionsInWindow,
+				targetForWindow: s.window.targetForWindow,
+				daysRemaining: s.window.daysRemaining
+			}
+		})),
+		memory,
+		timeContext: getTimeContext(),
+		interactionType
+	};
+
+	const result = await generateDialogue(request);
+	if (result?.dialogue) {
+		monsterSetDialogue(result.dialogue);
+	}
 }

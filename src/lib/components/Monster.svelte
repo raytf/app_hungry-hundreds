@@ -316,17 +316,16 @@
 
 	/**
 	 * Display dialogue text inside the Rive speech bubble using a typewriter effect.
-	 * Shows the bubble, types out the text character-by-character, then hides the bubble
-	 * after the full text has been visible for `displayMs` milliseconds.
+	 * Shows the bubble and types out the text character-by-character. The bubble stays
+	 * visible until replaced by the next call (no auto-hide).
 	 *
 	 * No-ops if the Rive view model dialogue properties are not available
 	 * (e.g., Rive failed to load or the artboard has no speech bubble).
 	 *
-	 * @param text       - Dialogue string (max ~80 chars)
-	 * @param charDelayMs  - Milliseconds between each typed character (default: 30)
-	 * @param displayMs  - How long the complete message stays visible before hiding (default: 3500)
+	 * @param text        - Dialogue string (max ~80 chars)
+	 * @param charDelayMs - Milliseconds between each typed character (default: 30)
 	 */
-	export function setDialogue(text: string, charDelayMs = 30, displayMs = 3500): void {
+	export function setDialogue(text: string, charDelayMs = 30): void {
 		if (!dialogueProp || !dialogueVisibleProp) return;
 
 		// Cancel any in-progress typewriter
@@ -354,11 +353,7 @@
 					clearInterval(typewriterInterval);
 					typewriterInterval = null;
 				}
-				// Hide the bubble after the display duration
-				dialogueHideTimeout = setTimeout(() => {
-					if (dialogueVisibleProp) dialogueVisibleProp.value = false;
-					dialogueHideTimeout = null;
-				}, displayMs);
+				// Bubble stays visible — no auto-hide (user dismisses or next message replaces it)
 			}
 		}, charDelayMs);
 	}

@@ -4,6 +4,7 @@
 	import { habits, type HabitWithStatus } from '$lib/stores/habits';
 	import { prefersReducedMotion } from '$lib/animations/transitions';
 	import { monsterSetExpression } from '$lib/stores/monster';
+	import { triggerGonnDialogue } from '$lib/ai/dialogue';
 	import { animate } from 'motion';
 
 	interface Props {
@@ -82,6 +83,12 @@
 		}
 
 		habits.toggle(habit.id);
+
+		// Fire AI dialogue on completion (not un-completion). Fire-and-forget:
+		// triggerGonnDialogue handles throttling, caching, and auth checks silently.
+		if (!habit.completedToday && habit.id !== undefined) {
+			triggerGonnDialogue('habit-complete', String(habit.id));
+		}
 	}
 
 	function handleCardClick() {

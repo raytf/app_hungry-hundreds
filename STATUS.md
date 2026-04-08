@@ -15,12 +15,12 @@
 | 4       | Sync                  | ✅ Complete    | 4/4      |
 | 5       | Rule Engine & Rive    | ✅ Complete    | 6/6      |
 | 6       | PWA                   | ✅ Complete    | 5/5      |
-| 7       | AI Dialogue           | 🚧 In Progress | 4/5      |
+| 7       | AI Dialogue           | ✅ Complete    | 5/5      |
 | 8       | Chatbot               | ✅ Complete    | 5/5      |
 | 9       | Design System         | ✅ Complete    | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
-**Last Updated:** 2026-04-06
+**Last Updated:** 2026-04-08
 
 ---
 
@@ -248,16 +248,17 @@ All Phase 5 tasks completed:
 See `docs/features/ai-implementation-spec.md` for full implementation guide.
 See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 
-### Phase 7: AI Dialogue 🚧
+### Phase 7: AI Dialogue ✅
 
 1. ✅ **Type definitions** - `DialogueRequest`, `DialogueResponse`, `InteractionType`, `TimeOfDay` in `src/lib/types/mascot.ts`
 2. ✅ **Memory system** - `src/lib/ai/memory.ts` — permanent + short-term memory read/write/trim
 3. ✅ **Dialogue pipeline** - `src/lib/ai/dialogue.ts` — 4-hour cache, 12s throttle, edge function fetch
 4. ✅ **Supabase migration** - `supabase/migrations/20260328021436_dialogue_usage.sql` — rate limit table + RPC
 5. ✅ **Edge Function** - `supabase/functions/gonn-dialogue/index.ts` — Claude Haiku proxy with auth + rate limiting
-6. ✅ **Monster.svelte** - `setDialogue()` export with typewriter effect via Rive `dialogueText`/`dialogueVisible` VM props
-7. ⏳ **Rive artboard** — Speech bubble, `dialogueText` text run, and `dialogueVisible` boolean property need adding in Rive editor
-8. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
+6. ✅ **Speech bubble** - `SpeechBubble.svelte` + `dialogueStore` — HTML/CSS overlay, typewriter effect, `prefers-reduced-motion` support (Phase C of Design System). Speech bubble is Svelte-side, not in the Rive artboard.
+7. ✅ **Dialogue routing** - `monsterSetDialogue()` → `showDialogue()` → `dialogueStore` → `SpeechBubble`
+8. ✅ **Production triggers** - `triggerGonnDialogue()` in `dialogue.ts` fires on `habit-complete` (HabitCardCompact) and `app-open` (home page mount). Also writes short-term completion memory via `writeCompletionMemory()`.
+9. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
 ### Phase 9: Design System ✅ Complete
 
@@ -314,7 +315,7 @@ These items are deliberately deferred. They are documented here so they are not 
 | **Evolution cutscene**      | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay | `docs/DESIGN_GUIDE.md` §6.5  |
 | **Dark mode**               | Deferred per design guide; requires token inversion system | `docs/DESIGN_GUIDE.md` §12   |
 | **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP | `docs/DESIGN_GUIDE.md` §4.4  |
-| **Rive speech bubble artboard** | `dialogueText`/`dialogueVisible` text run needs adding in Rive editor (Phase 7 remainder) | Phase 7 notes in STATUS.md   |
+| **Rive speech bubble** | ~~Rive artboard speech bubble~~ — resolved; speech bubble is Svelte-side HTML (`SpeechBubble.svelte`) | `docs/rive-spec.md` §6 |
 
 ---
 

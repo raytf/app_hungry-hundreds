@@ -6,7 +6,7 @@
  * SpeechBubble component can subscribe reactively.
  *
  * Usage:
- *   showDialogue('Hello!');                    // 30ms/char, 3500ms display
+ *   showDialogue('Hello!');                    // 30ms/char, stays until dismissed
  *   showDialogue('Fast!', { charDelayMs: 15 });
  *   hideDialogue();
  */
@@ -15,19 +15,16 @@ export interface DialogueState {
 	text: string;
 	visible: boolean;
 	charDelayMs: number;
-	displayMs: number;
 }
 
 export interface ShowDialogueOptions {
 	charDelayMs?: number;
-	displayMs?: number;
 }
 
 function createDialogueStore() {
 	let text = $state('');
 	let visible = $state(false);
 	let charDelayMs = $state(30);
-	let displayMs = $state(3500);
 
 	return {
 		get text() {
@@ -39,14 +36,10 @@ function createDialogueStore() {
 		get charDelayMs() {
 			return charDelayMs;
 		},
-		get displayMs() {
-			return displayMs;
-		},
 
 		show(newText: string, opts?: ShowDialogueOptions) {
 			text = newText;
 			charDelayMs = opts?.charDelayMs ?? 30;
-			displayMs = opts?.displayMs ?? 3500;
 			visible = true;
 		},
 
