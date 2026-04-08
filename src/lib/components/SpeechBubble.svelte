@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue.svelte';
 
-	// Typewriter + transition state
+	// Typewriter state
 	let displayText = $state('');
-	let fading = $state(false);
 	let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
 	let reducedMotion = $state(false);
 
@@ -13,12 +11,9 @@
 			clearTimeout(typewriterTimer);
 			typewriterTimer = null;
 		}
-		// Always snap out of fading if a new call interrupts mid-transition
-		fading = false;
 	}
 
 	function beginTyping(text: string, charDelayMs: number) {
-		displayText = '';
 		let i = 0;
 		function typeNext() {
 			i++;
@@ -26,38 +21,35 @@
 			if (i < text.length) {
 				typewriterTimer = setTimeout(typeNext, charDelayMs);
 			}
-			// No hide timer — bubble stays until user dismisses or next message arrives
 		}
 		typewriterTimer = setTimeout(typeNext, charDelayMs);
 	}
 
 	function startTypewriter(text: string, charDelayMs: number) {
+		// Debug: log every time we (re)start. If you see this twice in quick succession
+		// with different texts, two concurrent triggerGonnDialogue() calls are racing.
+		console.debug('[SpeechBubble] startTypewriter', {
+			incoming: text.slice(0, 40),
+			interrupted: displayText.length > 0 ? displayText.slice(0, 20) : null
+		});
+
 		clearTimer();
+		displayText = ''; // immediately clear any partially-typed text
 
 		if (reducedMotion) {
-			// Respect prefers-reduced-motion: show full text instantly, no fade
 			displayText = text;
 			return;
 		}
 
-		// untrack: reading displayText here must NOT register it as a $effect dependency.
-		// Without untrack, every character written by beginTyping() would re-fire the
-		// effect, call startTypewriter() again, and create an infinite reset loop.
-		if (untrack(() => displayText.length > 0)) {
-			// A message is already visible — fade it out briefly, then type the new one
-			fading = true;
-			typewriterTimer = setTimeout(() => {
-				fading = false;
-				beginTyping(text, charDelayMs);
-			}, 150);
-		} else {
-			beginTyping(text, charDelayMs);
-		}
+		beginTyping(text, charDelayMs);
 	}
 
-	// Start/reset typewriter whenever the store text changes while visible
+	// Start/reset typewriter whenever the store text or visibility changes.
+	// NOTE: displayText is never read here (only written), so it is NOT a tracked
+	// dependency — the effect won't re-fire as each character is typed.
 	$effect(() => {
 		const { text, visible, charDelayMs } = dialogueStore;
+		console.debug('[SpeechBubble] $effect', { text: text?.slice(0, 40), visible });
 		if (visible && text) {
 			startTypewriter(text, charDelayMs);
 		} else if (!visible) {
@@ -102,7 +94,7 @@
 			<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
 			<p
 				class="m-0 font-body"
-				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content); opacity: {fading ? 0 : 1}; transition: opacity 150ms ease;"
+				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
 			>
 				{displayText}
 			</p>
