@@ -2,54 +2,40 @@
 
 > Companion to `ai-implementation-spec.md`. Captures architectural decisions and refinements made during planning.
 
-**Last Updated:** 2026-03-28
+**Last Updated:** 2026-04-08
 
 ---
 
-## 1. Speech Bubble in Rive (Not HTML)
+## 1. Speech Bubble — Svelte-Side HTML (Not Rive)
 
-The spec originally called for a standalone `SpeechBubble.svelte` component positioned over the canvas with CSS. Instead, the speech bubble will live **inside the Rive artboard**, keeping all visuals in a single renderer.
+> **Status: Implemented.** See `src/lib/components/SpeechBubble.svelte` and `src/lib/stores/dialogue.svelte.ts`.
 
-### Why
+The original plan was to put the speech bubble inside the Rive artboard, driven by `dialogueText`/`dialogueVisible` VM properties. The implementation switched to a Svelte HTML/CSS overlay positioned above the Rive canvas. The Rive VM properties were never added to the artboard and are no longer required.
 
-- No CSS z-index or positioning math against the canvas
-- Bubble inherits Gonn's animation context natively (can react to emotion, stage, etc.)
-- Cleaner API: `Monster.svelte` exposes `setDialogue()` instead of managing a separate component
-- `SpeechBubble.svelte` from the spec is dropped entirely
+### Architecture
 
-### What Rive Needs
-
-| Element                       | Details                                                                         |
-| ----------------------------- | ------------------------------------------------------------------------------- |
-| **Bubble shape**              | Rounded rectangle + tail, part of the character artboard                        |
-| **Text run**                  | Bound to `dialogueText` string property on `CharacterVM`                        |
-| **Visibility control**        | `dialogueVisible` boolean property on `CharacterVM`                             |
-| **State machine transitions** | Hidden by default. `dialogueVisible = true` → animate in; `false` → animate out |
-
-### What Code Needs
-
-New View Model property handles in `Monster.svelte` (same pattern as existing `expressionProp`, `emotionProp`):
-
-```typescript
-// In initViewModel()
-dialogueProp = vmInstance.string('dialogueText');
-dialogueVisibleProp = vmInstance.boolean('dialogueVisible');
+```
+triggerGonnDialogue(interactionType, habitId?)   ← production call sites
+  → generateDialogue(DialogueRequest)            ← LLM pipeline (cache + throttle)
+    → monsterSetDialogue(text)                   ← monster.ts routing
+      → showDialogue(text)                       ← dialogue.svelte.ts store
+        → SpeechBubble.svelte                   ← HTML/CSS component (reactive)
 ```
 
-New exported function:
+### SpeechBubble.svelte behaviour
 
-```typescript
-export function setDialogue(text: string, displayMs = 4000): void {
-  // 1. Set dialogueVisibleProp.value = true → Rive plays bubble-in animation
-  // 2. setInterval at ~30ms/char, updating dialogueProp.value with successive slices
-  // 3. After full text shown, wait displayMs
-  // 4. Set dialogueVisibleProp.value = false → Rive plays bubble-out animation
-}
-```
+- Positioned at `bottom: calc(var(--gonn-size) + 8px)`, `z-[15]`, centred above Gonn
+- Typewriter effect at 30 ms/char (skipped for `prefers-reduced-motion`)
+- **Persistent** — no auto-hide timer. Bubble stays until the user taps/clicks it or a new message arrives
+- **Fade-between-messages** — when a new message replaces an existing one, content fades to opacity 0 over 150 ms, then the new typewriter begins
+- Click/tap dismisses (`role="button"`, keyboard accessible, screen-reader live region)
+- `Reply →` link navigates to `/chat` without dismissing the bubble
 
-The **typewriter effect runs from JS** — incrementally setting `dialogueProp.value` character by character. Rive re-renders the text run each frame. This is simpler than building reveal animations in Rive for variable-length text.
+### Monster.svelte Rive path (dead code, kept for forward-compat)
 
-> **Type check:** Verify `ViewModelInstanceBoolean` is exported from `@rive-app/canvas`. String and Number variants are already imported in `Monster.svelte`.
+`Monster.svelte` still has `dialogueProp` and `dialogueVisibleProp` handles and a `setDialogue()` export. If the Rive artboard ever gains those VM properties, the Rive path activates automatically. Currently they resolve to `null` (artboard has no speech bubble) and all calls are no-ops.
+
+See `docs/rive-spec.md` §6 for the Rive artboard notes.
 
 ---
 
@@ -207,14 +193,119 @@ Reduce unnecessary calls before they reach the edge function:
 
 ---
 
+## 4. Per-Habit Context for habit-complete Dialogue
+
+> **Status: Planned.** Current code sends all habits as context but does not identify which one was just completed to the LLM or cache.
+
+### Problem
+
+When the user completes a habit, `triggerGonnDialogue('habit-complete', habitId)` fires. The `habitId` is used to write short-term memory (`writeCompletionMemory`) but is **not** forwarded to the `DialogueRequest`. This means:
+
+1. The LLM sees all habits equally and cannot know which one was just ticked off
+2. The cache key (`hashContext`) does not include the completed habit, so completing different habits in the same session returns the same cached response
+3. The global 12 s throttle (`MIN_CALL_INTERVAL_MS`) means completing a second habit within 12 s silently returns `null`
+
+### Design
+
+#### 4.1 Add `completedHabitName` to `DialogueRequest`
+
+In `src/lib/types/mascot.ts`, add an optional field to `DialogueRequest`:
+
+```typescript
+export interface DialogueRequest {
+  // ... existing fields ...
+  completedHabitName?: string; // populated for 'habit-complete' events
+}
+```
+
+In `triggerGonnDialogue()` (`src/lib/ai/dialogue.ts`), resolve the name from the snapshot:
+
+```typescript
+const completedSnap = habitSnapshots.find((s) => s.habitId === completedHabitId);
+
+const request: DialogueRequest = {
+  // ... existing fields ...
+  completedHabitName: completedSnap?.habitName,
+};
+```
+
+The edge function system prompt already receives the full `DialogueRequest`; adding this field gives the LLM a clear signal ("the user just completed *Morning Run*") without requiring prompt changes beyond including the field name in the payload.
+
+#### 4.2 Include `completedHabitName` in the cache key
+
+In `hashContext()` (`src/lib/ai/dialogue.ts`):
+
+```typescript
+function hashContext(req: DialogueRequest): string {
+  const key = [
+    req.interactionType,
+    req.completedHabitName ?? '',      // ← add this
+    req.mascotState.primaryEmotion,
+    req.timeContext.hourOfDay,
+    req.mascotState.evolutionStage,
+    req.habits.map((h) => h.streakLength).join(','),
+  ].join('-');
+  return btoa(key).slice(0, 32);
+}
+```
+
+This ensures completing *Morning Run* vs *Evening Walk* within the same hour produces distinct cache entries.
+
+#### 4.3 Replace global throttle with per-habit throttling
+
+The current throttle is a single module-level `lastCallAt` timestamp. Replace it with a `Map<string, number>` keyed on habit ID (falling back to `interactionType` for non-habit events):
+
+```typescript
+// Before
+let lastCallAt = 0;
+if (now - lastCallAt < MIN_CALL_INTERVAL_MS) return null;
+
+// After
+const throttleMap = new Map<string, number>();
+
+function getThrottleKey(req: DialogueRequest): string {
+  return req.completedHabitName
+    ? `habit-complete:${req.completedHabitName}`
+    : req.interactionType;
+}
+
+const key = getThrottleKey(request);
+const lastAt = throttleMap.get(key) ?? 0;
+if (now - lastAt < MIN_CALL_INTERVAL_MS) return null;
+// ... on success:
+throttleMap.set(key, Date.now());
+```
+
+This allows two different habits completed in quick succession to both reach the LLM, while still throttling repeated taps on the *same* habit.
+
+### Acceptance Criteria
+
+- [ ] Completing Habit A shows a message referencing Habit A by name
+- [ ] Completing Habit B immediately after shows a different message referencing Habit B
+- [ ] Completing the same habit twice within 12 s still returns `null` (throttled)
+- [ ] Cache entries are per-habit, not per-session context
+- [ ] `completedHabitName` is `undefined` for non-habit-complete interaction types (no regression)
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/lib/types/mascot.ts` | Add `completedHabitName?: string` to `DialogueRequest` |
+| `src/lib/ai/dialogue.ts` | Update `hashContext()`, replace `lastCallAt` with `throttleMap`, populate `completedHabitName` in `triggerGonnDialogue()` |
+
+---
+
 ## Summary of Deviations from Original Spec
 
-| Topic              | Original Spec                            | Revised                                                                              |
-| ------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------ |
-| Speech bubble      | `SpeechBubble.svelte` (HTML/CSS overlay) | Inside Rive artboard, driven by `dialogueText` + `dialogueVisible` VM properties     |
-| Typewriter effect  | JS `setInterval` updating DOM text       | JS `setInterval` updating Rive VM string property (same mechanism, different target) |
-| Edge function CORS | Not addressed                            | Required — `OPTIONS` preflight handler added                                         |
-| Edge function auth | Not addressed                            | JWT validation required                                                              |
-| Rate limiting      | Not addressed                            | Per-user daily cap (50) + per-minute cap (5) via `dialogue_usage` table              |
-| Client throttling  | Not addressed                            | Debounce rapid completions, 30s tap cooldown                                         |
-| Function URL       | `/functions/gonn-dialogue`               | `https://<project-ref>.supabase.co/functions/v1/gonn-dialogue`                       |
+| Topic                  | Original Spec                                    | Actual Implementation                                                               |
+| ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Speech bubble          | Rive artboard VM properties                      | `SpeechBubble.svelte` HTML/CSS overlay + `dialogueStore`; Rive path is dead code   |
+| Bubble visibility      | `dialogueVisible` boolean on CharacterVM         | `dialogueStore.visible` reactive state; auto-hide removed, user-dismisses           |
+| Typewriter effect      | JS `setInterval` updating Rive VM string prop    | JS `setTimeout` chain updating Svelte `$state` + 150 ms fade between messages       |
+| Production triggers    | Not specified                                    | `habit-complete` (HabitCardCompact) + `app-open` (home page mount, 1.5 s delay)    |
+| Per-habit context      | Not specified                                    | Planned — §4 above                                                                  |
+| Edge function CORS     | Not addressed                                    | Required — `OPTIONS` preflight handler added                                        |
+| Edge function auth     | Not addressed                                    | JWT validation required                                                             |
+| Rate limiting          | Not addressed                                    | Per-user daily cap (50) + per-minute cap (5) via `dialogue_usage` table             |
+| Client throttling      | Not addressed                                    | Global 12 s `lastCallAt`; to be replaced with per-habit `throttleMap` (§4.3)       |
+| Function URL           | `/functions/gonn-dialogue`                       | `https://<project-ref>.supabase.co/functions/v1/gonn-dialogue`                     |
