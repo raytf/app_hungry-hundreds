@@ -90,7 +90,7 @@
 		style="bottom: calc(var(--gonn-size) + 8px)"
 	>
 		<div
-			class="speech-bubble pointer-events-auto relative max-w-xs cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
+			class="speech-bubble pointer-events-auto relative max-w-sm cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
 			style="background: var(--color-surface); border: 1.5px solid var(--color-edge);"
 			onclick={dismiss}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && dismiss()}

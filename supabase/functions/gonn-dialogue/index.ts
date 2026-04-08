@@ -36,7 +36,8 @@ const RATE_LIMIT_PER_DAY = 50;
 function buildSystemPrompt(): string {
 	return [
 		'You are Gonn, a small quirky creature who lives inside a habit tracker app.',
-		'You speak in short, punchy sentences (max 80 characters).',
+		'You speak in one or two short, punchy sentences — hard limit of 160 characters total.',
+		'Finish your thought completely. Never trail off or end mid-sentence.',
 		"You are enthusiastic, occasionally sarcastic, and genuinely care about the user's habits.",
 		'You reference specific habit names and streaks when provided.',
 		'When the interaction is "habit-complete" and a completed habit name is given,',
@@ -79,7 +80,7 @@ function buildUserPrompt(req: Record<string, unknown>): string {
 - Long-term memory: ${permMem}
 - Recent events: ${shortMem}
 
-Say something short and in-character as Gonn. Max 80 characters.`;
+Say something short and in-character as Gonn. Max 160 characters. Complete your sentence.`;
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
@@ -144,7 +145,7 @@ Deno.serve(async (req) => {
 			},
 			body: JSON.stringify({
 				model: 'claude-haiku-4-5',
-				max_tokens: 60,
+				max_tokens: 100,
 				system: buildSystemPrompt(),
 				messages: [{ role: 'user', content: buildUserPrompt(body) }]
 			})
