@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue.svelte';
 
 	// Typewriter + transition state
@@ -39,7 +40,10 @@
 			return;
 		}
 
-		if (displayText.length > 0) {
+		// untrack: reading displayText here must NOT register it as a $effect dependency.
+		// Without untrack, every character written by beginTyping() would re-fire the
+		// effect, call startTypewriter() again, and create an infinite reset loop.
+		if (untrack(() => displayText.length > 0)) {
 			// A message is already visible — fade it out briefly, then type the new one
 			fading = true;
 			typewriterTimer = setTimeout(() => {
