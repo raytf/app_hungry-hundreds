@@ -2,18 +2,28 @@
 	import Header from '$lib/components/Header.svelte';
 	import StatsCard from '$lib/components/StatsCard.svelte';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
-	import WeeklyChart from '$lib/components/WeeklyChart.svelte';
+	import PeriodSelector from '$lib/components/PeriodSelector.svelte';
+	import PeriodChart from '$lib/components/PeriodChart.svelte';
 	import ConsistencyGauge from '$lib/components/ConsistencyGauge.svelte';
 	import InsightCard from '$lib/components/InsightCard.svelte';
 	import DayPatternGrid from '$lib/components/DayPatternGrid.svelte';
 	import { habits, todaysProgress } from '$lib/stores/habits';
-	import { stats } from '$lib/stores/stats';
 	import { advancedStats } from '$lib/stores/advancedStats';
+	import { selectedPeriod, periodStats } from '$lib/stores/periodStats';
 
 	// Calculate additional stats
 	let totalStreak = $derived($habits.reduce((sum, h) => sum + h.streak, 0));
 	let longestStreak = $derived(Math.max(...$habits.map((h) => h.streak), 0));
 	let activeHabits = $derived($habits.length);
+
+	const PERIOD_LABELS: Record<string, string> = {
+		day: 'Yesterday',
+		'7days': 'Last 7 Days',
+		'30days': 'Last 30 Days',
+		custom: 'Custom Range'
+	};
+
+	let chartTitle = $derived(PERIOD_LABELS[$selectedPeriod.preset] ?? 'Selected Period');
 </script>
 
 <svelte:head>
@@ -43,14 +53,20 @@
 		</div>
 	</section>
 
-	<!-- Weekly Chart -->
+	<!-- Period Selector + Chart -->
+	<section class="mb-3">
+		<PeriodSelector
+			value={$selectedPeriod}
+			onchange={(range) => selectedPeriod.set(range)}
+		/>
+	</section>
 	<section class="mb-6">
-		<WeeklyChart data={$stats.weeklyData} />
+		<PeriodChart data={$periodStats.chartData} title={chartTitle} />
 	</section>
 
 	<!-- Stats Grid -->
 	<section class="mb-6 grid grid-cols-2 gap-3">
-		<StatsCard label="Completion Rate" value="{$stats.completionRate}%" icon="📊" />
+		<StatsCard label="Completion Rate" value="{$periodStats.completionRate}%" icon="📊" />
 		<StatsCard label="Active Habits" value={String(activeHabits)} icon="📋" />
 		<StatsCard label="Total Streak Days" value={String(totalStreak)} icon="🔥" />
 		<StatsCard label="Longest Streak" value="{longestStreak} days" icon="🏆" />
