@@ -90,7 +90,7 @@ src/
 - ✅ Habit creation — daily, every-X-days, weekly, and multi-completion schedules
 - ✅ Streak tracking with partial completion support (preserves streak on busy days)
 - ✅ Milestone confetti at 7, 30, and 100 day streaks
-- ✅ Gonn — animated Rive mascot with emotional states, head tracking, proactive dialogue
+- ✅ Gonn — animated Rive mascot with emotional states, head tracking, and proactive dialogue up to 160 characters
 - ✅ `/chat` page — full-screen AI conversation powered by Claude Haiku via Supabase Edge Function
 - ✅ Offline-first — Dexie.js local DB syncs automatically with Supabase when online
 - ✅ Warm neutral design system — DM Sans + Fredoka, fire progress bar, sky/ground environment
