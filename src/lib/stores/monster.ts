@@ -200,7 +200,7 @@ export function registerMonsterSetDialogue(fn: SetDialogueFn | null) {
  * The bubble stays visible until the user dismisses it or a new message replaces it.
  * The Rive VM path (_setDialogueFn) is kept as dead code for forward-compat.
  *
- * @param text        - Text to display (max ~80 chars)
+ * @param text        - Text to display (max ~160 chars)
  * @param charDelayMs - Milliseconds between each character (default: 30)
  */
 export function monsterSetDialogue(text: string, charDelayMs?: number) {

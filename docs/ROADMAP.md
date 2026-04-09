@@ -4,16 +4,16 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 
 ## Overview
 
-| Phase | Name          | Description                                        | Status      |
-| ----- | ------------- | -------------------------------------------------- | ----------- |
-| 1     | UI Foundation | SvelteKit, components, routing, mock data          | ✅ Complete |
-| 2     | Data Layer    | Dexie.js, local persistence, CRUD operations       | ✅ Complete |
-| 3     | Backend       | Supabase, auth, database, Edge Functions           | ✅ Complete |
-| 4     | Sync          | Offline queue, conflict resolution, reconnect      | ✅ Complete |
+| Phase | Name               | Description                                           | Status      |
+| ----- | ------------------ | ----------------------------------------------------- | ----------- |
+| 1     | UI Foundation      | SvelteKit, components, routing, mock data             | ✅ Complete |
+| 2     | Data Layer         | Dexie.js, local persistence, CRUD operations          | ✅ Complete |
+| 3     | Backend            | Supabase, auth, database, Edge Functions              | ✅ Complete |
+| 4     | Sync               | Offline queue, conflict resolution, reconnect         | ✅ Complete |
 | 5     | Rule Engine & Rive | Rule engine, mascot stores, Rive bridge, Dexie schema | 📋 Planned  |
-| 6     | PWA           | Service worker, push notifications, installability | ✅ Complete |
-| 7     | AI Dialogue   | LLM proxy, memory system, speech bubble, Motion One | 📋 Planned  |
-| 8     | Chatbot       | Interactive multi-turn chat with Gonn, streaming SSE | 📋 Planned  |
+| 6     | PWA                | Service worker, push notifications, installability    | ✅ Complete |
+| 7     | AI Dialogue        | LLM proxy, memory system, speech bubble, Motion One   | 📋 Planned  |
+| 8     | Chatbot            | Interactive multi-turn chat with Gonn, streaming SSE  | 📋 Planned  |
 
 ---
 
@@ -144,14 +144,14 @@ src/lib/sync/
 
 **Goal:** Implement the deterministic rule engine, Gonn state management, and Rive animation bridge. This phase makes Gonn react to habit data in real-time without any LLM dependency.
 
-| Task                              | Status | Dependencies               | Effort |
-| --------------------------------- | ------ | -------------------------- | ------ |
-| Create type definitions           | 📋     | Phase 2 complete           | S      |
-| Implement rule engine core        | 📋     | Types defined              | M      |
-| Update Dexie schema               | 📋     | Types defined              | S      |
-| Create Gonn store (Dexie-backed)  | 📋     | Schema updated             | M      |
-| Create Mascot derived store       | 📋     | Rule engine, Gonn store    | M      |
-| Extend Monster.svelte (Rive)      | 📋     | Mascot store, .riv asset   | L      |
+| Task                             | Status | Dependencies             | Effort |
+| -------------------------------- | ------ | ------------------------ | ------ |
+| Create type definitions          | 📋     | Phase 2 complete         | S      |
+| Implement rule engine core       | 📋     | Types defined            | M      |
+| Update Dexie schema              | 📋     | Types defined            | S      |
+| Create Gonn store (Dexie-backed) | 📋     | Schema updated           | M      |
+| Create Mascot derived store      | 📋     | Rule engine, Gonn store  | M      |
+| Extend Monster.svelte (Rive)     | 📋     | Mascot store, .riv asset | L      |
 
 **Key Files to Create/Modify:**
 
@@ -178,13 +178,13 @@ static/animations/
 
 **Evolution Stages (Satiation-Based, with Hysteresis):**
 
-| Stage | Enter At | Exit At | Form |
-|-------|----------|---------|------|
-| 1 — Egg | default | — | Small, round, mostly face/eyes |
-| 2 — Hatchling | satiation ≥ 10 | satiation < 6 | Eyes open, wiggling |
-| 3 — Juvenile | satiation ≥ 25 | satiation < 18 | Limbs visible, teeth emerge |
-| 4 — Adult | satiation ≥ 50 | satiation < 40 | Full body, horns, attitude |
-| 5 — Apex | satiation ≥ 80 | satiation < 70 | Full kaiju, tail, special FX |
+| Stage         | Enter At       | Exit At        | Form                           |
+| ------------- | -------------- | -------------- | ------------------------------ |
+| 1 — Egg       | default        | —              | Small, round, mostly face/eyes |
+| 2 — Hatchling | satiation ≥ 10 | satiation < 6  | Eyes open, wiggling            |
+| 3 — Juvenile  | satiation ≥ 25 | satiation < 18 | Limbs visible, teeth emerge    |
+| 4 — Adult     | satiation ≥ 50 | satiation < 40 | Full body, horns, attitude     |
+| 5 — Apex      | satiation ≥ 80 | satiation < 70 | Full kaiju, tail, special FX   |
 
 MVP targets stages 1–3 only.
 
@@ -199,6 +199,7 @@ MVP targets stages 1–3 only.
 - [ ] Monster.svelte falls back to emoji if Rive fails
 
 **Reference:**
+
 - `docs/RULE_ENGINE_SPEC.md` — authoritative formulas
 - `docs/features/ai-implementation-spec.md` — implementation guide
 
@@ -229,12 +230,12 @@ MVP targets stages 1–3 only.
 
 **Goal:** Add LLM-powered dialogue for Gonn via Supabase Edge Functions, with a memory system and speech bubble UI.
 
-| Task                              | Status | Dependencies               | Effort |
-| --------------------------------- | ------ | -------------------------- | ------ |
-| Implement memory system           | 📋     | Phase 5 Dexie schema       | M      |
-| Create Supabase Edge Function     | 📋     | Supabase project           | M      |
-| Implement dialogue pipeline       | 📋     | Edge function, memory      | M      |
-| Create SpeechBubble.svelte        | 📋     | Dialogue pipeline          | M      |
+| Task                          | Status | Dependencies          | Effort |
+| ----------------------------- | ------ | --------------------- | ------ |
+| Implement memory system       | 📋     | Phase 5 Dexie schema  | M      |
+| Create Supabase Edge Function | 📋     | Supabase project      | M      |
+| Implement dialogue pipeline   | 📋     | Edge function, memory | M      |
+| Create SpeechBubble.svelte    | 📋     | Dialogue pipeline     | M      |
 
 **Key Files Created:**
 
@@ -258,10 +259,11 @@ supabase/functions/
 - [ ] Memory system stores permanent + short-term memories
 - [ ] SpeechBubble shows typewriter text with auto-dismiss
 - [ ] Offline: animations + rule engine work fully, dialogue hidden
-- [ ] Max 80 characters per dialogue line
+- [ ] Max 160 characters per dialogue line
 - [ ] Gonn personality consistent across evolution stages
 
 **Reference:**
+
 - `docs/features/ai-implementation-spec.md` — full implementation guide
 
 ---
@@ -272,13 +274,13 @@ supabase/functions/
 
 **Dependencies:** Phase 5 (Rule Engine & Rive) and Phase 7 (AI Dialogue) must be complete.
 
-| Task                              | Status | Dependencies                       | Effort |
-| --------------------------------- | ------ | ---------------------------------- | ------ |
-| Dexie schema: `chatSessions`      | 📋     | Phase 5 Dexie schema               | S      |
-| Chat history utility              | 📋     | Types defined                      | S      |
-| `gonn-chat` Edge Function         | 📋     | Phase 7 Edge Function pattern      | M      |
-| Chat store (Svelte 5 runes)       | 📋     | History util, Edge Function        | M      |
-| GonnChat.svelte component         | 📋     | Chat store                         | M      |
+| Task                         | Status | Dependencies                  | Effort |
+| ---------------------------- | ------ | ----------------------------- | ------ |
+| Dexie schema: `chatSessions` | 📋     | Phase 5 Dexie schema          | S      |
+| Chat history utility         | 📋     | Types defined                 | S      |
+| `gonn-chat` Edge Function    | 📋     | Phase 7 Edge Function pattern | M      |
+| Chat store (Svelte 5 runes)  | 📋     | History util, Edge Function   | M      |
+| GonnChat.svelte component    | 📋     | Chat store                    | M      |
 
 **Key Files to Create/Modify:**
 
@@ -314,6 +316,7 @@ supabase/functions/
 - [ ] Graceful offline handling: error message shown, no crash
 
 **Reference:**
+
 - `docs/features/chatbot-spec.md` — full implementation spec
 
 ---

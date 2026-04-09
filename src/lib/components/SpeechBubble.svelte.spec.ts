@@ -86,6 +86,19 @@ describe('SpeechBubble', () => {
 		expect(readBubbleText()).toBe('Second');
 	});
 
+	it('renders longer dialogue in the widened bubble layout', async () => {
+		render(SpeechBubble);
+		const longText =
+			'Morning, champ. Your Hungry Hundreds Post is screaming for attention at day 35-drop the excuses and feed that streak before it bites back.';
+		showDialogue(longText, { charDelayMs: 1 });
+
+		await waitForValue(readBubbleText, longText);
+		const bubble = document.querySelector('[data-testid="speech-bubble"]') as HTMLDivElement | null;
+		expect(bubble).not.toBeNull();
+		expect(bubble?.className).toContain('max-w-xl');
+		expect(readBubbleText()).toBe(longText);
+	});
+
 	it('dismisses the bubble when clicked', async () => {
 		render(SpeechBubble);
 		showDialogue('Tap to dismiss', { charDelayMs: 1 });

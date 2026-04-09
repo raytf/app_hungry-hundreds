@@ -130,13 +130,13 @@
 {#if dialogueStore.visible}
 	<!-- Fixed zone: sits above Gonn (z-[15]) -->
 	<div
-		class="speech-bubble-zone pointer-events-none fixed inset-x-0 z-15 flex justify-center"
+		class="speech-bubble-zone pointer-events-none fixed inset-x-0 z-15 flex justify-center px-3 sm:px-4"
 		style="bottom: calc(var(--gonn-size) + 8px)"
 		in:scale={{ start: 0.9, duration: reducedMotion ? 0 : BUBBLE_IN_MS, easing: cubicOut }}
 		out:fade={{ duration: reducedMotion ? 0 : BUBBLE_OUT_MS }}
 	>
 		<div
-			class="speech-bubble pointer-events-auto relative max-w-sm cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
+			class="speech-bubble pointer-events-auto relative w-full max-w-xl cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
 			style="background: var(--color-surface); border: 1.5px solid var(--color-edge);"
 			onclick={dismiss}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && dismiss()}
@@ -149,7 +149,7 @@
 				<!-- Screen reader announcement -->
 				<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
 				<p
-					class="m-0 font-body"
+					class="m-0 font-body break-words"
 					style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
 					data-testid="speech-bubble-text"
 				>

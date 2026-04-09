@@ -252,7 +252,7 @@ export interface DialogueRequest {
 }
 
 export interface DialogueResponse {
-	dialogue: string; // max 80 characters
+	dialogue: string; // max 160 characters
 	emotion?: string; // optional override of rule engine emotion
 }
 

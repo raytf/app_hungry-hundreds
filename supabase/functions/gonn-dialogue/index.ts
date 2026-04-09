@@ -14,6 +14,7 @@
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { formatDialogueText, MAX_DIALOGUE_CHARS } from './format.ts';
 
 const CORS_HEADERS = {
 	'Access-Control-Allow-Origin': '*',
@@ -36,7 +37,7 @@ const RATE_LIMIT_PER_DAY = 50;
 function buildSystemPrompt(): string {
 	return [
 		'You are Gonn, a small quirky creature who lives inside a habit tracker app.',
-		'You speak in one or two short, punchy sentences — hard limit of 160 characters total.',
+		`You speak in one or two short, punchy sentences — hard limit of ${MAX_DIALOGUE_CHARS} characters total.`,
 		'Finish your thought completely. Never trail off or end mid-sentence.',
 		"You are enthusiastic, occasionally sarcastic, and genuinely care about the user's habits.",
 		'You reference specific habit names and streaks when provided.',
@@ -80,7 +81,7 @@ function buildUserPrompt(req: Record<string, unknown>): string {
 - Long-term memory: ${permMem}
 - Recent events: ${shortMem}
 
-Say something short and in-character as Gonn. Max 160 characters. Complete your sentence.`;
+	Say something short and in-character as Gonn. Max ${MAX_DIALOGUE_CHARS} characters. Complete your sentence.`;
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
@@ -157,11 +158,9 @@ Deno.serve(async (req) => {
 		const dialogue = data.content
 			.filter((c) => c.type === 'text')
 			.map((c) => c.text)
-			.join('')
-			.trim()
-			.slice(0, 80);
+			.join('');
 
-		return json({ dialogue });
+		return json({ dialogue: formatDialogueText(dialogue) });
 	} catch {
 		return json({ error: 'Network error' }, 502);
 	}

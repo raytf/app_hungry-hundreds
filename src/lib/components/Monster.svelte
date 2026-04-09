@@ -322,7 +322,7 @@
 	 * No-ops if the Rive view model dialogue properties are not available
 	 * (e.g., Rive failed to load or the artboard has no speech bubble).
 	 *
-	 * @param text        - Dialogue string (max ~80 chars)
+	 * @param text        - Dialogue string (max ~160 chars)
 	 * @param charDelayMs - Milliseconds between each typed character (default: 30)
 	 */
 	export function setDialogue(text: string, charDelayMs = 30): void {
