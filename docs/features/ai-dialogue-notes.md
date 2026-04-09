@@ -2,7 +2,7 @@
 
 > Companion to `ai-implementation-spec.md`. Captures architectural decisions and refinements made during planning.
 
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 ---
 
@@ -195,88 +195,38 @@ Reduce unnecessary calls before they reach the edge function:
 
 ## 4. Per-Habit Context for habit-complete Dialogue
 
-> **Status: Planned.** Current code sends all habits as context but does not identify which one was just completed to the LLM or cache.
+> **Status: Implemented.** `DialogueRequest` now carries `completedHabitName`, and both caching and client throttling are keyed with that context.
 
-### Problem
+### Implemented behaviour
 
-When the user completes a habit, `triggerGonnDialogue('habit-complete', habitId)` fires. The `habitId` is used to write short-term memory (`writeCompletionMemory`) but is **not** forwarded to the `DialogueRequest`. This means:
+When the user completes a habit, `triggerGonnDialogue('habit-complete', habitId)` resolves the completed habit from the current snapshot and forwards its name in `completedHabitName`.
 
-1. The LLM sees all habits equally and cannot know which one was just ticked off
-2. The cache key (`hashContext`) does not include the completed habit, so completing different habits in the same session returns the same cached response
-3. The global 12 s throttle (`MIN_CALL_INTERVAL_MS`) means completing a second habit within 12 s silently returns `null`
+That value now affects both:
 
-### Design
+1. **LLM context** — the edge payload can tell which habit was completed
+2. **Cache keys** — `getDialogueCacheKey()` distinguishes `habit-complete:Morning Run` from `habit-complete:Evening Walk`
+3. **Client throttle keys** — `getDialogueThrottleKey()` throttles repeated calls for the same completed habit without blocking other interaction keys
 
-#### 4.1 Add `completedHabitName` to `DialogueRequest`
+### Shared production helpers
 
-In `src/lib/types/mascot.ts`, add an optional field to `DialogueRequest`:
+`src/lib/ai/dialogue.ts` now exports the helpers used by both production and the monster debug page:
 
-```typescript
-export interface DialogueRequest {
-  // ... existing fields ...
-  completedHabitName?: string; // populated for 'habit-complete' events
-}
-```
+- `getDialogueCacheKey(req)`
+- `getDialogueThrottleKey(req)`
+- `getDialogueLastCallAt(req)`
+- `getDialogueThrottleRemainingMs(req, now?)`
+- `DIALOGUE_MIN_CALL_INTERVAL_MS`
 
-In `triggerGonnDialogue()` (`src/lib/ai/dialogue.ts`), resolve the name from the snapshot:
+This keeps the debug UI aligned with the real cache/throttle implementation instead of re-implementing it locally.
 
-```typescript
-const completedSnap = habitSnapshots.find((s) => s.habitId === completedHabitId);
+### Current throttle model
 
-const request: DialogueRequest = {
-  // ... existing fields ...
-  completedHabitName: completedSnap?.habitName,
-};
-```
+The client-side throttle is no longer a single global timestamp. It uses a per-key `Map<string, number>` where the key is:
 
-The edge function system prompt already receives the full `DialogueRequest`; adding this field gives the LLM a clear signal ("the user just completed *Morning Run*") without requiring prompt changes beyond including the field name in the payload.
+- `habit-complete:<habitName>` for habit completion events with `completedHabitName`
+- `interactionType` for all other dialogue calls
 
-#### 4.2 Include `completedHabitName` in the cache key
-
-In `hashContext()` (`src/lib/ai/dialogue.ts`):
-
-```typescript
-function hashContext(req: DialogueRequest): string {
-  const key = [
-    req.interactionType,
-    req.completedHabitName ?? '',      // ← add this
-    req.mascotState.primaryEmotion,
-    req.timeContext.hourOfDay,
-    req.mascotState.evolutionStage,
-    req.habits.map((h) => h.streakLength).join(','),
-  ].join('-');
-  return btoa(key).slice(0, 32);
-}
-```
-
-This ensures completing *Morning Run* vs *Evening Walk* within the same hour produces distinct cache entries.
-
-#### 4.3 Replace global throttle with per-habit throttling
-
-The current throttle is a single module-level `lastCallAt` timestamp. Replace it with a `Map<string, number>` keyed on habit ID (falling back to `interactionType` for non-habit events):
-
-```typescript
-// Before
-let lastCallAt = 0;
-if (now - lastCallAt < MIN_CALL_INTERVAL_MS) return null;
-
-// After
-const throttleMap = new Map<string, number>();
-
-function getThrottleKey(req: DialogueRequest): string {
-  return req.completedHabitName
-    ? `habit-complete:${req.completedHabitName}`
-    : req.interactionType;
-}
-
-const key = getThrottleKey(request);
-const lastAt = throttleMap.get(key) ?? 0;
-if (now - lastAt < MIN_CALL_INTERVAL_MS) return null;
-// ... on success:
-throttleMap.set(key, Date.now());
-```
-
-This allows two different habits completed in quick succession to both reach the LLM, while still throttling repeated taps on the *same* habit.
+This means two different habits can both trigger dialogue within the same 12-second window, while repeated calls for the same key are still blocked.
 
 ### Acceptance Criteria
 
@@ -288,24 +238,25 @@ This allows two different habits completed in quick succession to both reach the
 
 ### Files Changed
 
-| File | Change |
-|------|--------|
-| `src/lib/types/mascot.ts` | Add `completedHabitName?: string` to `DialogueRequest` |
-| `src/lib/ai/dialogue.ts` | Update `hashContext()`, replace `lastCallAt` with `throttleMap`, populate `completedHabitName` in `triggerGonnDialogue()` |
+| File                              | Change                                                                                                                            |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/types/mascot.ts`         | Add `completedHabitName?: string` to `DialogueRequest`                                                                            |
+| `src/lib/ai/dialogue.ts`          | Export cache/throttle helpers, key cache + throttle per completed habit, populate `completedHabitName` in `triggerGonnDialogue()` |
+| `src/routes/monster/+page.svelte` | Reuse production cache/throttle helpers in the debug UI                                                                           |
 
 ---
 
 ## Summary of Deviations from Original Spec
 
-| Topic                  | Original Spec                                    | Actual Implementation                                                               |
-| ---------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Speech bubble          | Rive artboard VM properties                      | `SpeechBubble.svelte` HTML/CSS overlay + `dialogueStore`; Rive path is dead code   |
-| Bubble visibility      | `dialogueVisible` boolean on CharacterVM         | `dialogueStore.visible` reactive state; auto-hide removed, user-dismisses           |
-| Typewriter effect      | JS `setInterval` updating Rive VM string prop    | JS `setTimeout` chain updating Svelte `$state` + 150 ms fade between messages       |
-| Production triggers    | Not specified                                    | `habit-complete` (HabitCardCompact) + `app-open` (home page mount, 1.5 s delay)    |
-| Per-habit context      | Not specified                                    | Planned — §4 above                                                                  |
-| Edge function CORS     | Not addressed                                    | Required — `OPTIONS` preflight handler added                                        |
-| Edge function auth     | Not addressed                                    | JWT validation required                                                             |
-| Rate limiting          | Not addressed                                    | Per-user daily cap (50) + per-minute cap (5) via `dialogue_usage` table             |
-| Client throttling      | Not addressed                                    | Global 12 s `lastCallAt`; to be replaced with per-habit `throttleMap` (§4.3)       |
-| Function URL           | `/functions/gonn-dialogue`                       | `https://<project-ref>.supabase.co/functions/v1/gonn-dialogue`                     |
+| Topic               | Original Spec                                 | Actual Implementation                                                             |
+| ------------------- | --------------------------------------------- | --------------------------------------------------------------------------------- |
+| Speech bubble       | Rive artboard VM properties                   | `SpeechBubble.svelte` HTML/CSS overlay + `dialogueStore`; Rive path is dead code  |
+| Bubble visibility   | `dialogueVisible` boolean on CharacterVM      | `dialogueStore.visible` reactive state; auto-hide removed, user-dismisses         |
+| Typewriter effect   | JS `setInterval` updating Rive VM string prop | JS `setTimeout` chain updating Svelte `$state` + 150 ms fade between messages     |
+| Production triggers | Not specified                                 | `habit-complete` (HabitCardCompact) + `app-open` (home page mount, 1.5 s delay)   |
+| Per-habit context   | Not specified                                 | `completedHabitName` included in request + cache/throttle keys                    |
+| Edge function CORS  | Not addressed                                 | Required — `OPTIONS` preflight handler added                                      |
+| Edge function auth  | Not addressed                                 | JWT validation required                                                           |
+| Rate limiting       | Not addressed                                 | Per-user daily cap (50) + per-minute cap (5) via `dialogue_usage` table           |
+| Client throttling   | Not addressed                                 | 12 s per-key throttle via `Map<string, number>` keyed by completed habit or event |
+| Function URL        | `/functions/gonn-dialogue`                    | `https://<project-ref>.supabase.co/functions/v1/gonn-dialogue`                    |

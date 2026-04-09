@@ -1,16 +1,37 @@
 <script lang="ts">
+	import { cubicOut } from 'svelte/easing';
+	import { fade, scale } from 'svelte/transition';
 	import { dialogueStore, hideDialogue } from '$lib/stores/dialogue.svelte';
+
+	const MESSAGE_FADE_MS = 150;
+	const BUBBLE_IN_MS = 250;
+	const BUBBLE_OUT_MS = 200;
 
 	// Typewriter state
 	let displayText = $state('');
+	let contentHidden = $state(false);
 	let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
+	let replaceTimer: ReturnType<typeof setTimeout> | null = null;
 	let reducedMotion = $state(false);
+	let activeText = '';
 
-	function clearTimer() {
+	function clearTypewriterTimer() {
 		if (typewriterTimer !== null) {
 			clearTimeout(typewriterTimer);
 			typewriterTimer = null;
 		}
+	}
+
+	function clearReplaceTimer() {
+		if (replaceTimer !== null) {
+			clearTimeout(replaceTimer);
+			replaceTimer = null;
+		}
+	}
+
+	function clearTimers() {
+		clearTypewriterTimer();
+		clearReplaceTimer();
 	}
 
 	function beginTyping(text: string, charDelayMs: number) {
@@ -20,20 +41,17 @@
 			displayText = text.slice(0, i);
 			if (i < text.length) {
 				typewriterTimer = setTimeout(typeNext, charDelayMs);
+			} else {
+				typewriterTimer = null;
 			}
 		}
 		typewriterTimer = setTimeout(typeNext, charDelayMs);
 	}
 
 	function startTypewriter(text: string, charDelayMs: number) {
-		// Debug: log every time we (re)start. If you see this twice in quick succession
-		// with different texts, two concurrent triggerGonnDialogue() calls are racing.
-		console.debug('[SpeechBubble] startTypewriter', {
-			incoming: text.slice(0, 40),
-			interrupted: displayText.length > 0 ? displayText.slice(0, 20) : null
-		});
-
-		clearTimer();
+		clearTimers();
+		activeText = text;
+		contentHidden = false;
 		displayText = ''; // immediately clear any partially-typed text
 
 		if (reducedMotion) {
@@ -44,17 +62,50 @@
 		beginTyping(text, charDelayMs);
 	}
 
+	function replaceMessage(text: string, charDelayMs: number) {
+		clearTimers();
+
+		if (reducedMotion) {
+			activeText = text;
+			contentHidden = false;
+			displayText = text;
+			return;
+		}
+
+		contentHidden = true;
+		replaceTimer = setTimeout(() => {
+			replaceTimer = null;
+			activeText = text;
+			displayText = '';
+			contentHidden = false;
+			beginTyping(text, charDelayMs);
+		}, MESSAGE_FADE_MS);
+	}
+
 	// Start/reset typewriter whenever the store text or visibility changes.
-	// NOTE: displayText is never read here (only written), so it is NOT a tracked
-	// dependency — the effect won't re-fire as each character is typed.
+	// NOTE: displayText must NOT be read anywhere inside this effect (directly or via
+	// called functions) — doing so would make it a tracked dependency and cause the
+	// effect to re-fire on every typed character, creating an infinite loop.
 	$effect(() => {
 		const { text, visible, charDelayMs } = dialogueStore;
-		console.debug('[SpeechBubble] $effect', { text: text?.slice(0, 40), visible });
 		if (visible && text) {
-			startTypewriter(text, charDelayMs);
+			if (reducedMotion) {
+				startTypewriter(text, charDelayMs);
+				return;
+			}
+
+			if (!activeText) {
+				startTypewriter(text, charDelayMs);
+				return;
+			}
+
+			if (text !== activeText) {
+				replaceMessage(text, charDelayMs);
+			}
 		} else if (!visible) {
-			clearTimer();
-			displayText = '';
+			clearTimers();
+			activeText = '';
+			contentHidden = false;
 		}
 	});
 
@@ -69,8 +120,9 @@
 	});
 
 	function dismiss() {
-		clearTimer();
-		displayText = '';
+		clearTimers();
+		activeText = '';
+		contentHidden = false;
 		hideDialogue();
 	}
 </script>
@@ -78,39 +130,45 @@
 {#if dialogueStore.visible}
 	<!-- Fixed zone: sits above Gonn (z-[15]) -->
 	<div
-		class="speech-bubble-zone pointer-events-none fixed inset-x-0 z-[15] flex justify-center"
+		class="speech-bubble-zone pointer-events-none fixed inset-x-0 z-15 flex justify-center px-3 sm:px-4"
 		style="bottom: calc(var(--gonn-size) + 8px)"
+		in:scale={{ start: 0.9, duration: reducedMotion ? 0 : BUBBLE_IN_MS, easing: cubicOut }}
+		out:fade={{ duration: reducedMotion ? 0 : BUBBLE_OUT_MS }}
 	>
 		<div
-			class="speech-bubble pointer-events-auto relative max-w-sm cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
+			class="speech-bubble pointer-events-auto relative w-full max-w-xl cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
 			style="background: var(--color-surface); border: 1.5px solid var(--color-edge);"
 			onclick={dismiss}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && dismiss()}
 			role="button"
 			tabindex="0"
 			aria-label="Gonn says: {dialogueStore.text}. Press to dismiss."
+			data-testid="speech-bubble"
 		>
-			<!-- Screen reader announcement -->
-			<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
-			<p
-				class="m-0 font-body"
-				style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
-			>
-				{displayText}
-			</p>
+			<div class="speech-content" class:is-hidden={contentHidden}>
+				<!-- Screen reader announcement -->
+				<span role="status" aria-live="polite" class="sr-only">{dialogueStore.text}</span>
+				<p
+					class="m-0 font-body break-words"
+					style="font-size: var(--text-gonn-speech); line-height: var(--text-gonn-speech--line-height); font-weight: var(--text-gonn-speech--font-weight); color: var(--color-content);"
+					data-testid="speech-bubble-text"
+				>
+					{displayText}
+				</p>
 
-			<!-- Reply affordance: navigates to /chat without dismissing bubble -->
-			<a
-				href="/chat"
-				class="mt-1 block text-right text-body-sm font-medium text-accent-warm"
-				onclick={(e) => e.stopPropagation()}
-			>
-				Reply →
-			</a>
+				<!-- Reply affordance: navigates to /chat without dismissing bubble -->
+				<a
+					href="/chat"
+					class="mt-1 block text-right text-body-sm font-medium text-accent-warm"
+					onclick={(e) => e.stopPropagation()}
+				>
+					Reply →
+				</a>
+			</div>
 
 			<!-- Triangle tail pointing down toward Gonn -->
 			<span
-				class="absolute -bottom-[9px] left-1/2 -translate-x-1/2"
+				class="absolute -bottom-2.25 left-1/2 -translate-x-1/2"
 				style="
 					width: 0; height: 0;
 					border-left: 9px solid transparent;
@@ -120,7 +178,7 @@
 				aria-hidden="true"
 			></span>
 			<span
-				class="absolute -bottom-[7px] left-1/2 -translate-x-1/2"
+				class="absolute -bottom-1.75 left-1/2 -translate-x-1/2"
 				style="
 					width: 0; height: 0;
 					border-left: 8px solid transparent;
@@ -135,27 +193,20 @@
 
 <style>
 	.speech-bubble-zone {
-		animation: bubble-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+		will-change: transform, opacity;
 	}
 
-	.speech-bubble-zone:not(.speech-bubble-zone) {
-		animation: bubble-out 200ms ease-in both;
+	.speech-content {
+		transition: opacity 150ms ease;
 	}
 
-	@keyframes bubble-in {
-		from {
-			opacity: 0;
-			transform: scale(0.9) translateY(4px);
-		}
-		to {
-			opacity: 1;
-			transform: scale(1) translateY(0);
-		}
+	.speech-content.is-hidden {
+		opacity: 0;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.speech-bubble-zone {
-			animation: none;
+		.speech-content {
+			transition: none;
 		}
 	}
 </style>

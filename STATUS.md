@@ -7,17 +7,17 @@
 
 ## Quick Status
 
-| Phase   | Name                  | Status         | Progress |
-| ------- | --------------------- | -------------- | -------- |
-| 1       | UI Foundation         | ✅ Complete    | 5/5      |
-| 2       | Data Layer            | ✅ Complete    | 5/5      |
-| 3       | Backend               | ✅ Complete    | 5/5      |
-| 4       | Sync                  | ✅ Complete    | 4/4      |
-| 5       | Rule Engine & Rive    | ✅ Complete    | 6/6      |
-| 6       | PWA                   | ✅ Complete    | 5/5      |
-| 7       | AI Dialogue           | ✅ Complete    | 5/5      |
-| 8       | Chatbot               | ✅ Complete    | 5/5      |
-| 9       | Design System         | ✅ Complete    | 8/8      |
+| Phase | Name               | Status      | Progress |
+| ----- | ------------------ | ----------- | -------- |
+| 1     | UI Foundation      | ✅ Complete | 5/5      |
+| 2     | Data Layer         | ✅ Complete | 5/5      |
+| 3     | Backend            | ✅ Complete | 5/5      |
+| 4     | Sync               | ✅ Complete | 4/4      |
+| 5     | Rule Engine & Rive | ✅ Complete | 6/6      |
+| 6     | PWA                | ✅ Complete | 5/5      |
+| 7     | AI Dialogue        | ✅ Complete | 5/5      |
+| 8     | Chatbot            | ✅ Complete | 5/5      |
+| 9     | Design System      | ✅ Complete | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
 **Last Updated:** 2026-04-09
@@ -259,7 +259,8 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 6. ✅ **Speech bubble** - `SpeechBubble.svelte` + `dialogueStore` — HTML/CSS overlay, typewriter effect, `prefers-reduced-motion` support (Phase C of Design System). Speech bubble is Svelte-side, not in the Rive artboard.
 7. ✅ **Dialogue routing** - `monsterSetDialogue()` → `showDialogue()` → `dialogueStore` → `SpeechBubble`
 8. ✅ **Production triggers** - `triggerGonnDialogue()` in `dialogue.ts` fires on `habit-complete` (HabitCardCompact) and `app-open` (home page mount). Also writes short-term completion memory via `writeCompletionMemory()`.
-9. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
+9. ✅ **Long-response fix** - `gonn-dialogue` now formats responses to a 160-character cap without hard-cutting at 80, the client cache key is versioned to bypass truncated legacy entries, and `SpeechBubble.svelte` is widened for longer copy.
+10. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
 ### Phase 9: Design System ✅ Complete
 
@@ -275,6 +276,7 @@ All 8 phases complete. See `docs/features/design-guide-implementation.md` for fu
 8. ✅ **Phase H: Route Rename** — `/dashboard` → `/journey`; `BottomNav` removed; drawer nav is sole navigation
 
 **Additional work on this branch:**
+
 - `/chat` dedicated page replacing the GonnChat overlay (B+A tap zone + SpeechBubble "Reply →" + drawer nav)
 - Toast notifications wired to: habit created, habit deleted, manual sync, sync error
 - Weekly `frequencyTarget` bug fixed — falls back to `schedule.timesPerWeek`
@@ -310,13 +312,13 @@ All prerequisites met:
 
 These items are deliberately deferred. They are documented here so they are not forgotten.
 
-| Feature                     | Reason Deferred                              | Design Reference              |
-| --------------------------- | -------------------------------------------- | ----------------------------- |
-| **Onboarding redesign**     | Conversational flow (Gonn-driven, one screen per question) requires design system to be complete first | `docs/DESIGN_GUIDE.md` §6.2  |
-| **Evolution cutscene**      | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay | `docs/DESIGN_GUIDE.md` §6.5  |
-| **Dark mode**               | Deferred per design guide; requires token inversion system | `docs/DESIGN_GUIDE.md` §12   |
-| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP | `docs/DESIGN_GUIDE.md` §4.4  |
-| **Rive speech bubble** | ~~Rive artboard speech bubble~~ — resolved; speech bubble is Svelte-side HTML (`SpeechBubble.svelte`) | `docs/rive-spec.md` §6 |
+| Feature                         | Reason Deferred                                                                                        | Design Reference            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------- |
+| **Onboarding redesign**         | Conversational flow (Gonn-driven, one screen per question) requires design system to be complete first | `docs/DESIGN_GUIDE.md` §6.2 |
+| **Evolution cutscene**          | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay               | `docs/DESIGN_GUIDE.md` §6.5 |
+| **Dark mode**                   | Deferred per design guide; requires token inversion system                                             | `docs/DESIGN_GUIDE.md` §12  |
+| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP                                | `docs/DESIGN_GUIDE.md` §4.4 |
+| **Rive speech bubble**          | ~~Rive artboard speech bubble~~ — resolved; speech bubble is Svelte-side HTML (`SpeechBubble.svelte`)  | `docs/rive-spec.md` §6      |
 
 ---
 

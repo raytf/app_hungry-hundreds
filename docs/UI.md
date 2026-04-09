@@ -23,20 +23,20 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route               | Page          | Purpose                              | Status      |
-| ------------------- | ------------- | ------------------------------------ | ----------- |
-| `/`                 | Home          | Daily habit check-in with Gonn       | ✅ Complete |
-| `/chat`             | Chat          | Full-screen conversation with Gonn   | ✅ Complete |
-| `/habits`           | Habits List   | Detailed view of all habits          | ✅ Complete |
-| `/habits/new`       | New Habit     | Create a new habit (full-page form)  | ✅ Complete |
-| `/habits/[id]`      | Habit Detail  | View habit details and history       | ✅ Complete |
-| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit               | ✅ Complete |
-| `/journey`          | Journey       | Stats, history, and milestones       | ✅ Complete |
-| `/settings`         | Settings      | App preferences and sync             | ✅ Complete |
-| `/onboard`          | Onboarding    | First-time setup wizard              | 📋 Redesign deferred |
-| `/auth/signin`      | Sign In       | User authentication                  | ✅ Complete |
-| `/auth/signup`      | Sign Up       | Account creation                     | ✅ Complete |
-| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools     | ✅ Complete |
+| Route               | Page          | Purpose                             | Status               |
+| ------------------- | ------------- | ----------------------------------- | -------------------- |
+| `/`                 | Home          | Daily habit check-in with Gonn      | ✅ Complete          |
+| `/chat`             | Chat          | Full-screen conversation with Gonn  | ✅ Complete          |
+| `/habits`           | Habits List   | Detailed view of all habits         | ✅ Complete          |
+| `/habits/new`       | New Habit     | Create a new habit (full-page form) | ✅ Complete          |
+| `/habits/[id]`      | Habit Detail  | View habit details and history      | ✅ Complete          |
+| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit              | ✅ Complete          |
+| `/journey`          | Journey       | Stats, history, and milestones      | ✅ Complete          |
+| `/settings`         | Settings      | App preferences and sync            | ✅ Complete          |
+| `/onboard`          | Onboarding    | First-time setup wizard             | 📋 Redesign deferred |
+| `/auth/signin`      | Sign In       | User authentication                 | ✅ Complete          |
+| `/auth/signup`      | Sign Up       | Account creation                    | ✅ Complete          |
+| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools    | ✅ Complete          |
 
 ### Page Details
 
@@ -48,21 +48,21 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **Layout (target — Phase B/C/D of design system implementation):**
 
-| Zone | Height | Scrolls | z-index | Content |
-|---|---|---|---|---|
-| Top bar | 48px | No (fixed) | 30 | Hamburger, date `<time>`, sync dot |
-| Fire progress bar | 6px | No (fixed) | 25 | Today's completion gradient |
-| Habits scroll area | flex-1 | **Yes** | 20 | Habit cards on sky gradient |
-| Speech bubble zone | ~60–80px when visible | No (fixed) | 15 | Gonn's HTML dialogue bubble |
-| Rive canvas | `min(100vw, 430px)` square | No (fixed bottom) | 10 | Gonn on ground surface |
-| Ground / safe area | canvas height + safe area | No (fixed) | 5 | Ground gradient behind Gonn |
+| Zone               | Height                     | Scrolls           | z-index | Content                            |
+| ------------------ | -------------------------- | ----------------- | ------- | ---------------------------------- |
+| Top bar            | 48px                       | No (fixed)        | 30      | Hamburger, date `<time>`, sync dot |
+| Fire progress bar  | 6px                        | No (fixed)        | 25      | Today's completion gradient        |
+| Habits scroll area | flex-1                     | **Yes**           | 20      | Habit cards on sky gradient        |
+| Speech bubble zone | ~60–80px when visible      | No (fixed)        | 15      | Gonn's HTML dialogue bubble        |
+| Rive canvas        | `min(100vw, 430px)` square | No (fixed bottom) | 10      | Gonn on ground surface             |
+| Ground / safe area | canvas height + safe area  | No (fixed)        | 5       | Ground gradient behind Gonn        |
 
 **Components Used:**
 
 - `Header` (48px, date-only center, sync dot, hamburger → drawer)
 - `FireProgressBar` (consumes `todaysProgress.pct`)
 - `HabitCardCompact` (redesigned: circle indicator, success-soft tint)
-- `SpeechBubble` (Svelte HTML/CSS, fixed zone above Gonn; includes "Reply →" link to `/chat`)
+- `SpeechBubble` (Svelte HTML/CSS, fixed zone above Gonn; typewriter text + 150 ms fade-between-messages; includes "Reply →" link to `/chat`)
 - `MonsterDisplay` → `Monster.svelte` (Rive canvas, fixed bottom)
 
 **Key Features:**
@@ -76,6 +76,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - Real-time progress tracking
 - Quick add habit link
 - Monster head tracking — gaze follows cursor via `onmousemove` → `monsterLookAt()`
+- Dialogue bubble is persistent until dismissed; replacement messages fade out old content before retyping
 - **Chat triggers:** Transparent `<a href="/chat">` over Gonn's lower half (tap zone); "Reply →" link in SpeechBubble when visible
 
 ---
@@ -88,11 +89,11 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **Layout:**
 
-| Zone | Description |
-|---|---|
-| Header | Back arrow → `/`, title "Gonn", sync dot |
-| Message list | `flex-1`, `overflow-y-auto`; suggestion chips on empty state |
-| Input bar | `textarea` + send button; sticky to bottom; respects safe-area-inset-bottom |
+| Zone         | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| Header       | Back arrow → `/`, title "Gonn", sync dot                                    |
+| Message list | `flex-1`, `overflow-y-auto`; suggestion chips on empty state                |
+| Input bar    | `textarea` + send button; sticky to bottom; respects safe-area-inset-bottom |
 
 **Components Used:**
 
@@ -338,18 +339,18 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **AI Dialogue Panels (added Phase 7):**
 
-| Panel                | Purpose                                                                                                            |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Fire a call          | Choose interaction type, habit name, streak; calls `generateDialogue()` and shows LLM/cache badge                  |
-| Cache inspector      | Lists all `dialogueCache` Dexie entries with hash + timestamp; Refresh / Clear buttons                             |
-| Rate limit inspector | Shows last LLM call time, client 12 s throttle countdown, server 5/min · 50/day limits, link to edge function logs |
-| Rive typewriter test | Free-text input → `monsterSetDialogue()` → typewriter effect on Gonn's speech bubble                               |
+| Panel                | Purpose                                                                                                                                       |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fire a call          | Choose interaction type, habit name, streak; calls `generateDialogue()` with the production `DialogueRequest` shape and shows LLM/cache badge |
+| Cache inspector      | Lists all `dialogueCache` Dexie entries with hash + timestamp; Refresh / Clear buttons                                                        |
+| Rate limit inspector | Shows production throttle key, last successful call for that key, client 12 s countdown, cache key, server limits, and edge logs link         |
+| Rive typewriter test | Free-text input → `monsterSetDialogue()` → current HTML speech-bubble typewriter (legacy panel name kept)                                     |
 
 **Key Features:**
 
-- Interaction type selector: `tap`, `complete`, `danger_zone`, `ambient`, `evolve`
+- Interaction type selector: `tap`, `habit-complete`, `app-open`, `lapse-return`, `feast`, `evolution`, `regression`
 - Cache hit detection: badge shows `📦 cache` or `🤖 llm` for each response
-- Error display for throttle / auth failures
+- Error display for throttle / auth failures, including the active throttle key
 - `monsterSetDialogue` wired through store registration pattern (`registerMonsterSetDialogue`)
 
 ---
@@ -428,13 +429,13 @@ The hamburger drawer is the sole top-level navigation. Accessed via the `Menu` i
 
 **Nav Items:**
 
-| Route          | Label           | Icon (Lucide)   |
-| -------------- | --------------- | --------------- |
-| `/`            | Home            | `Home`          |
-| `/habits/new`  | Add Habit       | `Plus`          |
-| `/chat`        | Chat with Gonn  | `MessageCircle` |
-| `/journey`     | Journey         | `TrendingUp`    |
-| `/settings`    | Settings        | `Settings`      |
+| Route         | Label          | Icon (Lucide)   |
+| ------------- | -------------- | --------------- |
+| `/`           | Home           | `Home`          |
+| `/habits/new` | Add Habit      | `Plus`          |
+| `/chat`       | Chat with Gonn | `MessageCircle` |
+| `/journey`    | Journey        | `TrendingUp`    |
+| `/settings`   | Settings       | `Settings`      |
 
 **Features:**
 
@@ -791,7 +792,7 @@ Defined in `src/routes/layout.css`:
 **`.btn-primary`** - Primary action button
 
 ```css
-@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white transition-all hover:bg-hungry-600 active:bg-hungry-700 disabled:cursor-not-allowed disabled:opacity-50;
+@apply bg-hungry-500 hover:bg-hungry-600 active:bg-hungry-700 rounded-xl px-6 py-3 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50;
 ```
 
 **`.btn-secondary`** - Secondary action button
@@ -815,7 +816,7 @@ Defined in `src/routes/layout.css`:
 **`.input-field`** - Form input
 
 ```css
-@apply w-full rounded-xl border border-gray-200 px-4 py-3 transition-all focus:border-transparent focus:ring-2 focus:ring-hungry-500 focus:outline-none;
+@apply focus:ring-hungry-500 w-full rounded-xl border border-gray-200 px-4 py-3 transition-all focus:border-transparent focus:ring-2 focus:outline-none;
 ```
 
 ### Responsive Behavior
