@@ -247,6 +247,8 @@ export interface DialogueRequest {
 		hourOfDay: number;
 	};
 	interactionType: InteractionType;
+	/** Name of the habit just completed. Only set for 'habit-complete' events. */
+	completedHabitName?: string;
 }
 
 export interface DialogueResponse {

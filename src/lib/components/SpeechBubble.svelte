@@ -4,52 +4,57 @@
 	// Typewriter state
 	let displayText = $state('');
 	let typewriterTimer: ReturnType<typeof setTimeout> | null = null;
-	let hideTimer: ReturnType<typeof setTimeout> | null = null;
 	let reducedMotion = $state(false);
 
-	function clearTimers() {
+	function clearTimer() {
 		if (typewriterTimer !== null) {
 			clearTimeout(typewriterTimer);
 			typewriterTimer = null;
 		}
-		if (hideTimer !== null) {
-			clearTimeout(hideTimer);
-			hideTimer = null;
-		}
 	}
 
-	function startTypewriter(text: string, charDelayMs: number, displayMs: number) {
-		clearTimers();
-		displayText = '';
-
-		if (reducedMotion) {
-			// Respect prefers-reduced-motion: show full text instantly
-			displayText = text;
-			hideTimer = setTimeout(() => hideDialogue(), displayMs);
-			return;
-		}
-
+	function beginTyping(text: string, charDelayMs: number) {
 		let i = 0;
 		function typeNext() {
 			i++;
 			displayText = text.slice(0, i);
 			if (i < text.length) {
 				typewriterTimer = setTimeout(typeNext, charDelayMs);
-			} else {
-				// Typing done — start display timer
-				hideTimer = setTimeout(() => hideDialogue(), displayMs);
 			}
 		}
 		typewriterTimer = setTimeout(typeNext, charDelayMs);
 	}
 
-	// Start/reset typewriter whenever the store text changes while visible
+	function startTypewriter(text: string, charDelayMs: number) {
+		// Debug: log every time we (re)start. If you see this twice in quick succession
+		// with different texts, two concurrent triggerGonnDialogue() calls are racing.
+		console.debug('[SpeechBubble] startTypewriter', {
+			incoming: text.slice(0, 40),
+			interrupted: displayText.length > 0 ? displayText.slice(0, 20) : null
+		});
+
+		clearTimer();
+		displayText = ''; // immediately clear any partially-typed text
+
+		if (reducedMotion) {
+			displayText = text;
+			return;
+		}
+
+		beginTyping(text, charDelayMs);
+	}
+
+	// Start/reset typewriter whenever the store text or visibility changes.
+	// NOTE: displayText is never read here (only written), so it is NOT a tracked
+	// dependency — the effect won't re-fire as each character is typed.
 	$effect(() => {
-		const { text, visible, charDelayMs, displayMs } = dialogueStore;
+		const { text, visible, charDelayMs } = dialogueStore;
+		console.debug('[SpeechBubble] $effect', { text: text?.slice(0, 40), visible });
 		if (visible && text) {
-			startTypewriter(text, charDelayMs, displayMs);
+			startTypewriter(text, charDelayMs);
 		} else if (!visible) {
-			clearTimers();
+			clearTimer();
+			displayText = '';
 		}
 	});
 
@@ -64,7 +69,8 @@
 	});
 
 	function dismiss() {
-		clearTimers();
+		clearTimer();
+		displayText = '';
 		hideDialogue();
 	}
 </script>
@@ -76,7 +82,7 @@
 		style="bottom: calc(var(--gonn-size) + 8px)"
 	>
 		<div
-			class="speech-bubble pointer-events-auto relative max-w-xs cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
+			class="speech-bubble pointer-events-auto relative max-w-sm cursor-pointer rounded-2xl px-4 py-3 text-left shadow-bubble"
 			style="background: var(--color-surface); border: 1.5px solid var(--color-edge);"
 			onclick={dismiss}
 			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && dismiss()}

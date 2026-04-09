@@ -183,7 +183,7 @@ export function monsterSetExpression(expression: string) {
 // Monster Dialogue (Typewriter)
 // ============================================================================
 
-type SetDialogueFn = (text: string, charDelayMs?: number, displayMs?: number) => void;
+type SetDialogueFn = (text: string, charDelayMs?: number) => void;
 let _setDialogueFn: SetDialogueFn | null = null;
 
 /**
@@ -197,14 +197,14 @@ export function registerMonsterSetDialogue(fn: SetDialogueFn | null) {
 /**
  * Trigger Gonn's speech bubble typewriter effect.
  * Routes through the HTML SpeechBubble component via dialogueStore (Phase C).
+ * The bubble stays visible until the user dismisses it or a new message replaces it.
  * The Rive VM path (_setDialogueFn) is kept as dead code for forward-compat.
  *
  * @param text        - Text to display (max ~80 chars)
  * @param charDelayMs - Milliseconds between each character (default: 30)
- * @param displayMs   - How long to keep the bubble visible after typing (default: 3500)
  */
-export function monsterSetDialogue(text: string, charDelayMs?: number, displayMs?: number) {
-	showDialogue(text, { charDelayMs, displayMs });
+export function monsterSetDialogue(text: string, charDelayMs?: number) {
+	showDialogue(text, { charDelayMs });
 	// Rive VM path kept for forward-compat (currently no-op)
-	_setDialogueFn?.(text, charDelayMs, displayMs);
+	_setDialogueFn?.(text, charDelayMs);
 }
