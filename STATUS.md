@@ -20,7 +20,7 @@
 | 9       | Design System         | ✅ Complete    | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
-**Last Updated:** 2026-04-08
+**Last Updated:** 2026-04-09
 
 ---
 
@@ -113,6 +113,7 @@
 - ✅ **HabitSuggestions Component** - `src/lib/components/HabitSuggestions.svelte` displays suggested habits in empty state
 - ✅ **Suggested Habits Data** - `src/lib/data/suggestedHabits.ts` provides curated habit suggestions
 - ✅ **Empty State UX** - Users see suggested habits they can click to add, plus link to create custom habits
+- ✅ **Journey Period Filter** - `PeriodSelector` segment control (Yesterday / 7 Days / 30 Days / Custom) + `PeriodChart` replace the fixed weekly chart on `/journey`; `periodStats` store drives completion rate for the selected window
 
 ### Phase 6: PWA (Complete)
 
