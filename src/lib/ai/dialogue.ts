@@ -15,7 +15,12 @@ import { browser } from '$app/environment';
 import { get } from 'svelte/store';
 import { db } from '$lib/db/db';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from '$env/static/public';
-import type { DialogueRequest, DialogueResponse, InteractionType, TimeOfDay } from '$lib/types/mascot';
+import type {
+	DialogueRequest,
+	DialogueResponse,
+	InteractionType,
+	TimeOfDay
+} from '$lib/types/mascot';
 import { supabase } from '$lib/supabase/client';
 import { mascotState } from '$lib/stores/mascot';
 import { gonnState } from '$lib/stores/gonn';
@@ -37,13 +42,23 @@ import { getMemoryContext, writeCompletionMemory } from '$lib/ai/memory';
 const throttleMap = new Map<string, number>();
 
 /** Minimum ms between calls for the same throttle key (≈5 calls/min server-side) */
-const MIN_CALL_INTERVAL_MS = 12_000;
+export const DIALOGUE_MIN_CALL_INTERVAL_MS = 12_000;
 
 /** Derive a stable throttle key from the request */
-function getThrottleKey(req: DialogueRequest): string {
-	return req.completedHabitName
-		? `habit-complete:${req.completedHabitName}`
-		: req.interactionType;
+export function getDialogueThrottleKey(req: DialogueRequest): string {
+	return req.completedHabitName ? `habit-complete:${req.completedHabitName}` : req.interactionType;
+}
+
+/** Return the last successful client-side call time for the request's throttle key. */
+export function getDialogueLastCallAt(req: DialogueRequest): number | null {
+	return throttleMap.get(getDialogueThrottleKey(req)) ?? null;
+}
+
+/** Return remaining client-side throttle time in ms for the request's throttle key. */
+export function getDialogueThrottleRemainingMs(req: DialogueRequest, now = Date.now()): number {
+	const lastCalledAt = getDialogueLastCallAt(req);
+	if (lastCalledAt === null) return 0;
+	return Math.max(0, DIALOGUE_MIN_CALL_INTERVAL_MS - (now - lastCalledAt));
 }
 
 // ============================================================================
@@ -70,7 +85,7 @@ export function getTimeContext(): DialogueRequest['timeContext'] {
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 /** Generate a stable cache key from the request's key parameters */
-function hashContext(req: DialogueRequest): string {
+export function getDialogueCacheKey(req: DialogueRequest): string {
 	const key = [
 		req.interactionType,
 		req.completedHabitName ?? '',
@@ -123,11 +138,11 @@ export async function generateDialogue(request: DialogueRequest): Promise<Dialog
 
 	// 1. Per-key client-side throttle
 	const now = Date.now();
-	const throttleKey = getThrottleKey(request);
-	if (now - (throttleMap.get(throttleKey) ?? 0) < MIN_CALL_INTERVAL_MS) return null;
+	const throttleKey = getDialogueThrottleKey(request);
+	if (now - (throttleMap.get(throttleKey) ?? 0) < DIALOGUE_MIN_CALL_INTERVAL_MS) return null;
 
 	// 2. Cache check
-	const hash = hashContext(request);
+	const hash = getDialogueCacheKey(request);
 	const cached = await checkCache(hash);
 	if (cached) return cached;
 

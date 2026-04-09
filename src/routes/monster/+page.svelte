@@ -2,13 +2,32 @@
 	import { onMount } from 'svelte';
 	import Header from '$lib/components/Header.svelte';
 	import MonsterDisplay from '$lib/components/MonsterDisplay.svelte';
-	import { monster, monsterLookAt, monsterSetExpression, monsterSetDialogue } from '$lib/stores/monster';
+	import {
+		monster,
+		monsterLookAt,
+		monsterSetExpression,
+		monsterSetDialogue
+	} from '$lib/stores/monster';
 	import { gonnState, feedGonn, resetGonnState, debugSetGonn } from '$lib/stores/gonn';
 	import { mascotState } from '$lib/stores/mascot';
-	import { EVOLUTION_STAGE_NAMES, type EvolutionStage } from '$lib/types/mascot';
-	import { generateDialogue, clearDialogueCache, getTimeContext } from '$lib/ai/dialogue';
+	import {
+		EVOLUTION_STAGE_NAMES,
+		type DialogueCacheEntry,
+		type DialogueRequest,
+		type EvolutionStage,
+		type InteractionType as DialogueInteractionType
+	} from '$lib/types/mascot';
+	import {
+		DIALOGUE_MIN_CALL_INTERVAL_MS,
+		clearDialogueCache,
+		generateDialogue,
+		getDialogueCacheKey,
+		getDialogueLastCallAt,
+		getDialogueThrottleKey,
+		getDialogueThrottleRemainingMs,
+		getTimeContext
+	} from '$lib/ai/dialogue';
 	import { db } from '$lib/db/db';
-	import type { DialogueCacheEntry } from '$lib/types/mascot';
 
 	// ── Expression controls ────────────────────────────────────────────────────
 	const expressions = ['normal', 'excited', 'bored', 'surprised'] as const;
@@ -60,10 +79,17 @@
 	}
 
 	// ── Dialogue ─────────────────────────────────────────────────────────────
-	const interactionTypes = ['tap', 'complete', 'danger_zone', 'ambient', 'evolve'] as const;
-	type InteractionType = (typeof interactionTypes)[number];
+	const interactionTypes: DialogueInteractionType[] = [
+		'tap',
+		'habit-complete',
+		'app-open',
+		'lapse-return',
+		'feast',
+		'evolution',
+		'regression'
+	];
 
-	let dlgInteractionType = $state<InteractionType>('tap');
+	let dlgInteractionType = $state<DialogueInteractionType>('tap');
 	let dlgHabitName = $state('Morning run');
 	let dlgStreakLength = $state(5);
 	let dlgResult = $state<string | null>(null);
@@ -83,21 +109,8 @@
 		await refreshCache();
 	}
 
-	// Rate limit state (reads the module-level lastCallAt via a re-export we can't access directly,
-	// so we track it locally on each call instead)
-	let lastCallMs = $state<number>(0);
-	let throttleRemainingSec = $derived(
-		lastCallMs === 0 ? 0 : Math.max(0, Math.ceil((12_000 - (Date.now() - lastCallMs)) / 1000))
-	);
-
-	async function handleGenerateDialogue() {
-		dlgLoading = true;
-		dlgError = null;
-		dlgResult = null;
-		dlgSource = null;
-
-		// Build a minimal but valid DialogueRequest
-		const request = {
+	const debugRequest = $derived.by(
+		(): DialogueRequest => ({
 			interactionType: dlgInteractionType,
 			mascotState: {
 				primaryEmotion: $mascotState.primaryEmotion,
@@ -124,34 +137,52 @@
 				}
 			],
 			memory: { permanent: [], shortTerm: [] },
-			timeContext: getTimeContext()
-		};
+			timeContext: getTimeContext(),
+			completedHabitName: dlgInteractionType === 'habit-complete' ? dlgHabitName : undefined
+		})
+	);
 
-		// Check if cache has a hit first (to mark source)
-		const { db: _db } = await import('$lib/db/db');
-		const hashKey = btoa(
-			[
-				request.interactionType,
-				request.mascotState.primaryEmotion,
-				request.timeContext.hourOfDay,
-				request.mascotState.evolutionStage,
-				request.habits.map((h) => h.streakLength).join(',')
-			].join('-')
-		).slice(0, 32);
-		const existingCache = await _db.dialogueCache.get(hashKey);
+	let throttleClockMs = $state(Date.now());
+	const throttleKey = $derived(getDialogueThrottleKey(debugRequest));
+	const cacheKey = $derived(getDialogueCacheKey(debugRequest));
+	const lastCallMs = $derived(getDialogueLastCallAt(debugRequest) ?? 0);
+	const throttleRemainingMs = $derived(
+		getDialogueThrottleRemainingMs(debugRequest, throttleClockMs)
+	);
+	const throttleRemainingSec = $derived(Math.ceil(throttleRemainingMs / 1000));
 
-		const result = await generateDialogue(request as Parameters<typeof generateDialogue>[0]);
+	$effect(() => {
+		if (throttleRemainingMs === 0) return;
+		const interval = setInterval(() => {
+			throttleClockMs = Date.now();
+		}, 1000);
+		return () => clearInterval(interval);
+	});
+
+	async function handleGenerateDialogue() {
+		dlgLoading = true;
+		dlgError = null;
+		dlgResult = null;
+		dlgSource = null;
+
+		const request = debugRequest;
+		const throttleBeforeMs = getDialogueThrottleRemainingMs(request);
+		const existingCache = await db.dialogueCache.get(getDialogueCacheKey(request));
+
+		const result = await generateDialogue(request);
 		dlgLoading = false;
+		throttleClockMs = Date.now();
 
 		if (result) {
 			dlgResult = result.dialogue;
 			dlgSource = existingCache ? 'cache' : 'llm';
-			lastCallMs = Date.now();
 			await refreshCache();
 		} else {
+			const throttleAfterMs = getDialogueThrottleRemainingMs(request);
+			const activeThrottleMs = Math.max(throttleBeforeMs, throttleAfterMs);
 			dlgError =
-				throttleRemainingSec > 0
-					? `Throttled — wait ${throttleRemainingSec}s`
+				activeThrottleMs > 0
+					? `Throttled for ${throttleKey} — wait ${Math.ceil(activeThrottleMs / 1000)}s`
 					: 'No response (check auth/network)';
 		}
 	}
@@ -193,7 +224,7 @@
 
 <!-- Layer 1 (z-ground=5): Ground surface -->
 <div
-	class="pointer-events-none fixed inset-x-0 bottom-0 z-[5] bg-ground-gradient"
+	class="pointer-events-none fixed inset-x-0 bottom-0 z-5 bg-ground-gradient"
 	style="height: calc(var(--gonn-size) + env(safe-area-inset-bottom, 0px))"
 	aria-hidden="true"
 ></div>
@@ -307,7 +338,7 @@
 					<h3 class="mb-3 text-sm font-semibold text-gray-700">Dialogue — Fire a call</h3>
 
 					<!-- Interaction type selector -->
-					<div class="mb-3 grid grid-cols-5 gap-1">
+					<div class="mb-3 grid grid-cols-2 gap-1 sm:grid-cols-4">
 						{#each interactionTypes as t (t)}
 							<button
 								type="button"
@@ -318,7 +349,7 @@
 								class:text-gray-600={dlgInteractionType !== t}
 								onclick={() => (dlgInteractionType = t)}
 							>
-								{t.replace('_', ' ')}
+								{t.replaceAll('-', ' ')}
 							</button>
 						{/each}
 					</div>
@@ -329,21 +360,21 @@
 							type="text"
 							bind:value={dlgHabitName}
 							placeholder="Habit name"
-							class="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-hungry-500 focus:outline-none"
+							class="focus:border-hungry-500 min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none"
 						/>
 						<input
 							type="number"
 							bind:value={dlgStreakLength}
 							min="0"
 							max="999"
-							class="w-20 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-hungry-500 focus:outline-none"
+							class="focus:border-hungry-500 w-20 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none"
 							title="Streak length"
 						/>
 					</div>
 
 					<button
 						type="button"
-						class="mb-3 w-full rounded-xl bg-hungry-500 py-2.5 text-sm font-semibold text-white transition-all hover:bg-hungry-600 active:scale-95 disabled:opacity-50"
+						class="bg-hungry-500 hover:bg-hungry-600 mb-3 w-full rounded-xl py-2.5 text-sm font-semibold text-white transition-all active:scale-95 disabled:opacity-50"
 						onclick={handleGenerateDialogue}
 						disabled={dlgLoading}
 					>
@@ -425,13 +456,19 @@
 					<h3 class="mb-3 text-sm font-semibold text-gray-700">Rate Limit Inspector</h3>
 					<div class="space-y-2 text-sm">
 						<div class="flex justify-between">
-							<span class="text-gray-500">Last LLM call</span>
+							<span class="text-gray-500">Throttle key</span>
+							<code class="text-xs text-gray-600">{throttleKey}</code>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-500">Last successful call for key</span>
 							<span class="font-medium text-gray-700">
 								{lastCallMs === 0 ? 'None this session' : new Date(lastCallMs).toLocaleTimeString()}
 							</span>
 						</div>
 						<div class="flex justify-between">
-							<span class="text-gray-500">Client throttle (12 s)</span>
+							<span class="text-gray-500"
+								>Client throttle ({DIALOGUE_MIN_CALL_INTERVAL_MS / 1000} s)</span
+							>
 							<span
 								class="font-medium"
 								class:text-green-600={throttleRemainingSec === 0}
@@ -441,6 +478,10 @@
 							</span>
 						</div>
 						<div class="flex justify-between">
+							<span class="text-gray-500">Cache key</span>
+							<code class="truncate pl-4 text-xs text-gray-500">{cacheKey}</code>
+						</div>
+						<div class="flex justify-between">
 							<span class="text-gray-500">Server limits</span>
 							<span class="text-xs text-gray-400">5 / min · 50 / day (edge fn)</span>
 						</div>
@@ -448,7 +489,7 @@
 							href="https://supabase.com/dashboard/project/kpafaoouebsijkowhpzj/functions"
 							target="_blank"
 							rel="noopener"
-							class="block text-center text-xs text-hungry-500 underline"
+							class="text-hungry-500 block text-center text-xs underline"
 						>
 							View edge function logs ↗
 						</a>
@@ -461,7 +502,7 @@
 					<textarea
 						bind:value={typewriterText}
 						rows="2"
-						class="mb-3 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-hungry-500 focus:outline-none"
+						class="focus:border-hungry-500 mb-3 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none"
 					></textarea>
 					<button
 						type="button"
