@@ -83,7 +83,7 @@ export function getTimeContext(): DialogueRequest['timeContext'] {
 // ============================================================================
 
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
-const DIALOGUE_CACHE_VERSION = 'v2';
+const DIALOGUE_CACHE_VERSION = 'v3';
 
 /** Generate a stable cache key from the request's key parameters */
 export function getDialogueCacheKey(req: DialogueRequest): string {
