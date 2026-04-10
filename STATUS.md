@@ -20,7 +20,7 @@
 | 9     | Design System      | ✅ Complete | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-10
 
 ---
 
@@ -259,7 +259,7 @@ See `docs/RULE_ENGINE_SPEC.md` for authoritative behavior formulas.
 6. ✅ **Speech bubble** - `SpeechBubble.svelte` + `dialogueStore` — HTML/CSS overlay, typewriter effect, `prefers-reduced-motion` support (Phase C of Design System). Speech bubble is Svelte-side, not in the Rive artboard.
 7. ✅ **Dialogue routing** - `monsterSetDialogue()` → `showDialogue()` → `dialogueStore` → `SpeechBubble`
 8. ✅ **Production triggers** - `triggerGonnDialogue()` in `dialogue.ts` fires on `habit-complete` (HabitCardCompact) and `app-open` (home page mount). Also writes short-term completion memory via `writeCompletionMemory()`.
-9. ✅ **Long-response fix** - `gonn-dialogue` now formats responses to a 160-character cap without hard-cutting at 80, the client cache key is versioned to bypass truncated legacy entries, and `SpeechBubble.svelte` is widened for longer copy.
+9. ✅ **Long-response fix** - `gonn-dialogue` now preserves the full generated message (whitespace-normalized, no hard truncation), the client cache key is versioned to bypass legacy shortened entries, and prompt guidance prefers one short complete sentence.
 10. ✅ **Migration push** — `supabase db push` pending (timed out; run manually)
 
 ### Phase 9: Design System ✅ Complete

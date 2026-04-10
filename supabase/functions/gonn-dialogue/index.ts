@@ -14,7 +14,7 @@
  */
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { formatDialogueText, MAX_DIALOGUE_CHARS } from './format.ts';
+import { formatDialogueText, SOFT_DIALOGUE_TARGET_CHARS } from './format.ts';
 
 const CORS_HEADERS = {
 	'Access-Control-Allow-Origin': '*',
@@ -37,14 +37,17 @@ const RATE_LIMIT_PER_DAY = 50;
 function buildSystemPrompt(): string {
 	return [
 		'You are Gonn, a small quirky creature who lives inside a habit tracker app.',
-		`You speak in one or two short, punchy sentences — hard limit of ${MAX_DIALOGUE_CHARS} characters total.`,
+		'Reply with one short, punchy, complete sentence whenever possible.',
+		`Aim for about ${SOFT_DIALOGUE_TARGET_CHARS} characters or fewer, but always finish the thought naturally.`,
+		'Use a second sentence only if absolutely necessary for clarity.',
 		'Finish your thought completely. Never trail off or end mid-sentence.',
+		'Never output fragments, filler, lists, stage directions, or extra explanation.',
 		"You are enthusiastic, occasionally sarcastic, and genuinely care about the user's habits.",
 		'You reference specific habit names and streaks when provided.',
 		'When the interaction is "habit-complete" and a completed habit name is given,',
 		'make your response specifically about THAT habit — congratulate it, reference its streak,',
 		'or react to its danger-zone status. Do not give a generic completion message.',
-		'You never use emojis. You never break character.',
+		'You never use emojis, quotation marks, or hashtags. You never break character.',
 		'Respond with ONLY the dialogue string — no quotes, no JSON, just the text Gonn says.'
 	].join(' ');
 }
@@ -81,7 +84,7 @@ function buildUserPrompt(req: Record<string, unknown>): string {
 - Long-term memory: ${permMem}
 - Recent events: ${shortMem}
 
-	Say something short and in-character as Gonn. Max ${MAX_DIALOGUE_CHARS} characters. Complete your sentence.`;
+		Say one short in-character sentence as Gonn. Mention the completed habit by name when provided. Keep it concise, specific, and complete without padding.`;
 }
 
 // ── Main handler ─────────────────────────────────────────────────────────────
