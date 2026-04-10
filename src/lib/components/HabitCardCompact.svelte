@@ -23,8 +23,7 @@
 	// Mirror the 4-case schedule detection from HabitCard.svelte
 	const isIntervalBased = $derived(habit.schedule?.type === 'every-x-days');
 	const isWeekly = $derived(
-		!isIntervalBased &&
-			(habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
+		!isIntervalBased && (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
 	);
 	const isMultiDaily = $derived(
 		!isIntervalBased && habit.frequencyType === 'daily' && (habit.frequencyTarget ?? 1) > 1
@@ -35,7 +34,6 @@
 		if (isIntervalBased) {
 			const interval = habit.schedule?.intervalDays;
 			const prefix = `Every ${interval} day${interval !== 1 ? 's' : ''}`;
-			if (habit.completedToday) return `${prefix} · Done ✓`;
 			if (habit.dueInDays === undefined) return prefix;
 			if (habit.dueInDays > 0)
 				return `${prefix} · Due in ${habit.dueInDays} day${habit.dueInDays !== 1 ? 's' : ''}`;
@@ -135,7 +133,13 @@
 			: `Mark ${habit.name} as complete`}
 	>
 		{#if isFullyCompleted}
-			<svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+			<svg
+				class="h-4 w-4 text-white"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+				stroke-width="3"
+			>
 				<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
 			</svg>
 		{:else if isPartiallyCompleted}
