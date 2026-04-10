@@ -2,7 +2,7 @@
 
 > Companion to `ai-implementation-spec.md`. Captures architectural decisions and refinements made during planning.
 
-**Last Updated:** 2026-04-09
+**Last Updated:** 2026-04-10
 
 ---
 
@@ -243,6 +243,23 @@ This means two different habits can both trigger dialogue within the same 12-sec
 | `src/lib/types/mascot.ts`         | Add `completedHabitName?: string` to `DialogueRequest`                                                                            |
 | `src/lib/ai/dialogue.ts`          | Export cache/throttle helpers, key cache + throttle per completed habit, populate `completedHabitName` in `triggerGonnDialogue()` |
 | `src/routes/monster/+page.svelte` | Reuse production cache/throttle helpers in the debug UI                                                                           |
+
+---
+
+## 5. Response Length Policy
+
+> **Status: Implemented.** The edge function now preserves the full generated message instead of hard-truncating it locally.
+
+### Current behaviour
+
+- `formatDialogueText()` only normalizes whitespace and trims leading/trailing space
+- The edge prompt now strongly prefers **one short complete sentence**
+- A second sentence is allowed only when needed for clarity
+- When formatting behavior changes materially, `DIALOGUE_CACHE_VERSION` should be bumped so stale cached replies are bypassed
+
+### Rationale
+
+Showing the full generated message avoids mid-thought cut-offs. Brevity is now enforced primarily through prompt guidance rather than destructive post-processing.
 
 ---
 
