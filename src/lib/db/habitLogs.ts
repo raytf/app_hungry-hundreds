@@ -53,6 +53,25 @@ export function resolveWindowInterval(habit: Habit): number | undefined {
 	return habit.pendingIntervalDays ?? habit.schedule.intervalDays;
 }
 
+async function consumePendingIntervalIfNeeded(habitId: number, habit: Habit): Promise<void> {
+	if (habit.pendingIntervalDays === undefined) return;
+
+	const nextSchedule = {
+		type: 'every-x-days' as const,
+		intervalDays: habit.pendingIntervalDays
+	};
+
+	await db.habits.update(habitId, {
+		schedule: nextSchedule,
+		pendingIntervalDays: undefined,
+		updatedAt: now()
+	});
+	await queueHabitUpdate(habitId, habit.serverId, {
+		schedule: nextSchedule,
+		pendingIntervalDays: undefined
+	});
+}
+
 export async function getLatestLogForHabit(habitId: number): Promise<HabitLog | undefined> {
 	const logs = await db.logs.where('habitId').equals(habitId).toArray();
 	return [...logs].sort(sortLogsNewestFirst)[0];
@@ -140,6 +159,7 @@ export async function toggleHabitCompletion(
 
 				const logId = await logHabitCompletion(habitId, logDate, 'full', windowIntervalDays);
 				await queueLogCreate(logId, habitId, habit.serverId, logDate, 'full', windowIntervalDays);
+				await consumePendingIntervalIfNeeded(habitId, habit);
 				return true;
 			}
 
@@ -159,22 +179,7 @@ export async function toggleHabitCompletion(
 			windowIntervalDays
 		);
 
-		if (habit.pendingIntervalDays !== undefined) {
-			const nextSchedule = {
-				type: 'every-x-days' as const,
-				intervalDays: habit.pendingIntervalDays
-			};
-
-			await db.habits.update(habitId, {
-				schedule: nextSchedule,
-				pendingIntervalDays: undefined,
-				updatedAt: now()
-			});
-			await queueHabitUpdate(habitId, habit.serverId, {
-				schedule: nextSchedule,
-				pendingIntervalDays: undefined
-			});
-		}
+		await consumePendingIntervalIfNeeded(habitId, habit);
 
 		return true;
 	}
