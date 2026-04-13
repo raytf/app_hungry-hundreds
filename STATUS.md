@@ -20,7 +20,7 @@
 | 9     | Design System      | ✅ Complete | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
-**Last Updated:** 2026-04-10
+**Last Updated:** 2026-04-13
 
 ---
 
@@ -91,9 +91,11 @@
 - ✅ **Flexible Frequency Types** - Daily and weekly habits with configurable targets
 - ✅ **Multi-Completion Daily Habits** - Support for 1-10 completions per day (e.g., "Drink water 8x/day")
 - ✅ **Weekly Habits** - Support for 1-7 completions per week with configurable week start day
+- ✅ **Non-Retroactive Interval Streaks** - `every-x-days` completions snapshot `windowIntervalDays`; interval edits can defer via `pendingIntervalDays`
 - ✅ **FlexibleStreakResult** - Extended streak tracking with periodProgress, periodTarget, periodType
 - ✅ **HabitCard Updates** - Dynamic display for daily vs weekly habits with progress indicators
 - 📄 **Feature Documentation** - `docs/features/flexible-streaks.md`
+- 📄 **Fix Documentation** - `docs/fixes/interval-streak-retroactive-fix.md`
 
 ### Partial Completion (Complete)
 
