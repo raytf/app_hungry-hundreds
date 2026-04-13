@@ -768,5 +768,29 @@ describe('Multi-Completion Daily Habits', () => {
 			expect(logs).toHaveLength(1);
 			expect(logs[0].completionType).toBe('full');
 		});
+
+		it('consumes a pending interval when a partial interval completion is upgraded to full', async () => {
+			const habitId = await createHabit({
+				name: 'Dishes',
+				emoji: '🍽️',
+				color: '#336699',
+				schedule: { type: 'every-x-days', intervalDays: 4 }
+			});
+			const today = daysAgo(0);
+
+			await updateHabit(habitId, { pendingIntervalDays: 6 });
+			await toggleHabitCompletion(habitId, today, 'partial');
+			const result = await toggleHabitCompletion(habitId, today, 'full');
+
+			const habit = await db.habits.get(habitId);
+			const logs = await db.logs.where('[habitId+date]').equals([habitId, today]).toArray();
+
+			expect(result).toBe(true);
+			expect(logs).toHaveLength(1);
+			expect(logs[0].completionType).toBe('full');
+			expect(logs[0].windowIntervalDays).toBe(6);
+			expect(habit!.schedule).toEqual({ type: 'every-x-days', intervalDays: 6 });
+			expect(habit!.pendingIntervalDays).toBeUndefined();
+		});
 	});
 });
