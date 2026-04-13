@@ -2,7 +2,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { liveQuery } from 'dexie';
 	import Header from '$lib/components/Header.svelte';
+	import PeriodSelector from '$lib/components/PeriodSelector.svelte';
+	import HabitPeriodChart from '$lib/components/HabitPeriodChart.svelte';
+	import IntervalWindowList from '$lib/components/IntervalWindowList.svelte';
+	import CompletionLogList from '$lib/components/CompletionLogList.svelte';
+	import { db, type HabitLog } from '$lib/db';
+	import { buildHabitChartData, deriveIntervalWindows } from '$lib/history/habitHistory';
+	import { getPresetRange, type PeriodPreset, type PeriodRange } from '$lib/stores/periodStats';
 	import { habits, habitsLoaded, sortedHabits } from '$lib/stores/habits';
 	import { monsterSetExpression } from '$lib/stores/monster';
 	import { showToast } from '$lib/stores/toast.svelte';
@@ -49,6 +57,49 @@
 	// Delete confirmation state
 	let showDeleteConfirm = $state(false);
 	let isDeleting = $state(false);
+	const HABIT_PRESETS: { id: PeriodPreset; label: string }[] = [
+		{ id: '7days', label: '7 Days' },
+		{ id: 'month', label: 'Month' },
+		{ id: '3months', label: '3 Months' },
+		{ id: 'custom', label: 'Custom' }
+	];
+	const defaultPeriod = getPresetRange('7days');
+	let habitPeriod = $state<PeriodRange>({ preset: '7days', ...defaultPeriod });
+	let historyLogs = $state<HabitLog[]>([]);
+
+	const historyChartData = $derived(
+		habit ? buildHabitChartData(habit, historyLogs, habitPeriod) : []
+	);
+	const intervalWindows = $derived(
+		habit ? deriveIntervalWindows(habit, historyLogs, habitPeriod) : []
+	);
+	const completionLogs = $derived(
+		[...historyLogs].sort((a, b) => b.date.localeCompare(a.date) || b.completedAt - a.completedAt)
+	);
+
+	$effect(() => {
+		if (!browser || !Number.isFinite(habitId)) {
+			historyLogs = [];
+			return;
+		}
+
+		const subscription = liveQuery(() =>
+			db.logs
+				.where('habitId')
+				.equals(habitId)
+				.filter((log) => log.date >= habitPeriod.start && log.date <= habitPeriod.end)
+				.toArray()
+		).subscribe({
+			next: (logs) => {
+				historyLogs = logs;
+			},
+			error: (error) => {
+				console.error('[habit-detail] Failed to load completion history', error);
+			}
+		});
+
+		return () => subscription.unsubscribe();
+	});
 
 	async function handleFullComplete() {
 		if (habit?.id !== undefined) {
@@ -159,7 +210,7 @@
 					<p class="text-sm text-content-muted">
 						{habit.schedule?.type === 'every-x-days'
 							? 'Interval Streak'
-							: (habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly')
+							: habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly'
 								? 'Week Streak'
 								: 'Day Streak'}
 					</p>
@@ -200,7 +251,9 @@
 							{habit.periodProgress}/{habit.periodTarget}
 						</p>
 						<p class="text-sm text-success">
-							{habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly' ? 'This Week' : 'Today'}
+							{habit.frequencyType === 'weekly' || habit.schedule?.type === 'weekly'
+								? 'This Week'
+								: 'Today'}
 						</p>
 					</div>
 				{/if}
@@ -212,6 +265,31 @@
 				</div>
 			{/if}
 		</div>
+
+		<section class="mb-4">
+			<div class="mb-3 px-1">
+				<h2 class="font-semibold text-content-muted">Completion History</h2>
+				<p class="text-sm text-content-subtle">
+					Review how this habit has been going across recent periods.
+				</p>
+			</div>
+
+			<div class="space-y-4">
+				<PeriodSelector
+					value={habitPeriod}
+					presets={HABIT_PRESETS}
+					onchange={(range) => (habitPeriod = range)}
+				/>
+
+				<HabitPeriodChart data={historyChartData} title="Selected Period" />
+
+				{#if habit.schedule?.type === 'every-x-days'}
+					<IntervalWindowList windows={intervalWindows} />
+				{/if}
+
+				<CompletionLogList logs={completionLogs} />
+			</div>
+		</section>
 
 		<!-- Partial Completion Section -->
 		{#if habit.partialCriteria}

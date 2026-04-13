@@ -174,6 +174,47 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ---
 
+#### Habit Detail (`/habits/[id]`)
+
+**File:** `src/routes/habits/[id]/+page.svelte`
+
+**Purpose:** View one habit's current status, streak stats, and completion history.
+
+**Layout:**
+
+1. Header with back button
+2. Habit summary card (emoji, name, schedule, edit action)
+3. Statistics card (streak, totals, due/progress state)
+4. Completion history section
+5. Partial completion section (if configured)
+6. Primary action buttons
+7. Delete confirmation section
+
+**Components Used:**
+
+- `Header` (with `showBack`)
+- `PeriodSelector`
+- `HabitPeriodChart`
+- `IntervalWindowList` (interval habits only)
+- `CompletionLogList`
+
+**Key Features:**
+
+- Shows current streak label based on habit cadence (day/week/interval)
+- Interval habits display due-today / overdue / next-due messaging
+- Completion history can be filtered by 7 Days / Month / 3 Months / Custom
+- Interval habits show window-by-window history with the rule that governed each window
+- Individual completion log lists full vs partial completions and interval metadata
+- Edit button navigates to `/habits/[id]/edit`
+
+**Navigation:**
+
+- Back button → previous page
+- Edit button → `/habits/[id]/edit`
+- Delete action → removes habit, then returns to Home (`/`)
+
+---
+
 #### Edit Habit (`/habits/[id]/edit`)
 
 **File:** `src/routes/habits/[id]/edit/+page.svelte`
@@ -217,7 +258,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 1. Header
 2. Today's progress card
-3. Weekly chart
+3. Period selector + chart
 4. Stats grid (2x2)
 5. Motivation section
 
@@ -225,13 +266,14 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 - `Header`
 - `ProgressRing`
-- `WeeklyChart`
+- `PeriodSelector`
+- `PeriodChart`
 - `StatsCard` (4 instances)
 
 **Stats Displayed:**
 
 - Today's progress with completion message
-- Weekly completion chart
+- Period-filtered completion chart
 - Completion rate, active habits, total streak days, longest streak
 
 ---
@@ -429,13 +471,13 @@ The hamburger drawer is the sole top-level navigation. Accessed via the `Menu` i
 
 **Nav Items:**
 
-| Route         | Label          | Icon (Lucide)   |
-| ------------- | -------------- | --------------- |
-| `/`       | Home           | `Home`          |
-| `/habits` | Habits         | `LayoutList`    |
-| `/chat`   | Chat with Gonn | `MessageCircle` |
-| `/journey`    | Journey        | `TrendingUp`    |
-| `/settings`   | Settings       | `Settings`      |
+| Route       | Label          | Icon (Lucide)   |
+| ----------- | -------------- | --------------- |
+| `/`         | Home           | `Home`          |
+| `/habits`   | Habits         | `LayoutList`    |
+| `/chat`     | Chat with Gonn | `MessageCircle` |
+| `/journey`  | Journey        | `TrendingUp`    |
+| `/settings` | Settings       | `Settings`      |
 
 **Features:**
 
