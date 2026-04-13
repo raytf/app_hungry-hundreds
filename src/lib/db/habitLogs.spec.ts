@@ -5,8 +5,8 @@
  */
 import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { db, getTodayDate } from './db';
-import { createHabit } from './habits';
+import { db, formatDateLocal, getTodayDate } from './db';
+import { createHabit, updateHabit } from './habits';
 import {
 	logHabitCompletion,
 	removeHabitCompletion,
@@ -153,7 +153,7 @@ describe('Streak Calculation', () => {
 	function daysAgo(days: number): string {
 		const date = new Date();
 		date.setDate(date.getDate() - days);
-		return date.toISOString().split('T')[0];
+		return formatDateLocal(date);
 	}
 
 	beforeEach(async () => {
@@ -262,7 +262,7 @@ describe('Multi-Completion Daily Habits', () => {
 	function daysAgo(days: number): string {
 		const date = new Date();
 		date.setDate(date.getDate() - days);
-		return date.toISOString().split('T')[0];
+		return formatDateLocal(date);
 	}
 
 	beforeEach(async () => {
@@ -428,17 +428,17 @@ describe('Multi-Completion Daily Habits', () => {
 			await logHabitCompletion(habitId, daysAgo(0));
 			await logHabitCompletion(habitId, daysAgo(0));
 
-			// Day 1 (yesterday): only 1 completion (target NOT met - breaks streak)
+			// Day 1 (yesterday): only 1 completion (target NOT met, but continuity remains)
 			await logHabitCompletion(habitId, daysAgo(1));
 
-			// Day 2: 3 completions (target met, but streak already broken)
+			// Day 2: 3 completions (target met and still connected through yesterday)
 			await logHabitCompletion(habitId, daysAgo(2));
 			await logHabitCompletion(habitId, daysAgo(2));
 			await logHabitCompletion(habitId, daysAgo(2));
 
 			const streak = await calculateDayStreak(habitId, 3);
 
-			expect(streak).toBe(1); // Only today counts
+			expect(streak).toBe(2); // Today and day 2 count; yesterday only preserves continuity
 		});
 
 		it('should start from yesterday if today target not met', async () => {
@@ -685,6 +685,88 @@ describe('Multi-Completion Daily Habits', () => {
 			const result = await calculateFlexibleStreak(habit!);
 
 			expect(result.totalCompletions).toBe(6);
+		});
+	});
+
+	describe('calculateFlexibleStreak for every-x-days habits', () => {
+		it('uses per-log interval snapshots instead of the current habit schedule', async () => {
+			const habitId = await createHabit({
+				name: 'Stretch',
+				emoji: '🧘',
+				color: '#0af',
+				schedule: { type: 'every-x-days', intervalDays: 10 }
+			});
+
+			await logHabitCompletion(habitId, daysAgo(6), 'full', 2);
+			await logHabitCompletion(habitId, daysAgo(3), 'full', 10);
+			await logHabitCompletion(habitId, daysAgo(0), 'full', 10);
+
+			const habit = await db.habits.get(habitId);
+			const result = await calculateFlexibleStreak(habit!);
+
+			expect(result.streak).toBe(2);
+			expect(result.dueInDays).toBeGreaterThan(0);
+		});
+
+		it('counts only full completions while partial interval completions preserve continuity', async () => {
+			const habitId = await createHabit({
+				name: 'Clean Kitchen',
+				emoji: '🧽',
+				color: '#fa0',
+				schedule: { type: 'every-x-days', intervalDays: 3 }
+			});
+
+			await logHabitCompletion(habitId, daysAgo(4), 'full', 3);
+			await logHabitCompletion(habitId, daysAgo(2), 'partial', 3);
+			await logHabitCompletion(habitId, daysAgo(0), 'full', 3);
+
+			const habit = await db.habits.get(habitId);
+			const result = await calculateFlexibleStreak(habit!);
+
+			expect(result.streak).toBe(2);
+			expect(result.periodProgress).toBe(1);
+		});
+
+		it('applies a pending interval to the next completion and then clears it', async () => {
+			const habitId = await createHabit({
+				name: 'Vacuum',
+				emoji: '🧹',
+				color: '#777',
+				schedule: { type: 'every-x-days', intervalDays: 3 }
+			});
+
+			await updateHabit(habitId, { pendingIntervalDays: 5 });
+			await toggleHabitCompletion(habitId, daysAgo(0));
+
+			const habit = await db.habits.get(habitId);
+			const logs = await db.logs
+				.where('[habitId+date]')
+				.equals([habitId, daysAgo(0)])
+				.toArray();
+
+			expect(logs).toHaveLength(1);
+			expect(logs[0].windowIntervalDays).toBe(5);
+			expect(habit!.schedule).toEqual({ type: 'every-x-days', intervalDays: 5 });
+			expect(habit!.pendingIntervalDays).toBeUndefined();
+		});
+
+		it('upgrades a partial interval completion to full instead of toggling it off', async () => {
+			const habitId = await createHabit({
+				name: 'Journal',
+				emoji: '📓',
+				color: '#663399',
+				schedule: { type: 'every-x-days', intervalDays: 4 }
+			});
+			const today = daysAgo(0);
+
+			await toggleHabitCompletion(habitId, today, 'partial');
+			const result = await toggleHabitCompletion(habitId, today, 'full');
+
+			const logs = await db.logs.where('[habitId+date]').equals([habitId, today]).toArray();
+
+			expect(result).toBe(true);
+			expect(logs).toHaveLength(1);
+			expect(logs[0].completionType).toBe('full');
 		});
 	});
 });

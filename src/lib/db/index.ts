@@ -33,7 +33,8 @@ export {
 	deleteHabit,
 	seedHabitsIfEmpty,
 	type CreateHabitInput,
-	type UpdateHabitInput
+	type UpdateHabitInput,
+	type UpdateHabitPayload
 } from './habits';
 
 // HabitLog operations
@@ -50,6 +51,7 @@ export {
 	// Flexible streak calculation (Phase 1)
 	calculateFlexibleStreak,
 	calculateFlexibleStreaksForHabits,
+	getLatestLogForHabit,
 	getWeekBounds,
 	getCompletionsInRange,
 	getTotalCompletions,

@@ -14,7 +14,18 @@ import { queueHabitCreate, queueHabitUpdate, queueHabitDelete } from '$lib/sync/
 // ============================================================================
 
 export type CreateHabitInput = Pick<Habit, 'name' | 'emoji' | 'color'> &
-	Partial<Pick<Habit, 'reminderTime' | 'schedule'>>;
+	Partial<
+		Pick<
+			Habit,
+			| 'reminderTime'
+			| 'schedule'
+			| 'frequencyType'
+			| 'frequencyTarget'
+			| 'weekStartsOn'
+			| 'partialCriteria'
+			| 'pendingIntervalDays'
+		>
+	>;
 
 /**
  * Create a new habit
@@ -28,6 +39,11 @@ export async function createHabit(input: CreateHabitInput): Promise<number> {
 		color: input.color,
 		reminderTime: input.reminderTime,
 		schedule: input.schedule ?? DEFAULT_HABIT_SCHEDULE,
+		frequencyType: input.frequencyType,
+		frequencyTarget: input.frequencyTarget,
+		weekStartsOn: input.weekStartsOn,
+		partialCriteria: input.partialCriteria,
+		pendingIntervalDays: input.pendingIntervalDays,
 		createdAt: timestamp,
 		updatedAt: timestamp
 	};
@@ -69,13 +85,17 @@ export async function getHabitCount(): Promise<number> {
 // Update Operations
 // ============================================================================
 
-export type UpdateHabitInput = Partial<Pick<Habit, 'name' | 'emoji' | 'color' | 'reminderTime' | 'schedule'>>;
+export type UpdateHabitInput = Partial<
+	Pick<Habit, 'name' | 'emoji' | 'color' | 'reminderTime' | 'schedule'>
+>;
+export type UpdateHabitMetadata = Partial<Pick<Habit, 'pendingIntervalDays'>>;
+export type UpdateHabitPayload = UpdateHabitInput & UpdateHabitMetadata;
 
 /**
  * Update an existing habit
  * @returns Number of records updated (0 or 1)
  */
-export async function updateHabit(id: number, updates: UpdateHabitInput): Promise<number> {
+export async function updateHabit(id: number, updates: UpdateHabitPayload): Promise<number> {
 	const result = await db.habits.update(id, {
 		...updates,
 		updatedAt: now()
@@ -139,6 +159,11 @@ export async function seedHabitsIfEmpty(
 		color: h.color,
 		reminderTime: h.reminderTime,
 		schedule: h.schedule ?? DEFAULT_HABIT_SCHEDULE,
+		frequencyType: h.frequencyType,
+		frequencyTarget: h.frequencyTarget,
+		weekStartsOn: h.weekStartsOn,
+		partialCriteria: h.partialCriteria,
+		pendingIntervalDays: h.pendingIntervalDays,
 		createdAt: timestamp,
 		updatedAt: timestamp
 	}));

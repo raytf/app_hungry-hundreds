@@ -16,7 +16,47 @@ import {
 	type HabitLog,
 	type CompletionType
 } from './db';
-import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
+import { queueHabitUpdate, queueLogCreate, queueLogDelete } from '$lib/sync/queue';
+
+function sortLogsNewestFirst(a: HabitLog, b: HabitLog): number {
+	if (a.date === b.date) {
+		return b.completedAt - a.completedAt;
+	}
+
+	return b.date.localeCompare(a.date);
+}
+
+function uniqueLogsByDateNewestFirst(logs: HabitLog[]): HabitLog[] {
+	const logsByDate = new Map<string, HabitLog>();
+
+	for (const log of logs) {
+		const existing = logsByDate.get(log.date);
+		if (!existing) {
+			logsByDate.set(log.date, log);
+			continue;
+		}
+
+		const shouldReplace =
+			(existing.completionType !== 'full' && log.completionType === 'full') ||
+			(existing.completionType === log.completionType && log.completedAt > existing.completedAt);
+
+		if (shouldReplace) {
+			logsByDate.set(log.date, log);
+		}
+	}
+
+	return [...logsByDate.values()].sort(sortLogsNewestFirst);
+}
+
+export function resolveWindowInterval(habit: Habit): number | undefined {
+	if (habit.schedule?.type !== 'every-x-days') return undefined;
+	return habit.pendingIntervalDays ?? habit.schedule.intervalDays;
+}
+
+export async function getLatestLogForHabit(habitId: number): Promise<HabitLog | undefined> {
+	const logs = await db.logs.where('habitId').equals(habitId).toArray();
+	return [...logs].sort(sortLogsNewestFirst)[0];
+}
 
 // ============================================================================
 // Create/Toggle Operations
@@ -32,7 +72,8 @@ import { queueLogCreate, queueLogDelete } from '$lib/sync/queue';
 export async function logHabitCompletion(
 	habitId: number,
 	date?: string,
-	completionType: CompletionType = 'full'
+	completionType: CompletionType = 'full',
+	windowIntervalDays?: number
 ): Promise<number> {
 	const logDate = date ?? getTodayDate();
 	const log: HabitLog = {
@@ -40,6 +81,7 @@ export async function logHabitCompletion(
 		date: logDate,
 		completedAt: now(),
 		completionType,
+		windowIntervalDays,
 		synced: false
 	};
 
@@ -77,12 +119,65 @@ export async function toggleHabitCompletion(
 	const habit = await db.habits.get(habitId);
 	if (!habit) return false;
 
+	const windowIntervalDays = resolveWindowInterval(habit);
 	const target = habit.frequencyType === 'daily' ? (habit.frequencyTarget ?? 1) : 1;
 	const existingLogs = await db.logs.where('[habitId+date]').equals([habitId, logDate]).toArray();
 	const currentCount = existingLogs.length;
 
 	// Check if already has a full completion today (for partial completion upgrade logic)
 	const hasFullCompletion = existingLogs.some((log) => log.completionType === 'full');
+
+	if (habit.schedule?.type === 'every-x-days') {
+		if (currentCount > 0) {
+			if (completionType === 'partial' && hasFullCompletion) {
+				return true;
+			}
+
+			if (completionType === 'full' && !hasFullCompletion) {
+				const existing = existingLogs.sort((a, b) => b.completedAt - a.completedAt)[0];
+				await db.logs.delete(existing.id!);
+				await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
+
+				const logId = await logHabitCompletion(habitId, logDate, 'full', windowIntervalDays);
+				await queueLogCreate(logId, habitId, habit.serverId, logDate, 'full', windowIntervalDays);
+				return true;
+			}
+
+			const existing = existingLogs.sort((a, b) => b.completedAt - a.completedAt)[0];
+			await db.logs.delete(existing.id!);
+			await queueLogDelete(existing.id!, existing.serverId, habitId, habit.serverId, logDate);
+			return false;
+		}
+
+		const logId = await logHabitCompletion(habitId, logDate, completionType, windowIntervalDays);
+		await queueLogCreate(
+			logId,
+			habitId,
+			habit.serverId,
+			logDate,
+			completionType,
+			windowIntervalDays
+		);
+
+		if (habit.pendingIntervalDays !== undefined) {
+			const nextSchedule = {
+				type: 'every-x-days' as const,
+				intervalDays: habit.pendingIntervalDays
+			};
+
+			await db.habits.update(habitId, {
+				schedule: nextSchedule,
+				pendingIntervalDays: undefined,
+				updatedAt: now()
+			});
+			await queueHabitUpdate(habitId, habit.serverId, {
+				schedule: nextSchedule,
+				pendingIntervalDays: undefined
+			});
+		}
+
+		return true;
+	}
 
 	if (habit.frequencyType === 'daily' && target === 1) {
 		// Single-completion daily habit: simple toggle
@@ -550,7 +645,8 @@ export async function calculateWeekStreak(
  * Streak logic:
  * - Each completion starts a new window of `intervalDays` days
  * - A window is "on time" if the next completion came within that window
- * - Streak = count of consecutive on-time completions (newest first)
+ * - Any completion (full or partial) preserves continuity
+ * - Only full completions increment the streak counter
  * - If the current window is overdue (dueInDays < 0), streak resets to 0
  *
  * dueInDays:
@@ -560,18 +656,17 @@ export async function calculateWeekStreak(
  */
 async function calculateIntervalStreak(habit: Habit): Promise<FlexibleStreakResult> {
 	const habitId = habit.id!;
-	const intervalDays = habit.schedule?.intervalDays ?? 7;
 	const totalCompletions = await getTotalCompletions(habitId);
 
-	// Get unique completion dates (full completions only for streak; any for "done" display)
+	// Get unique completion logs (any completion type preserves interval continuity)
 	const allLogs = await db.logs.where('habitId').equals(habitId).toArray();
-	const uniqueDates = [...new Set(allLogs.map((l) => l.date))].sort().reverse(); // newest first
+	const uniqueLogs = uniqueLogsByDateNewestFirst(allLogs);
 
 	const today = getTodayDate();
 	const todayMs = new Date(today + 'T00:00:00').getTime();
 	const msPerDay = 24 * 60 * 60 * 1000;
 
-	if (uniqueDates.length === 0) {
+	if (uniqueLogs.length === 0) {
 		// No completions yet — due immediately
 		return {
 			streak: 0,
@@ -584,9 +679,10 @@ async function calculateIntervalStreak(habit: Habit): Promise<FlexibleStreakResu
 	}
 
 	// Calculate next due date from last completion
-	const lastDate = uniqueDates[0];
-	const lastMs = new Date(lastDate + 'T00:00:00').getTime();
-	const nextDueMs = lastMs + intervalDays * msPerDay;
+	const latestLog = uniqueLogs[0];
+	const lastMs = new Date(latestLog.date + 'T00:00:00').getTime();
+	const latestIntervalDays = latestLog.windowIntervalDays ?? habit.schedule?.intervalDays ?? 7;
+	const nextDueMs = lastMs + latestIntervalDays * msPerDay;
 	const dueInDays = Math.round((nextDueMs - todayMs) / msPerDay);
 
 	// completedThisInterval: already done and still within the window
@@ -597,15 +693,21 @@ async function calculateIntervalStreak(habit: Habit): Promise<FlexibleStreakResu
 	if (dueInDays < 0) {
 		// Overdue — streak is broken
 		streak = 0;
-	} else if (uniqueDates.length > 0) {
-		// Count starting from most recent completion
-		streak = 1;
-		for (let i = 0; i < uniqueDates.length - 1; i++) {
-			const newerMs = new Date(uniqueDates[i] + 'T00:00:00').getTime();
-			const olderMs = new Date(uniqueDates[i + 1] + 'T00:00:00').getTime();
+	} else if (uniqueLogs.length > 0) {
+		// Count starting from most recent completion, with partials preserving continuity
+		streak = latestLog.completionType === 'full' ? 1 : 0;
+		for (let i = 0; i < uniqueLogs.length - 1; i++) {
+			const newerLog = uniqueLogs[i];
+			const olderLog = uniqueLogs[i + 1];
+			const newerMs = new Date(newerLog.date + 'T00:00:00').getTime();
+			const olderMs = new Date(olderLog.date + 'T00:00:00').getTime();
 			const gapDays = Math.round((newerMs - olderMs) / msPerDay);
-			if (gapDays <= intervalDays) {
-				streak++;
+			const governingIntervalDays =
+				olderLog.windowIntervalDays ?? habit.schedule?.intervalDays ?? 7;
+			if (gapDays <= governingIntervalDays) {
+				if (olderLog.completionType === 'full') {
+					streak++;
+				}
 			} else {
 				break; // Gap too large — consecutive chain broken
 			}

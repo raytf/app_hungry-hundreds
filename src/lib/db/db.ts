@@ -61,6 +61,7 @@ export interface Habit {
 	 * e.g., "20 pushups instead of full gym session" or "10 minutes instead of 30"
 	 */
 	partialCriteria?: string;
+	pendingIntervalDays?: number; // Deferred interval change for every-x-days habits
 	createdAt: number; // Unix timestamp
 	updatedAt: number; // Unix timestamp
 }
@@ -75,6 +76,7 @@ export interface HabitLog {
 	date: string; // YYYY-MM-DD format
 	completedAt: number; // Unix timestamp
 	completionType: CompletionType; // 'full' or 'partial' completion
+	windowIntervalDays?: number; // Interval that governs the window opened by this completion
 	synced: boolean; // Whether synced to Supabase
 }
 
@@ -177,6 +179,40 @@ export class HungryHundredsDB extends Dexie {
 			dialogueCache: 'contextHash, createdAt',
 			chatSessions: '++id, createdAt'
 		});
+
+		// Version 6: Add interval snapshot fields for non-retroactive every-x-days streaks
+		this.version(6)
+			.stores({
+				habits: '++id, serverId, createdAt',
+				logs: '++id, serverId, [habitId+date], habitId, completedAt, synced, date',
+				syncQueue: '++id, timestamp',
+				gonnState: 'id',
+				mascotMemory: '++id, type, key, createdAt',
+				dialogueCache: 'contextHash, createdAt',
+				chatSessions: '++id, createdAt'
+			})
+			.upgrade(async (tx) => {
+				const habits = await tx.table('habits').toArray();
+
+				for (const habit of habits) {
+					const intervalDays =
+						habit.schedule?.type === 'every-x-days' ? habit.schedule.intervalDays : undefined;
+
+					if (habit.id === undefined || intervalDays === undefined) {
+						continue;
+					}
+
+					await tx
+						.table('logs')
+						.where('habitId')
+						.equals(habit.id)
+						.modify((log) => {
+							if (log.windowIntervalDays === undefined) {
+								log.windowIntervalDays = intervalDays;
+							}
+						});
+				}
+			});
 	}
 }
 

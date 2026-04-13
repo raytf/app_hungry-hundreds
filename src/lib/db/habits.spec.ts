@@ -190,6 +190,21 @@ describe('Habit CRUD Operations', () => {
 			expect(habit!.schedule).toEqual({ type: 'weekly', timesPerWeek: 5 });
 		});
 
+		it('should persist pending interval metadata for every-x-days habits', async () => {
+			const id = await createHabit({
+				name: 'Laundry',
+				emoji: '🧺',
+				color: '#89f',
+				schedule: { type: 'every-x-days', intervalDays: 7 }
+			});
+
+			await updateHabit(id, { pendingIntervalDays: 10 });
+			const habit = await getHabitById(id);
+
+			expect(habit!.pendingIntervalDays).toBe(10);
+			expect(habit!.schedule).toEqual({ type: 'every-x-days', intervalDays: 7 });
+		});
+
 		it('should return 0 when updating non-existent habit', async () => {
 			const result = await updateHabit(999, { name: 'Ghost' });
 

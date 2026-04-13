@@ -24,6 +24,7 @@ export interface Database {
 					color: string;
 					reminder_time: string | null;
 					schedule: Json;
+					pending_interval_days: number | null;
 					created_at: string;
 					updated_at: string;
 				};
@@ -35,6 +36,7 @@ export interface Database {
 					color?: string;
 					reminder_time?: string | null;
 					schedule?: Json;
+					pending_interval_days?: number | null;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -46,6 +48,7 @@ export interface Database {
 					color?: string;
 					reminder_time?: string | null;
 					schedule?: Json;
+					pending_interval_days?: number | null;
 					created_at?: string;
 					updated_at?: string;
 				};
@@ -58,6 +61,7 @@ export interface Database {
 					logged_date: string;
 					logged_at: string;
 					completion_type: 'full' | 'partial';
+					window_interval_days: number | null;
 				};
 				Insert: {
 					id?: string;
@@ -66,6 +70,7 @@ export interface Database {
 					logged_date: string;
 					logged_at?: string;
 					completion_type?: 'full' | 'partial';
+					window_interval_days?: number | null;
 				};
 				Update: {
 					id?: string;
@@ -74,6 +79,7 @@ export interface Database {
 					logged_date?: string;
 					logged_at?: string;
 					completion_type?: 'full' | 'partial';
+					window_interval_days?: number | null;
 				};
 			};
 			push_subscriptions: {

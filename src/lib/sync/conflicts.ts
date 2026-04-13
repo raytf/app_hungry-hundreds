@@ -22,6 +22,14 @@ export interface ConflictResult<T> {
 	remoteUpdatedAt: number;
 }
 
+function parseRemoteSchedule(schedule: HabitRow['schedule']): HabitSchedule {
+	if (schedule && typeof schedule === 'object' && !Array.isArray(schedule) && 'type' in schedule) {
+		return schedule as unknown as HabitSchedule;
+	}
+
+	return DEFAULT_HABIT_SCHEDULE;
+}
+
 // ============================================================================
 // Habit Conflict Resolution
 // ============================================================================
@@ -47,6 +55,7 @@ export function resolveHabitConflict(
 				color: local.color,
 				reminderTime: local.reminderTime,
 				schedule: local.schedule,
+				pendingIntervalDays: local.pendingIntervalDays,
 				updatedAt: localUpdatedAt
 			},
 			localUpdatedAt,
@@ -60,7 +69,8 @@ export function resolveHabitConflict(
 				emoji: remote.emoji,
 				color: remote.color,
 				reminderTime: remote.reminder_time ?? undefined,
-				schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
+				schedule: parseRemoteSchedule(remote.schedule),
+				pendingIntervalDays: remote.pending_interval_days ?? undefined,
 				updatedAt: remoteUpdatedAt,
 				serverId: remote.id
 			},
@@ -79,7 +89,8 @@ export async function applyRemoteHabit(localId: number, remote: HabitRow): Promi
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
-		schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
+		schedule: parseRemoteSchedule(remote.schedule),
+		pendingIntervalDays: remote.pending_interval_days ?? undefined,
 		serverId: remote.id,
 		updatedAt: new Date(remote.updated_at).getTime()
 	});
@@ -94,7 +105,8 @@ export async function createLocalHabitFromRemote(remote: HabitRow): Promise<numb
 		emoji: remote.emoji,
 		color: remote.color,
 		reminderTime: remote.reminder_time ?? undefined,
-		schedule: (remote.schedule as HabitSchedule) ?? DEFAULT_HABIT_SCHEDULE,
+		schedule: parseRemoteSchedule(remote.schedule),
+		pendingIntervalDays: remote.pending_interval_days ?? undefined,
 		serverId: remote.id,
 		createdAt: new Date(remote.created_at).getTime(),
 		updatedAt: new Date(remote.updated_at).getTime()
@@ -140,6 +152,7 @@ export async function createLocalLogFromRemote(
 		date: remote.logged_date,
 		completedAt: new Date(remote.logged_at).getTime(),
 		completionType: remote.completion_type ?? 'full',
+		windowIntervalDays: remote.window_interval_days ?? undefined,
 		serverId: remote.id,
 		synced: true
 	});
