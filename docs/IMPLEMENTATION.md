@@ -4,6 +4,8 @@
 
 This guide provides step-by-step instructions for implementing the Hungry Hundreds UI foundation based on the technical specification. Use this as a checklist when building out the application.
 
+> **Historical note:** This is an early Phase 1 implementation guide. The current app now uses drawer navigation in `Header.svelte`, and analytics live on the `/journey` route.
+
 ## Phase 1: UI Foundation (Current Scope)
 
 ### Prerequisites Checklist
@@ -21,6 +23,7 @@ This guide provides step-by-step instructions for implementing the Hungry Hundre
 **File**: `tailwind.config.js`
 
 Add to `theme.extend`:
+
 ```javascript
 colors: {
   hungry: {
@@ -53,6 +56,7 @@ See [COMPONENTS.md](./COMPONENTS.md) for exact CSS definitions.
 **File**: `src/lib/data/mockData.js`
 
 Export:
+
 - `mockHabits` - Array of 4 sample habits
 - `mockMonster` - Monster state object
 - `mockStats` - Statistics object with weekly data
@@ -64,11 +68,13 @@ Export:
 **File**: `src/lib/stores/habits.js`
 
 Create store with methods:
+
 - `toggle(id)` - Toggle habit completion
 - `add(habit)` - Add new habit
 - `reset()` - Reset to mock data
 
 Create derived store:
+
 - `todaysProgress` - Calculate completion percentage
 
 #### 5. Build Core Components
@@ -76,13 +82,13 @@ Create derived store:
 Create in `src/lib/components/`:
 
 **Priority Order**:
-1. `BottomNav.svelte` - Navigation (needed for all pages)
-2. `Header.svelte` - Page headers
-3. `HabitCard.svelte` - Habit display
-4. `ProgressRing.svelte` - Progress visualization
-5. `MonsterDisplay.svelte` - Monster placeholder
-6. `StatsCard.svelte` - Statistics display
-7. `HabitForm.svelte` - Habit creation form
+
+1. `Header.svelte` - Page headers and drawer navigation
+2. `HabitCard.svelte` - Habit display
+3. `ProgressRing.svelte` - Progress visualization
+4. `MonsterDisplay.svelte` - Monster placeholder
+5. `StatsCard.svelte` - Statistics display
+6. `HabitForm.svelte` - Habit creation form
 
 **Component Specs**: See [COMPONENTS.md](./COMPONENTS.md) for detailed props and usage.
 
@@ -92,16 +98,20 @@ Create in `src/lib/components/`:
 
 ```
 src/routes/
-├── +layout.svelte         # Root layout with BottomNav
+├── +layout.svelte         # Root layout / app shell
 ├── +page.svelte           # Home page (today's habits)
+├── chat/
+│   └── +page.svelte       # Full-screen chat with Gonn
 ├── onboard/
 │   └── +page.svelte       # Onboarding flow
 ├── habits/
 │   ├── +page.svelte       # All habits list
+│   ├── [id]/
+│   │   └── +page.svelte   # Habit detail page
 │   └── new/
 │       └── +page.svelte   # Create new habit
-├── dashboard/
-│   └── +page.svelte       # Statistics dashboard
+├── journey/
+│   └── +page.svelte       # Statistics / history page
 └── settings/
     └── +page.svelte       # Settings page
 ```
@@ -109,33 +119,39 @@ src/routes/
 #### 7. Implement Pages
 
 **Home Page** (`src/routes/+page.svelte`):
+
 - Display today's habits using `HabitCard`
 - Show `MonsterDisplay` at top
 - Show `ProgressRing` with today's completion
 - Use `page-container` wrapper
 
 **All Habits** (`src/routes/habits/+page.svelte`):
+
 - List all habits from store
 - Add "New Habit" button linking to `/habits/new`
 - Show streak information
 
 **New Habit** (`src/routes/habits/new/+page.svelte`):
+
 - Render `HabitForm` component
 - Handle submit event
 - Call `habits.add()` store method
 - Navigate back to `/habits` on success
 
-**Dashboard** (`src/routes/dashboard/+page.svelte`):
+**Journey** (`src/routes/journey/+page.svelte`):
+
 - Display `StatsCard` components
 - Show weekly completion chart
 - Display overall completion rate
 
 **Settings** (`src/routes/settings/+page.svelte`):
+
 - Monster name customization
 - Reset data option
 - About/version information
 
 **Onboarding** (`src/routes/onboard/+page.svelte`):
+
 - Welcome screen
 - Monster naming
 - First habit creation
@@ -145,22 +161,21 @@ src/routes/
 
 **File**: `src/routes/+layout.svelte`
 
-Structure:
+Structure (current simplified shell):
+
 ```svelte
 <script>
-  import BottomNav from '$lib/components/BottomNav.svelte';
-  import '../app.css';
+	import './layout.css';
 </script>
 
-<div class="min-h-screen bg-gray-50">
-  <slot />
-  <BottomNav />
+<div class="h-screen bg-surface">
+	<slot />
 </div>
 ```
 
 ### Testing Checklist
 
-- [ ] All routes accessible via bottom navigation
+- [ ] All primary routes accessible via header / drawer navigation
 - [ ] Habit toggle updates streak correctly
 - [ ] New habit form validation works
 - [ ] Progress ring shows correct percentage
@@ -172,14 +187,16 @@ Structure:
 ### Visual Testing
 
 **Key Screens to Verify**:
+
 1. Home page with 0 habits completed
 2. Home page with all habits completed
 3. Habits list with various streak counts
 4. New habit form with all fields
-5. Dashboard with weekly data
+5. Journey page with weekly data
 6. Settings page
 
 **Responsive Breakpoints**:
+
 - Mobile: 375px - 768px (primary target)
 - Tablet: 768px - 1024px
 - Desktop: 1024px+ (centered with max-width)
@@ -190,14 +207,14 @@ Structure:
 
 ```svelte
 <script>
-  import Header from '$lib/components/Header.svelte';
-  import { habits } from '$lib/stores/habits.js';
+	import Header from '$lib/components/Header.svelte';
+	import { habits } from '$lib/stores/habits.js';
 </script>
 
 <Header title="Page Title" showBack={true} />
 
 <div class="page-container">
-  <!-- Page content -->
+	<!-- Page content -->
 </div>
 ```
 
@@ -205,14 +222,14 @@ Structure:
 
 ```svelte
 <script>
-  import HabitForm from '$lib/components/HabitForm.svelte';
-  import { habits } from '$lib/stores/habits.js';
-  import { goto } from '$app/navigation';
-  
-  function handleSubmit(event) {
-    habits.add(event.detail);
-    goto('/habits');
-  }
+	import HabitForm from '$lib/components/HabitForm.svelte';
+	import { habits } from '$lib/stores/habits.js';
+	import { goto } from '$app/navigation';
+
+	function handleSubmit(event) {
+		habits.add(event.detail);
+		goto('/habits');
+	}
 </script>
 
 <HabitForm on:submit={handleSubmit} />
@@ -222,14 +239,14 @@ Structure:
 
 ```svelte
 <script>
-  import { habits } from '$lib/stores/habits.js';
-  import HabitCard from '$lib/components/HabitCard.svelte';
+	import { habits } from '$lib/stores/habits.js';
+	import HabitCard from '$lib/components/HabitCard.svelte';
 </script>
 
 <div class="space-y-3">
-  {#each $habits as habit (habit.id)}
-    <HabitCard {habit} />
-  {/each}
+	{#each $habits as habit (habit.id)}
+		<HabitCard {habit} />
+	{/each}
 </div>
 ```
 
@@ -240,14 +257,13 @@ Structure:
 Start with mobile styles, add responsive variants:
 
 ```svelte
-<div class="text-sm md:text-base lg:text-lg">
-  Responsive text
-</div>
+<div class="text-sm md:text-base lg:text-lg">Responsive text</div>
 ```
 
 ### Consistent Spacing
 
 Use Tailwind spacing scale:
+
 - `gap-3` (12px) - Between cards
 - `gap-4` (16px) - Between sections
 - `p-4` (16px) - Card padding
@@ -259,13 +275,15 @@ Use Tailwind spacing scale:
 Always include hover and active states:
 
 ```svelte
-<button class="
-  bg-hungry-500 
-  hover:bg-hungry-600 
+<button
+	class="
+  bg-hungry-500
+  hover:bg-hungry-600
   active:bg-hungry-700
   transition-all
-">
-  Button
+"
+>
+	Button
 </button>
 ```
 
@@ -278,6 +296,7 @@ SvelteKit automatically splits routes. No action needed.
 ### Image Optimization
 
 For future image assets:
+
 - Use WebP format
 - Provide multiple sizes
 - Use `loading="lazy"`
@@ -302,6 +321,7 @@ Unsubscribe automatically with `$` prefix:
 ### Store State
 
 View current store state:
+
 ```svelte
 <pre>{JSON.stringify($habits, null, 2)}</pre>
 ```
@@ -309,25 +329,28 @@ View current store state:
 ### Reactive Statements
 
 Log reactive changes:
+
 ```svelte
 <script>
-  $: console.log('Habits changed:', $habits);
+	$: console.log('Habits changed:', $habits);
 </script>
 ```
 
 ### Component Props
 
 Verify props received:
+
 ```svelte
 <script>
-  export let habit;
-  $: console.log('Habit prop:', habit);
+	export let habit;
+	$: console.log('Habit prop:', habit);
 </script>
 ```
 
 ## Next Steps (Future Phases)
 
 ### Phase 2: Database Integration
+
 1. Setup Cloudflare D1 database
 2. Create database schema (see [API.md](./API.md))
 3. Replace store methods with API calls
@@ -335,12 +358,14 @@ Verify props received:
 5. Implement error handling
 
 ### Phase 3: Authentication
+
 1. Choose auth provider (Clerk, Auth0, etc.)
 2. Add protected routes
 3. User-specific data
 4. Profile management
 
 ### Phase 4: Enhanced Features
+
 1. Replace monster emoji with Rive animation
 2. Add push notifications
 3. Implement PWA features
@@ -353,4 +378,3 @@ Verify props received:
 - [COMPONENTS.md](./COMPONENTS.md) - Component reference
 - [API.md](./API.md) - Data models
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide
-

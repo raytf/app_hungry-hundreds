@@ -21,13 +21,13 @@ This document tracks the phased development of Hungry Hundreds, from UI foundati
 
 **Goal:** Establish the visual foundation and user experience with mock data.
 
-| Task                       | Status | Notes                                |
-| -------------------------- | ------ | ------------------------------------ |
-| SvelteKit project setup    | ✅     | Cloudflare adapter configured        |
-| Tailwind CSS 4 integration | ✅     | Dark theme, Fredoka font             |
-| Component library          | ✅     | HabitCard, Header, BottomNav, etc.   |
-| File-based routing         | ✅     | Home, habits/, dashboard/, settings/ |
-| Mock data and stores       | ✅     | Svelte 5 runes with derived state    |
+| Task                       | Status | Notes                                      |
+| -------------------------- | ------ | ------------------------------------------ |
+| SvelteKit project setup    | ✅     | Cloudflare adapter configured              |
+| Tailwind CSS 4 integration | ✅     | Dark theme, Fredoka font                   |
+| Component library          | ✅     | HabitCard, Header, Toast, drawer nav, etc. |
+| File-based routing         | ✅     | Home, habits/, journey/, chat/, settings/  |
+| Mock data and stores       | ✅     | Svelte 5 runes with derived state          |
 
 **Deliverables:**
 

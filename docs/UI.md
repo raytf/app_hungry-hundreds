@@ -219,14 +219,15 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **File:** `src/routes/habits/[id]/edit/+page.svelte`
 
-**Purpose:** Form for editing an existing habit.
+**Purpose:** Form for editing an existing habit, including deferred interval updates for `every-x-days` schedules.
 
 **Layout:**
 
 1. Header with back button and "Edit Habit" title
 2. Description text
-3. HabitForm component (pre-populated with current habit data)
-4. Error display (if update fails)
+3. Pending interval notice with "Apply now and restart interval" action (when applicable)
+4. HabitForm component (pre-populated with current habit data)
+5. Error display (if update fails)
 
 **Components Used:**
 
@@ -236,6 +237,9 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 **Key Features:**
 
 - Pre-populated form with existing habit name, emoji, color, reminder time
+- For `every-x-days` habits, mid-window interval edits can be deferred via `pendingIntervalDays`
+- Amber notice explains when a pending interval change will take effect
+- Notice includes an explicit "Apply now and restart interval instead" escape hatch
 - Loading state while submitting
 - Error handling with user feedback
 - Habit not found state with link back to habits list
@@ -245,6 +249,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 - Back button → Habits list (`/habits`)
 - On submit → Habits list (`/habits`)
+- "Apply now and restart interval instead" → Habit detail (`/habits/[id]`)
 
 ---
 

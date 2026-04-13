@@ -53,7 +53,7 @@ As a user, I want to see my monster companion animate and react to my actions so
 #### Phase 5.6-5.7: Micro-interactions
 
 - Add `buttonSpring` to `HabitCard.svelte` toggle
-- Add tap animation to `BottomNav.svelte` icons
+- Add tap animation to navigation icons (implemented in `BottomNav.svelte` at the time; now lives in `Header.svelte` drawer items)
 
 #### Phase 5.8: Performance
 
@@ -134,12 +134,12 @@ const supportsRive = (): boolean => {
 
 ### Integration Points
 
-| Component               | Animation           | Trigger                        |
-| ----------------------- | ------------------- | ------------------------------ |
-| `Monster.svelte`        | Rive idle/happy     | Stage change, habit completion |
-| `MonsterDisplay.svelte` | Uses Monster.svelte | Page load                      |
-| `HabitCard.svelte`      | buttonSpring        | Toggle button tap              |
-| `BottomNav.svelte`      | Scale spring        | Icon tap                       |
+| Component               | Animation           | Trigger                                            |
+| ----------------------- | ------------------- | -------------------------------------------------- |
+| `Monster.svelte`        | Rive idle/happy     | Stage change, habit completion                     |
+| `MonsterDisplay.svelte` | Uses Monster.svelte | Page load                                          |
+| `HabitCard.svelte`      | buttonSpring        | Toggle button tap                                  |
+| Navigation icons        | Scale spring        | Icon tap (legacy BottomNav, current Header drawer) |
 
 ## Acceptance Criteria
 
@@ -148,7 +148,7 @@ const supportsRive = (): boolean => {
 - [x] Emoji fallback works when WebGL unavailable
 - [x] MonsterDisplay uses Monster.svelte with fallback
 - [x] HabitCard has spring animation on toggle
-- [x] BottomNav has tap animation on icons
+- [x] Navigation icons have tap animation (legacy BottomNav implementation, current Header drawer items)
 - [x] Reduced motion preference respected
 - [x] Rive lazy-loaded via Vite chunks
 - [x] STATUS.md updated with Phase 5 progress

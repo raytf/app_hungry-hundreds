@@ -67,25 +67,23 @@ hungryhundreds/
 ├── src/
 │   ├── app.html
 │   ├── routes/
-│   │   ├── +page.svelte          # Home (habit list)
-│   │   ├── +layout.svelte        # App shell
-│   │   ├── onboard/+page.svelte  # First-time setup
-│   │   ├── check-in/+page.svelte # Daily habit logging
-│   │   ├── dashboard/+page.svelte # Analytics/streaks
-│   │   └── settings/+page.svelte  # User preferences
+│   │   ├── +page.svelte              # Home (today's habits)
+│   │   ├── +layout.svelte            # App shell
+│   │   ├── chat/+page.svelte         # Full-screen chat with Gonn
+│   │   ├── habits/+page.svelte       # Habit list
+│   │   ├── habits/[id]/+page.svelte  # Habit detail + completion history
+│   │   ├── habits/new/+page.svelte   # Create habit
+│   │   ├── journey/+page.svelte      # Analytics / history
+│   │   ├── onboard/+page.svelte      # First-time setup
+│   │   └── settings/+page.svelte     # User preferences
 │   ├── lib/
-│   │   ├── components/
-│   │   │   ├── Monster.svelte     # Rive character with lookAt() head tracking
-│   │   │   ├── MonsterDisplay.svelte # Monster wrapper, registers lookAt callback
-│   │   │   ├── HabitCard.svelte   # Individual habit item
-│   │   │   └── StreakBadge.svelte # Streak indicator
-│   │   ├── stores/
-│   │   │   ├── habits.ts          # Habit state management
-│   │   │   ├── monster.ts         # Monster state + registerMonsterLookAt/monsterLookAt
-│   │   │   └── auth.ts            # User session
-│   │   ├── db.ts                  # Dexie schema (local storage)
-│   │   ├── api.ts                 # Supabase client
-│   │   └── sync.ts                # Offline sync logic
+│   │   ├── ai/                     # Gonn dialogue, memory, and rule engine
+│   │   ├── components/             # Reusable Svelte components
+│   │   ├── db/                     # Dexie schema + habit/log data access
+│   │   ├── history/                # Derived habit-history helpers
+│   │   ├── stores/                 # Svelte 5 runes stores
+│   │   ├── supabase/               # Auth + API client
+│   │   └── sync/                   # Offline sync logic
 │   └── service-worker.ts
 ├── static/
 │   ├── manifest.json
@@ -262,9 +260,10 @@ On connectivity restored:
 
 ### 3. Streak Tracking
 
-- Current streak: consecutive days completed
-- Best streak: all-time record
-- Streak calculated locally first, server authoritative on sync
+- Current streak and best streak support daily, weekly, and `every-x-days` cadences
+- Interval habits snapshot `windowIntervalDays` on each completion so past windows stay governed by the rule active at the time
+- Mid-window interval edits can defer through `pendingIntervalDays` and apply after the next completion
+- Streaks and per-habit completion history are derived locally first, server authoritative on sync
 
 ### 4. Push Notifications
 

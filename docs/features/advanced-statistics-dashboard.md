@@ -14,7 +14,7 @@
 
 ## Purpose
 
-The current dashboard (`src/routes/dashboard/+page.svelte`) shows basic metrics — completion rate, active habits, total streak days, longest streak, and a weekly bar chart. While useful for a quick snapshot, these metrics don't help users understand _why_ they succeed or fail, or _how_ their behavior is changing over time.
+The current Journey page (`src/routes/journey/+page.svelte`) shows basic metrics — completion rate, active habits, total streak days, longest streak, and a weekly bar chart. While useful for a quick snapshot, these metrics don't help users understand _why_ they succeed or fail, or _how_ their behavior is changing over time.
 
 This feature adds six advanced behavioral analytics that surface actionable insights: which days and times work best, how quickly users recover from misses, a holistic consistency score, trend direction, time-to-complete tracking, and a "never miss twice" counter inspired by James Clear's Atomic Habits. Together, these metrics help users build sustainable consistency rather than chasing volatile streaks.
 
@@ -38,13 +38,13 @@ As a habit tracker user, I want to see advanced behavioral analytics about my ha
 
 #### Files Modified
 
-| File                                | Changes                                                                 |
-| ----------------------------------- | ----------------------------------------------------------------------- |
-| `src/routes/dashboard/+page.svelte` | Added advanced stats sections below existing content (66 → 153 lines)   |
-| `src/lib/stores/stats.ts`           | Exported `getWeekStart()` and `getWeekDates()` (changed from private)   |
-| `src/lib/db/db.ts`                  | Added Dexie v5 migration with standalone `date` index on logs table     |
-| `src/lib/db/habitLogs.ts`           | Added query helpers: `getAllLogsForHabit()`, `getLogsBetweenDates()`    |
-| `src/lib/db/index.ts`               | Added barrel exports for `getAllLogsForHabit` and `getLogsBetweenDates` |
+| File                              | Changes                                                                 |
+| --------------------------------- | ----------------------------------------------------------------------- |
+| `src/routes/journey/+page.svelte` | Added advanced stats sections below existing content (66 → 153 lines)   |
+| `src/lib/stores/stats.ts`         | Exported `getWeekStart()` and `getWeekDates()` (changed from private)   |
+| `src/lib/db/db.ts`                | Added Dexie v5 migration with standalone `date` index on logs table     |
+| `src/lib/db/habitLogs.ts`         | Added query helpers: `getAllLogsForHabit()`, `getLogsBetweenDates()`    |
+| `src/lib/db/index.ts`             | Added barrel exports for `getAllLogsForHabit` and `getLogsBetweenDates` |
 
 #### Data Model Changes
 
@@ -314,9 +314,9 @@ function calculateNeverMissTwice(
 
 ### UI/UX Design
 
-#### Dashboard Layout (Updated)
+#### Journey Layout (Updated)
 
-The dashboard page (`src/routes/dashboard/+page.svelte`) will be extended with new sections below the existing content. The existing Today's Progress, Weekly Chart, and Stats Grid sections remain unchanged.
+The Journey page (`src/routes/journey/+page.svelte`) will be extended with new sections below the existing content. The existing Today's Progress, Weekly Chart, and Stats Grid sections remain unchanged.
 
 ```
 ┌─────────────────────────────────┐
@@ -450,7 +450,7 @@ All advanced metrics work fully offline because they are computed from local Dex
 | `src/lib/db/db.ts`                       | Dexie version 5 upgrade adds `date` index on logs table                                                     |
 | `src/lib/components/ProgressRing.svelte` | Reused by `ConsistencyGauge` for the circular score display                                                 |
 | `src/lib/components/StatsCard.svelte`    | Existing card used for simple value metrics (never-miss-twice, time-to-complete)                            |
-| `src/routes/dashboard/+page.svelte`      | Imports `advancedStats` store and new components                                                            |
+| `src/routes/journey/+page.svelte`        | Imports `advancedStats` store and new components                                                            |
 
 #### Sync Considerations
 

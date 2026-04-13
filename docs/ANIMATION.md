@@ -214,7 +214,7 @@ export function buttonSpring(element: HTMLElement) {
 
 - HabitCard toggle button
 - Primary action buttons
-- BottomNav icons
+- Header drawer navigation icons (legacy BottomNav integration)
 - FAB (Floating Action Button)
 
 #### 2. Page Transitions
@@ -309,7 +309,7 @@ export function celebrate(element: HTMLElement) {
 | Cursor move     | Head tracking (lookAt → headX/headY)      | Rive       |
 | Container mount | Scale-in entrance                         | Motion One |
 
-### BottomNav.svelte
+### Navigation Icons (Legacy BottomNav → Current Header Drawer)
 
 | Trigger             | Animation                | Package    |
 | ------------------- | ------------------------ | ---------- |
@@ -462,7 +462,7 @@ static/animations/
 - [x] Add `src/lib/animations/transitions.ts` utilities (buttonSpring, celebrate, iconTap)
 - [x] Add `src/lib/animations/rive-utils.ts` utilities (WebGL detection, visibility observers)
 - [x] Integrate buttonSpring in HabitCard
-- [x] Integrate iconTap in BottomNav
+- [x] Integrate iconTap in navigation icons (originally BottomNav; now Header drawer items)
 - [x] Celebrate animation on streak milestones (7/30/100)
 - [ ] Add page transitions to +layout.svelte
 

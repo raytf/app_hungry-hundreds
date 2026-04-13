@@ -10,11 +10,11 @@ All components are located in `src/lib/components/` directory.
 
 ## Core Components
 
-### BottomNav.svelte
+### BottomNav.svelte (Legacy)
 
-**Purpose**: Fixed bottom navigation bar for main app navigation.
+**Purpose**: Retired fixed bottom navigation bar used in earlier app versions.
 
-**Location**: `src/lib/components/BottomNav.svelte`
+**Location**: Removed from the current codebase. App navigation now lives in the drawer menu inside `src/lib/components/Header.svelte`.
 
 **Features**:
 
@@ -23,18 +23,17 @@ All components are located in `src/lib/components/` directory.
 - Active state highlighting
 - Icon + label navigation items
 
-**Navigation Items**:
+**Historical Navigation Items**:
 
 - Home (`/`) - Today's habits
 - Habits (`/habits`) - All habits list
-- Stats (`/dashboard`) - Statistics dashboard
+- Journey (`/journey`) - Statistics dashboard
 - Settings (`/settings`) - App settings
 
 **Usage**:
 
 ```svelte
-<!-- In src/routes/+layout.svelte -->
-<BottomNav />
+<!-- Legacy only; current app uses the Header drawer navigation -->
 ```
 
 **Styling**:
@@ -333,7 +332,7 @@ Defined in `src/routes/layout.css` (or `src/app.css`):
 Primary action button styling.
 
 ```css
-@apply rounded-xl bg-hungry-500 px-6 py-3 font-semibold text-white transition-all hover:bg-hungry-600 active:bg-hungry-700 disabled:cursor-not-allowed disabled:opacity-50;
+@apply bg-hungry-500 hover:bg-hungry-600 active:bg-hungry-700 rounded-xl px-6 py-3 font-semibold text-white transition-all disabled:cursor-not-allowed disabled:opacity-50;
 ```
 
 **Usage**:
@@ -374,7 +373,7 @@ Page layout wrapper with max width and padding.
 </div>
 ```
 
-**Note**: `pb-24` (96px) provides space for bottom navigation.
+**Note**: The current `.page-container` utility uses `pb-6`; the larger bottom-nav clearance is legacy guidance.
 
 ---
 
@@ -412,10 +411,10 @@ Page layout wrapper with max width and padding.
 
 ### Spacing
 
-**Bottom Navigation Clearance**: 96px (`pb-24`)
+**Legacy Bottom Navigation Clearance**: 96px (`pb-24`)
 
-- Ensures content doesn't hide behind fixed bottom nav
-- Applied to `.page-container`
+- Applied in earlier layouts that used a fixed bottom nav
+- Current `.page-container` uses `pb-6`
 
 ---
 
