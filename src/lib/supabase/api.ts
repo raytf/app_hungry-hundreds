@@ -11,7 +11,14 @@
  * @see docs/API.md for data model documentation
  */
 import { supabase } from './client';
-import type { HabitRow, HabitInsert, HabitUpdate, HabitLogRow, HabitLogInsert } from './types';
+import type {
+	HabitRow,
+	HabitInsert,
+	HabitUpdate,
+	HabitLogRow,
+	HabitLogInsert,
+	HabitLogUpdate
+} from './types';
 
 // ============================================================================
 // Types
@@ -133,6 +140,23 @@ export async function createRemoteHabitLog(
 	const { data, error } = await supabase
 		.from('habit_logs')
 		.insert(insertData as never)
+		.select()
+		.single();
+
+	return { data: data as HabitLogRow | null, error };
+}
+
+/**
+ * Update a habit log
+ */
+export async function updateRemoteHabitLog(
+	logId: string,
+	updates: HabitLogUpdate
+): Promise<ApiResult<HabitLogRow>> {
+	const { data, error } = await supabase
+		.from('habit_logs')
+		.update(updates as never)
+		.eq('id', logId)
 		.select()
 		.single();
 

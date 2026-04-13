@@ -18,6 +18,7 @@ import {
 	createHabit,
 	getHabitById,
 	getLatestLogForHabit,
+	updateLogWindowInterval,
 	updateHabit,
 	deleteHabit,
 	toggleHabitCompletion,
@@ -324,6 +325,9 @@ export const habits = {
 					schedule: updates.schedule,
 					pendingIntervalDays: undefined
 				});
+				if (latestLog?.id !== undefined) {
+					await updateLogWindowInterval(latestLog.id, nextInterval);
+				}
 				refreshStatus();
 				return;
 			}
@@ -354,13 +358,19 @@ export const habits = {
 			return;
 		}
 
+		const nextInterval = habit.pendingIntervalDays;
+		const latestLog = await getLatestLogForHabit(id);
+
 		await updateHabit(id, {
 			schedule: {
 				type: 'every-x-days',
-				intervalDays: habit.pendingIntervalDays
+				intervalDays: nextInterval
 			},
 			pendingIntervalDays: undefined
 		});
+		if (latestLog?.id !== undefined) {
+			await updateLogWindowInterval(latestLog.id, nextInterval);
+		}
 		refreshStatus();
 	},
 

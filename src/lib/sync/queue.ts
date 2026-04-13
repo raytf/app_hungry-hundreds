@@ -157,6 +157,29 @@ export async function queueLogCreate(
 }
 
 /**
+ * Queue a habit log update for sync
+ */
+export async function queueLogUpdate(
+	localId: number,
+	serverId: string | undefined,
+	habitLocalId: number,
+	habitServerId: string | undefined,
+	date: string,
+	completionType: CompletionType = 'full',
+	windowIntervalDays?: number
+): Promise<number> {
+	return await queueOperation('update', 'logs', {
+		localId,
+		serverId,
+		habitLocalId,
+		habitServerId,
+		date,
+		completionType,
+		windowIntervalDays
+	});
+}
+
+/**
  * Queue a habit log deletion for sync
  */
 export async function queueLogDelete(

@@ -16,7 +16,7 @@ import {
 	type HabitLog,
 	type CompletionType
 } from './db';
-import { queueHabitUpdate, queueLogCreate, queueLogDelete } from '$lib/sync/queue';
+import { queueHabitUpdate, queueLogCreate, queueLogDelete, queueLogUpdate } from '$lib/sync/queue';
 
 function sortLogsNewestFirst(a: HabitLog, b: HabitLog): number {
 	if (a.date === b.date) {
@@ -75,6 +75,33 @@ async function consumePendingIntervalIfNeeded(habitId: number, habit: Habit): Pr
 export async function getLatestLogForHabit(habitId: number): Promise<HabitLog | undefined> {
 	const logs = await db.logs.where('habitId').equals(habitId).toArray();
 	return [...logs].sort(sortLogsNewestFirst)[0];
+}
+
+export async function updateLogWindowInterval(
+	logId: number,
+	windowIntervalDays: number | undefined
+): Promise<number> {
+	const log = await db.logs.get(logId);
+	if (!log) return 0;
+
+	const updated = await db.logs.update(logId, {
+		windowIntervalDays,
+		synced: false
+	});
+
+	if (updated > 0) {
+		await queueLogUpdate(
+			logId,
+			log.serverId,
+			log.habitId,
+			undefined,
+			log.date,
+			log.completionType,
+			windowIntervalDays
+		);
+	}
+
+	return updated;
 }
 
 // ============================================================================
