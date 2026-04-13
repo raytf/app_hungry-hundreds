@@ -12,6 +12,7 @@ import {
 	queueHabitUpdate,
 	queueHabitDelete,
 	queueLogCreate,
+	queueLogUpdate,
 	queueLogDelete,
 	getPendingOperations,
 	getPendingCount,
@@ -100,6 +101,36 @@ describe('Sync Queue Operations', () => {
 			});
 		});
 
+		describe('queueLogUpdate', () => {
+			it('should add a log update operation to the queue', async () => {
+				const queueId = await queueLogUpdate(
+					9,
+					'log-server-uuid',
+					3,
+					'habit-server-uuid',
+					'2026-04-13',
+					'full',
+					5
+				);
+
+				expect(queueId).toBeGreaterThan(0);
+
+				const pending = await getPendingOperations();
+				expect(pending).toHaveLength(1);
+				expect(pending[0].action).toBe('update');
+				expect(pending[0].table).toBe('logs');
+				expect(pending[0].payload).toMatchObject({
+					localId: 9,
+					serverId: 'log-server-uuid',
+					habitLocalId: 3,
+					habitServerId: 'habit-server-uuid',
+					date: '2026-04-13',
+					completionType: 'full',
+					windowIntervalDays: 5
+				});
+			});
+		});
+
 		it('should work without serverId for unsynced habits', async () => {
 			const queueId = await queueHabitDelete(3, undefined);
 
@@ -154,4 +185,3 @@ describe('Sync Queue Operations', () => {
 		});
 	});
 });
-

@@ -24,6 +24,7 @@ export {
 	queueHabitUpdate,
 	queueHabitDelete,
 	queueLogCreate,
+	queueLogUpdate,
 	queueLogDelete,
 	getPendingOperations,
 	getPendingCount,

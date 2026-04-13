@@ -52,6 +52,7 @@ export {
 	calculateFlexibleStreak,
 	calculateFlexibleStreaksForHabits,
 	getLatestLogForHabit,
+	updateLogWindowInterval,
 	getWeekBounds,
 	getCompletionsInRange,
 	getTotalCompletions,

@@ -20,6 +20,8 @@
 		day: 'Yesterday',
 		'7days': 'Last 7 Days',
 		'30days': 'Last 30 Days',
+		month: 'This Month',
+		'3months': 'Last 3 Months',
 		custom: 'Custom Range'
 	};
 
@@ -55,10 +57,7 @@
 
 	<!-- Period Selector + Chart -->
 	<section class="mb-3">
-		<PeriodSelector
-			value={$selectedPeriod}
-			onchange={(range) => selectedPeriod.set(range)}
-		/>
+		<PeriodSelector value={$selectedPeriod} onchange={(range) => selectedPeriod.set(range)} />
 	</section>
 	<section class="mb-6">
 		<PeriodChart data={$periodStats.chartData} title={chartTitle} />

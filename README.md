@@ -10,7 +10,7 @@ Hungry Hundreds helps users build consistent habits by:
 - **Streak Tracking** - Build momentum with daily, weekly, and non-retroactive every-X-days streaks; celebrate milestones at 7, 30, and 100 days
 - **Gonn** — An animated Rive mascot that reacts emotionally to your progress, speaks proactively, and answers questions in the `/chat` page
 - **Offline-First** - All data lives in IndexedDB (Dexie.js) and syncs to Supabase when online
-- **Progress Analytics** - View completion rates and habit history on the Journey page
+- **Progress Analytics** - View completion rates on Journey and inspect per-habit history windows from the habit detail page
 
 **Current Phase**: Phase 9 complete — Design System applied across all UI surfaces
 
@@ -89,6 +89,7 @@ src/
 
 - ✅ Habit creation — daily, every-X-days, weekly, and multi-completion schedules
 - ✅ Streak tracking with partial completion support and non-retroactive interval changes for every-X-days habits
+- ✅ Habit detail history — per-habit chart, interval windows, and completion log filtering by 7 Days / Month / 3 Months / Custom
 - ✅ Milestone confetti at 7, 30, and 100 day streaks
 - ✅ Gonn — animated Rive mascot with emotional states, head tracking, and proactive dialogue guided toward one short complete sentence
 - ✅ `/chat` page — full-screen AI conversation powered by Claude Haiku via Supabase Edge Function

@@ -16,6 +16,7 @@ import {
 	updateRemoteHabit,
 	deleteRemoteHabit,
 	createRemoteHabitLog,
+	updateRemoteHabitLog,
 	deleteRemoteHabitLog
 } from '$lib/supabase';
 import { auth, userId } from '$lib/stores/auth';
@@ -378,6 +379,26 @@ function createSyncStore() {
 				if (data) {
 					await markLogSynced(payload.localId, data.id);
 				}
+			} else if (op.action === 'update') {
+				let logServerId = payload.serverId;
+				if (!logServerId) {
+					const log = await db.logs.get(payload.localId);
+					logServerId = log?.serverId;
+				}
+
+				if (!logServerId) {
+					console.warn('[sync] Cannot update log without serverId, will retry after log syncs');
+					await incrementRetry(op.id!);
+					return;
+				}
+
+				const { error } = await updateRemoteHabitLog(logServerId, {
+					completion_type: payload.completionType,
+					window_interval_days: payload.windowIntervalDays ?? null
+				});
+
+				if (error) throw error;
+				await db.logs.update(payload.localId, { synced: true });
 			} else if (op.action === 'delete') {
 				if (!habitServerId) {
 					// For deletes without habitServerId, we can safely remove from queue
