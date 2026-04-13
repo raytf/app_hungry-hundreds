@@ -431,9 +431,9 @@ The hamburger drawer is the sole top-level navigation. Accessed via the `Menu` i
 
 | Route         | Label          | Icon (Lucide)   |
 | ------------- | -------------- | --------------- |
-| `/`           | Home           | `Home`          |
-| `/habits/new` | Add Habit      | `Plus`          |
-| `/chat`       | Chat with Gonn | `MessageCircle` |
+| `/`       | Home           | `Home`          |
+| `/habits` | Habits         | `LayoutList`    |
+| `/chat`   | Chat with Gonn | `MessageCircle` |
 | `/journey`    | Journey        | `TrendingUp`    |
 | `/settings`   | Settings       | `Settings`      |
 
@@ -742,7 +742,7 @@ interface WeeklyDataPoint {
 │                                                              │
 │   / (Home) ←──→ /chat ←──→ /journey ←──→ /settings          │
 │       ↓                                        ↓            │
-│   /habits/new                            /auth/signin        │
+│   /habits ←──→ /habits/new               /auth/signin        │
 │   /habits/[id]                                               │
 └──────────────────────────────────────────────────────────────┘
 
@@ -759,7 +759,7 @@ interface WeeklyDataPoint {
 
 1. **Drawer Navigation** - Main app sections (hamburger menu in Header, available on all pages)
 2. **Back Button** - Return to previous/home page (in Header)
-3. **Deep Links** - Direct action links (e.g., "+ Add New" → `/habits/new`)
+3. **Deep Links** - Direct action links (e.g., "+ Add New" → `/habits/new` from the habits list)
 4. **Redirects** - Post-action navigation (e.g., create habit → habits list)
 
 ---

@@ -12,12 +12,25 @@ Represents a user's habit stored locally in IndexedDB.
 
 ```typescript
 // src/lib/db.ts
+interface HabitSchedule {
+  type: 'daily' | 'weekly' | 'every-x-days';
+  timesPerWeek?: number;
+  intervalDays?: number;
+}
+
 interface Habit {
   id?: number;           // Auto-incremented local ID
   serverId?: string;     // Supabase UUID (set after sync)
   name: string;          // Habit name (e.g., "Morning Run")
+  emoji: string;         // Emoji icon shown in the UI
   color: string;         // Hex color code (e.g., "#3498db")
   reminderTime?: string; // HH:MM format (24-hour)
+  schedule: HabitSchedule;
+  frequencyType?: 'daily' | 'weekly';
+  frequencyTarget?: number;
+  weekStartsOn?: 0 | 1;
+  partialCriteria?: string;
+  pendingIntervalDays?: number; // Deferred interval change for every-x-days habits
   createdAt: number;     // Unix timestamp
   updatedAt: number;     // Unix timestamp
 }
@@ -30,8 +43,11 @@ interface Habit {
 	"id": 1,
 	"serverId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 	"name": "Morning Run",
+	"emoji": "🏃",
 	"color": "#22c55e",
 	"reminderTime": "07:00",
+	"schedule": { "type": "every-x-days", "intervalDays": 3 },
+	"pendingIntervalDays": 5,
 	"createdAt": 1705305600000,
 	"updatedAt": 1705305600000
 }
@@ -48,6 +64,8 @@ interface HabitLog {
   habitId: number;       // Local habit ID
   date: string;          // YYYY-MM-DD format
   completedAt: number;   // Unix timestamp
+  completionType: 'full' | 'partial';
+  windowIntervalDays?: number; // Interval governing the window started by this completion
   synced: boolean;       // Whether synced to Supabase
 }
 ```
@@ -61,6 +79,8 @@ interface HabitLog {
 	"habitId": 1,
 	"date": "2025-01-15",
 	"completedAt": 1705312800000,
+	"completionType": "full",
+	"windowIntervalDays": 3,
 	"synced": true
 }
 ```
@@ -269,6 +289,8 @@ export const supabase = createClient(
 - `name`: Required, 1-100 characters
 - `color`: Required, valid hex color (#RRGGBB)
 - `reminderTime`: Optional, HH:MM format (24-hour)
+- `schedule.intervalDays`: Required for `every-x-days`, allowed range 2-30
+- `pendingIntervalDays`: Optional deferred schedule change; consumed on the next interval completion
 - Maximum 10 habits per user (MVP)
 
 ### HabitLog
@@ -276,10 +298,11 @@ export const supabase = createClient(
 - `date`: Required, YYYY-MM-DD format
 - Cannot complete future dates
 - Can backfill past 7 days only
+- `completionType`: `full` increments streak progress; `partial` preserves continuity without counting as a full completion
+- `windowIntervalDays`: Optional interval snapshot used to keep every-X-days streaks non-retroactive
 
 ## Related Documentation
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture
 - [DEVELOPMENT.md](./DEVELOPMENT.md) - Development workflow
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment process
-

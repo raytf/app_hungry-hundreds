@@ -16,16 +16,19 @@ import {
 	db,
 	getAllHabits,
 	createHabit,
+	getHabitById,
+	getLatestLogForHabit,
 	updateHabit,
 	deleteHabit,
 	toggleHabitCompletion,
 	markPartialCompletion,
 	getCompletionTypeForDate,
+	calculateFlexibleStreak,
 	calculateFlexibleStreaksForHabits,
 	getCompletedTodayMap,
 	type Habit,
 	type CreateHabitInput,
-	type UpdateHabitInput,
+	type UpdateHabitPayload,
 	type CompletionType
 } from '$lib/db';
 
@@ -291,9 +294,74 @@ export const habits = {
 	/**
 	 * Update an existing habit
 	 */
-	edit: async (id: number, updates: UpdateHabitInput): Promise<void> => {
+	edit: async (id: number, updates: UpdateHabitPayload): Promise<void> => {
 		if (!browser) return;
+
+		const habit = await getHabitById(id);
+		if (!habit) return;
+
+		if (habit.schedule?.type === 'every-x-days' && updates.schedule?.type === 'every-x-days') {
+			const currentInterval = habit.schedule.intervalDays ?? 7;
+			const nextInterval = updates.schedule.intervalDays ?? currentInterval;
+
+			if (nextInterval !== currentInterval) {
+				const { dueInDays } = await calculateFlexibleStreak(habit);
+				const latestLog = await getLatestLogForHabit(id);
+				const restUpdates: UpdateHabitPayload = { ...updates };
+				delete restUpdates.schedule;
+
+				if (latestLog && (dueInDays ?? 0) >= 0) {
+					await updateHabit(id, {
+						...restUpdates,
+						pendingIntervalDays: nextInterval
+					});
+					refreshStatus();
+					return;
+				}
+
+				await updateHabit(id, {
+					...restUpdates,
+					schedule: updates.schedule,
+					pendingIntervalDays: undefined
+				});
+				refreshStatus();
+				return;
+			}
+		}
+
+		if (habit.pendingIntervalDays !== undefined && updates.schedule?.type !== 'every-x-days') {
+			await updateHabit(id, {
+				...updates,
+				pendingIntervalDays: undefined
+			});
+			refreshStatus();
+			return;
+		}
+
 		await updateHabit(id, updates);
+		refreshStatus();
+	},
+
+	applyIntervalNow: async (id: number): Promise<void> => {
+		if (!browser) return;
+
+		const habit = await getHabitById(id);
+		if (
+			!habit ||
+			habit.schedule?.type !== 'every-x-days' ||
+			habit.pendingIntervalDays === undefined
+		) {
+			return;
+		}
+
+		await updateHabit(id, {
+			schedule: {
+				type: 'every-x-days',
+				intervalDays: habit.pendingIntervalDays
+			},
+			pendingIntervalDays: undefined
+		});
+		refreshStatus();
 	},
 
 	/**

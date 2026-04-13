@@ -36,6 +36,7 @@ export interface QueuedLogPayload {
 	habitServerId?: string;
 	date: string;
 	completionType?: CompletionType;
+	windowIntervalDays?: number;
 }
 
 export type SyncPayload = QueuedHabitPayload | QueuedLogPayload;
@@ -142,14 +143,16 @@ export async function queueLogCreate(
 	habitLocalId: number,
 	habitServerId: string | undefined,
 	date: string,
-	completionType: CompletionType = 'full'
+	completionType: CompletionType = 'full',
+	windowIntervalDays?: number
 ): Promise<number> {
 	return await queueOperation('create', 'logs', {
 		localId,
 		habitLocalId,
 		habitServerId,
 		date,
-		completionType
+		completionType,
+		windowIntervalDays
 	});
 }
 

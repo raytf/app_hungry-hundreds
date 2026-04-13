@@ -7,7 +7,7 @@ An offline-first PWA habit tracker with Gonn — a character-driven mascot that 
 Hungry Hundreds helps users build consistent habits by:
 
 - **Daily Habit Tracking** - Check off habits as you complete them, with support for daily, every-X-days, and weekly schedules
-- **Streak Tracking** - Build momentum with consecutive day streaks; celebrate milestones at 7, 30, and 100 days
+- **Streak Tracking** - Build momentum with daily, weekly, and non-retroactive every-X-days streaks; celebrate milestones at 7, 30, and 100 days
 - **Gonn** — An animated Rive mascot that reacts emotionally to your progress, speaks proactively, and answers questions in the `/chat` page
 - **Offline-First** - All data lives in IndexedDB (Dexie.js) and syncs to Supabase when online
 - **Progress Analytics** - View completion rates and habit history on the Journey page
@@ -88,7 +88,7 @@ src/
 ## 🎨 Key Features
 
 - ✅ Habit creation — daily, every-X-days, weekly, and multi-completion schedules
-- ✅ Streak tracking with partial completion support (preserves streak on busy days)
+- ✅ Streak tracking with partial completion support and non-retroactive interval changes for every-X-days habits
 - ✅ Milestone confetti at 7, 30, and 100 day streaks
 - ✅ Gonn — animated Rive mascot with emotional states, head tracking, and proactive dialogue guided toward one short complete sentence
 - ✅ `/chat` page — full-screen AI conversation powered by Claude Haiku via Supabase Edge Function

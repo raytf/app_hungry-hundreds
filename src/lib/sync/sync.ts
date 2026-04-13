@@ -295,7 +295,8 @@ function createSyncStore() {
 						emoji: habit.emoji,
 						color: habit.color,
 						reminder_time: habit.reminderTime,
-						schedule: habit.schedule as unknown as import('$lib/supabase/types').Json
+						schedule: habit.schedule as unknown as import('$lib/supabase/types').Json,
+						pending_interval_days: habit.pendingIntervalDays ?? null
 					},
 					userId
 				);
@@ -314,13 +315,19 @@ function createSyncStore() {
 					return;
 				}
 
-				const { error } = await updateRemoteHabit(payload.serverId, {
+				const remoteUpdates: import('$lib/supabase').HabitUpdate = {
 					name: payload.data?.name,
 					emoji: payload.data?.emoji,
 					color: payload.data?.color,
 					reminder_time: payload.data?.reminderTime,
 					schedule: payload.data?.schedule as unknown as import('$lib/supabase/types').Json
-				});
+				};
+
+				if (payload.data && 'pendingIntervalDays' in payload.data) {
+					remoteUpdates.pending_interval_days = payload.data.pendingIntervalDays ?? null;
+				}
+
+				const { error } = await updateRemoteHabit(payload.serverId, remoteUpdates);
 
 				if (error) throw error;
 			} else if (op.action === 'delete') {
@@ -360,7 +367,9 @@ function createSyncStore() {
 				const { data, error } = await createRemoteHabitLog(
 					{
 						habit_id: habitServerId,
-						logged_date: payload.date
+						logged_date: payload.date,
+						completion_type: payload.completionType ?? 'full',
+						window_interval_days: payload.windowIntervalDays ?? null
 					},
 					userId
 				);
