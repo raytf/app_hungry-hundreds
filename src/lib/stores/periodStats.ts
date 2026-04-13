@@ -16,7 +16,7 @@ import { habits } from './habits';
 // Types
 // ============================================================================
 
-export type PeriodPreset = 'day' | '7days' | '30days' | 'custom';
+export type PeriodPreset = 'day' | '7days' | '30days' | 'month' | '3months' | 'custom';
 
 export interface PeriodRange {
 	preset: PeriodPreset;
@@ -59,6 +59,16 @@ export function getPresetRange(preset: Exclude<PeriodPreset, 'custom'>): {
 		d.setDate(d.getDate() - 1);
 		const start = formatDateLocal(d);
 		return { start, end: start };
+	}
+
+	if (preset === 'month') {
+		const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+		return { start: formatDateLocal(startDate), end };
+	}
+
+	if (preset === '3months') {
+		const startDate = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+		return { start: formatDateLocal(startDate), end };
 	}
 
 	const daysBack = preset === '7days' ? 6 : 29;
@@ -118,7 +128,12 @@ function buildChartData(
 		}
 
 		const label = `${cursor.getMonth() + 1}/${cursor.getDate()}`;
-		points.push({ label, completed: weekCompleted, total: weekPossible, date: formatDateLocal(cursor) });
+		points.push({
+			label,
+			completed: weekCompleted,
+			total: weekPossible,
+			date: formatDateLocal(cursor)
+		});
 		cursor.setDate(cursor.getDate() + 7);
 	}
 	return points;

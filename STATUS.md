@@ -116,6 +116,7 @@
 - ✅ **Suggested Habits Data** - `src/lib/data/suggestedHabits.ts` provides curated habit suggestions
 - ✅ **Empty State UX** - Users see suggested habits they can click to add, plus link to create custom habits
 - ✅ **Journey Period Filter** - `PeriodSelector` segment control (Yesterday / 7 Days / 30 Days / Custom) + `PeriodChart` replace the fixed weekly chart on `/journey`; `periodStats` store drives completion rate for the selected window
+- ✅ **Habit Detail History** - `/habits/[id]` now includes a scoped period selector, per-habit chart, interval window list, and completion log
 
 ### Phase 6: PWA (Complete)
 

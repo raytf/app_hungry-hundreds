@@ -6,16 +6,17 @@
 	interface Props {
 		value: PeriodRange;
 		onchange: (range: PeriodRange) => void;
+		presets?: { id: PeriodPreset; label: string }[];
 	}
 
-	let { value, onchange }: Props = $props();
-
-	const presets: { id: PeriodPreset; label: string }[] = [
+	const DEFAULT_PRESETS: { id: PeriodPreset; label: string }[] = [
 		{ id: 'day', label: 'Yesterday' },
 		{ id: '7days', label: '7 Days' },
 		{ id: '30days', label: '30 Days' },
 		{ id: 'custom', label: 'Custom' }
 	];
+
+	let { value, onchange, presets = DEFAULT_PRESETS }: Props = $props();
 
 	// Local state for the custom date inputs — untrack() suppresses the Svelte
 	// "initial value only" warning; $effect below keeps them in sync with the prop.
