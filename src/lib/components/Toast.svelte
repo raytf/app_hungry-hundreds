@@ -14,9 +14,23 @@
 		out:fly={{ y: -8, duration: 200 }}
 	>
 		<div
-			class="max-w-xs rounded-xl bg-content px-4 py-3 text-body font-medium text-surface shadow-toast"
+			data-testid="toast"
+			class="max-w-sm rounded-xl bg-content px-4 py-3 text-body font-medium text-surface shadow-toast"
+			class:pointer-events-auto={toastStore.hasAction}
 		>
-			{toastStore.message}
+			<div class="flex items-center gap-3">
+				<p class="min-w-0 flex-1">{toastStore.message}</p>
+				{#if toastStore.hasAction && toastStore.actionLabel}
+					<button
+						type="button"
+						data-testid="toast-action"
+						onclick={() => toastStore.handleAction()}
+						class="shrink-0 rounded-lg border border-white/20 px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+					>
+						{toastStore.actionLabel}
+					</button>
+				{/if}
+			</div>
 		</div>
 	</div>
 {/if}
