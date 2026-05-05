@@ -48,6 +48,8 @@ redirect to `/onboard` if they have zero habits.
 | `src/routes/+layout.svelte`           | **Edit**             | Add first-run detection in `onMount`           |
 | `src/routes/settings/+page.svelte`    | **Edit**             | `handleReset` clears flag + replays onboarding |
 | `src/routes/auth/signup/+page.svelte` | **Edit**             | Redirect to `/` not `/onboard` on success      |
+| `src/lib/stores/toast.svelte.ts`      | **Edit**             | Add optional action button support for CTA     |
+| `src/lib/components/Toast.svelte`     | **Edit**             | Render optional toast action button            |
 
 No new stores or composables — all draft state lives in the single `+page.svelte` using Svelte 5 `$state`.
 
@@ -143,7 +145,7 @@ Screen 7              Commit to Dexie + set flag + goto('/')
 After the first habit is created (i.e., after `habits.add()` succeeds), if `!$isAuthenticated`:
 
 - Show a dismissable toast via existing `showToast()`: _"Save your progress → Create account"_
-- Toast tap → `goto(resolve('/auth/signup'))`.
+- Toast action button → `goto(resolve('/auth/signup'))`.
 - No additional screen; does not block the habit reveal.
 
 ### Notifications — no browser prompt on screen 6 until user taps "Yes"

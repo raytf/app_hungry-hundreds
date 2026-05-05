@@ -23,20 +23,20 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 ### Route Structure
 
-| Route               | Page          | Purpose                             | Status               |
-| ------------------- | ------------- | ----------------------------------- | -------------------- |
-| `/`                 | Home          | Daily habit check-in with Gonn      | ✅ Complete          |
-| `/chat`             | Chat          | Full-screen conversation with Gonn  | ✅ Complete          |
-| `/habits`           | Habits List   | Detailed view of all habits         | ✅ Complete          |
-| `/habits/new`       | New Habit     | Create a new habit (full-page form) | ✅ Complete          |
-| `/habits/[id]`      | Habit Detail  | View habit details and history      | ✅ Complete          |
-| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit              | ✅ Complete          |
-| `/journey`          | Journey       | Stats, history, and milestones      | ✅ Complete          |
-| `/settings`         | Settings      | App preferences and sync            | ✅ Complete          |
-| `/onboard`          | Onboarding    | First-time setup wizard             | 📋 Redesign deferred |
-| `/auth/signin`      | Sign In       | User authentication                 | ✅ Complete          |
-| `/auth/signup`      | Sign Up       | Account creation                    | ✅ Complete          |
-| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools    | ✅ Complete          |
+| Route               | Page          | Purpose                               | Status      |
+| ------------------- | ------------- | ------------------------------------- | ----------- |
+| `/`                 | Home          | Daily habit check-in with Gonn        | ✅ Complete |
+| `/chat`             | Chat          | Full-screen conversation with Gonn    | ✅ Complete |
+| `/habits`           | Habits List   | Detailed view of all habits           | ✅ Complete |
+| `/habits/new`       | New Habit     | Create a new habit (full-page form)   | ✅ Complete |
+| `/habits/[id]`      | Habit Detail  | View habit details and history        | ✅ Complete |
+| `/habits/[id]/edit` | Edit Habit    | Edit an existing habit                | ✅ Complete |
+| `/journey`          | Journey       | Stats, history, and milestones        | ✅ Complete |
+| `/settings`         | Settings      | App preferences and sync              | ✅ Complete |
+| `/onboard`          | Onboarding    | First-time conversational habit setup | ✅ Complete |
+| `/auth/signin`      | Sign In       | User authentication                   | ✅ Complete |
+| `/auth/signup`      | Sign Up       | Account creation                      | ✅ Complete |
+| `/monster`          | Monster Debug | Dev-only Rive/mascot debug tools      | ✅ Complete |
 
 ### Page Details
 
@@ -311,6 +311,7 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 - Pending changes indicator
 - Error display for sync issues
 - Reset confirmation dialog
+- Reset All Data clears the onboarding flag and replays onboarding
 
 ---
 
@@ -318,25 +319,32 @@ Hungry Hundreds uses a mobile-first, offline-capable PWA design built with Svelt
 
 **File:** `src/routes/onboard/+page.svelte`
 
-**Purpose:** First-time user setup wizard.
+**Purpose:** Guest-first conversational onboarding that creates a user's first habit with minimal friction.
 
-**Layout:** Three-step wizard:
+**Layout:** Seven-screen conversational flow:
 
-1. **Welcome** - Introduction with get started CTA
-2. **Monster** - Name the monster companion
-3. **Habit** - Create first habit
+1. **Egg** - Single CTA: “Feed me a habit →”
+2. **Identity** - Motivational framing pills with auto-advance reply
+3. **Habit** - Free-form text input with suggestion pills
+4. **When?** - Reminder presets, inline custom time input, or skip
+5. **Frequency** - Daily, weekly target, or every-x-days cadence
+6. **Notifications** - Explicit browser prompt opt-in
+7. **Reveal** - Final confirmation that commits to Dexie and returns home
 
 **Components Used:**
 
-- `MonsterDisplay`
-- `HabitForm`
+- Route-local conversational UI (single-file stateful flow)
+- Global `Toast.svelte` via root layout for the post-create account CTA
 
 **Key Features:**
 
-- Multi-step flow with back navigation
-- Personalized greeting for authenticated users
-- Skip option for quick start
-- Monster name customization
+- One-question-per-screen flow with no progress stepper
+- Suggestion pills fill the habit input without auto-submitting
+- Exact suggestion matches inherit emoji, color, and reminder defaults
+- Reminder presets pre-select the nearest match from suggestion data
+- Notification permission is requested only after tapping “Yes, remind me”
+- Habit is created only on the final reveal screen
+- Guest users see a follow-up “Create account” toast after habit creation
 
 ---
 
@@ -704,9 +712,9 @@ The hamburger drawer is the sole top-level navigation. Accessed via the `Menu` i
 
 ```typescript
 interface WeeklyDataPoint {
-  day: string;       // e.g., "Mon"
-  completed: number;
-  total: number;
+	day: string; // e.g., "Mon"
+	completed: number;
+	total: number;
 }
 ```
 
@@ -750,6 +758,23 @@ interface WeeklyDataPoint {
 
 ---
 
+#### Toast
+
+**File:** `src/lib/components/Toast.svelte`
+
+**Purpose:** Global transient feedback for app events and lightweight follow-up actions.
+
+**Store API:** `showToast(message)` or `showToast({ message, actionLabel, onAction, durationMs })`
+
+**Behavior:**
+
+- Renders from root layout so it persists across route transitions
+- Supports plain informational toasts and optional action button toasts
+- Used by onboarding for the guest account CTA after first habit creation
+- Auto-dismisses by default; action toasts stay visible longer
+
+---
+
 #### AuthGuard
 
 **File:** `src/lib/components/AuthGuard.svelte`
@@ -779,9 +804,9 @@ interface WeeklyDataPoint {
 ┌──────────────────────────────────────────────────────────────┐
 │                    FIRST-TIME USER                           │
 │                                                              │
-│   /onboard ─┬→ Welcome → Monster Name → First Habit → /     │
-│             └→ Skip ──────────────────────────────────→ /   │
-│             └→ Create Account ────────────────────→ /auth/signup
+│   /onboard → Egg → Identity → Habit → When? → Frequency     │
+│             → Notifications? → Reveal → /                  │
+│                               └─────────────→ Toast CTA → /auth/signup
 └──────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────┐
@@ -969,7 +994,7 @@ All animations respect `prefers-reduced-motion: reduce`:
 import { prefersReducedMotion } from '$lib/animations/transitions';
 
 if (prefersReducedMotion()) {
-  // Use simple opacity fade instead of spring
+	// Use simple opacity fade instead of spring
 }
 ```
 
@@ -1037,7 +1062,7 @@ Based on the roadmap phases and current implementation:
 | `Monster.svelte`       | Rive animation wrapper   | 5      | ✅ Complete |
 | `InstallPrompt.svelte` | PWA install UI           | 6      | ✅ Complete |
 | `UpdatePrompt.svelte`  | PWA update notification  | 6      | ✅ Complete |
-| `Toast.svelte`         | Toast notifications      | 5      | 📋 Planned  |
+| `Toast.svelte`         | Toast notifications      | 5      | ✅ Complete |
 | `Modal.svelte`         | Reusable modal dialog    | 5      | 📋 Planned  |
 | `ConfettiEffect`       | Celebration animation    | 5      | 📋 Planned  |
 | `OfflineBanner`        | Offline mode indicator   | 6      | 📋 Planned  |

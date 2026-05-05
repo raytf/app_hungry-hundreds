@@ -20,7 +20,7 @@
 | 9     | Design System      | ✅ Complete | 8/8      |
 
 **Current Phase:** All phases complete — post-MVP polish ongoing
-**Last Updated:** 2026-04-13
+**Last Updated:** 2026-05-05
 
 ---
 
@@ -117,6 +117,9 @@
 - ✅ **Empty State UX** - Users see suggested habits they can click to add, plus link to create custom habits
 - ✅ **Journey Period Filter** - `PeriodSelector` segment control (Yesterday / 7 Days / 30 Days / Custom) + `PeriodChart` replace the fixed weekly chart on `/journey`; `periodStats` store drives completion rate for the selected window
 - ✅ **Habit Detail History** - `/habits/[id]` now includes a scoped period selector, per-habit chart, interval window list, and completion log
+- ✅ **Conversational Onboarding** - `/onboard` now uses a 7-screen guest-first flow with suggestion pills, reminder presets, frequency choices, explicit notification opt-in, and final reveal commit
+- ✅ **Actionable Toast CTA** - `Toast.svelte` and `toast.svelte.ts` support optional action buttons for flows like the onboarding account prompt
+- 📄 **Feature Documentation** - `docs/features/onboarding.md`
 - 📄 **Feature Documentation** - `docs/features/interval-streak-v2.md`
 
 ### Phase 6: PWA (Complete)
@@ -316,13 +319,12 @@ All prerequisites met:
 
 These items are deliberately deferred. They are documented here so they are not forgotten.
 
-| Feature                         | Reason Deferred                                                                                        | Design Reference            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------- |
-| **Onboarding redesign**         | Conversational flow (Gonn-driven, one screen per question) requires design system to be complete first | `docs/DESIGN_GUIDE.md` §6.2 |
-| **Evolution cutscene**          | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay               | `docs/DESIGN_GUIDE.md` §6.5 |
-| **Dark mode**                   | Deferred per design guide; requires token inversion system                                             | `docs/DESIGN_GUIDE.md` §12  |
-| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP                                | `docs/DESIGN_GUIDE.md` §4.4 |
-| **Rive speech bubble**          | ~~Rive artboard speech bubble~~ — resolved; speech bubble is Svelte-side HTML (`SpeechBubble.svelte`)  | `docs/rive-spec.md` §6      |
+| Feature                         | Reason Deferred                                                                                       | Design Reference            |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------- |
+| **Evolution cutscene**          | Requires Rive artboard evolution animation sequence + confetti + full-screen dim overlay              | `docs/DESIGN_GUIDE.md` §6.5 |
+| **Dark mode**                   | Deferred per design guide; requires token inversion system                                            | `docs/DESIGN_GUIDE.md` §12  |
+| **GSAP environment animations** | Time-of-day sky shifts, mood-reactive background — deferred to post-MVP                               | `docs/DESIGN_GUIDE.md` §4.4 |
+| **Rive speech bubble**          | ~~Rive artboard speech bubble~~ — resolved; speech bubble is Svelte-side HTML (`SpeechBubble.svelte`) | `docs/rive-spec.md` §6      |
 
 ---
 
