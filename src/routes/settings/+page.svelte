@@ -10,6 +10,8 @@
 	import { showToast } from '$lib/stores/toast.svelte';
 	import { pushStore } from '$lib/notifications';
 
+	const ONBOARDED_KEY = 'hh:onboarded';
+
 	let monsterName = $state(mockMonster.name);
 	let showResetConfirm = $state(false);
 	let signingOut = $state(false);
@@ -17,9 +19,11 @@
 	let waitingForSync = $state(false);
 	let prevSyncStatus = $state($syncStore.status);
 
-	function handleReset() {
-		habits.reset();
+	async function handleReset() {
+		await habits.reset();
+		localStorage.removeItem(ONBOARDED_KEY);
 		showResetConfirm = false;
+		goto(resolve('/onboard'), { replaceState: true });
 	}
 
 	async function handleSignOut() {
@@ -373,7 +377,7 @@
 		<h3 class="mb-3 font-semibold text-gray-700">About</h3>
 		<div class="card text-center">
 			<p class="mb-1 text-2xl">🦖</p>
-			<h4 class="font-display text-lg font-bold text-hungry-600">Hungry Hundreds</h4>
+			<h4 class="text-hungry-600 font-display text-lg font-bold">Hungry Hundreds</h4>
 			<p class="text-sm text-gray-500">Version 0.5.4 (Phase 5 - Animation)</p>
 			<p class="mt-2 text-xs text-gray-400">
 				Build better habits with your evolving monster companion

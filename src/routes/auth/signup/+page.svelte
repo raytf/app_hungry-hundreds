@@ -62,9 +62,9 @@
 				return;
 			}
 
-			// Redirect to onboarding on success
-			goto(resolve('/onboard'));
-		} catch (err) {
+			// Redirect home on success; first-run detection handles onboarding if needed.
+			goto(resolve('/'));
+		} catch {
 			error = 'An unexpected error occurred. Please try again.';
 			loading = false;
 		}
@@ -156,7 +156,7 @@
 	<div class="mt-8 text-center">
 		<p class="text-gray-600">
 			Already have an account?
-			<a href={resolve('/auth/signin')} class="font-semibold text-hungry-600 hover:text-hungry-700">
+			<a href={resolve('/auth/signin')} class="text-hungry-600 hover:text-hungry-700 font-semibold">
 				Sign in
 			</a>
 		</p>

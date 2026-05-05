@@ -1,6 +1,9 @@
 <script lang="ts">
 	import './layout.css';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { onMount, onDestroy } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import AuthGuard from '$lib/components/AuthGuard.svelte';
@@ -11,10 +14,13 @@
 	import { pwaStore } from '$lib/stores/pwa';
 	import { showToast } from '$lib/stores/toast.svelte';
 	import { pushStore } from '$lib/notifications';
+	import { db } from '$lib/db';
 	import { refreshStatus } from '$lib/stores/habits';
 	import { refreshStats } from '$lib/stores/stats';
 
 	let { children } = $props();
+	const ONBOARDED_KEY = 'hh:onboarded';
+	const onboardPath = resolve('/onboard');
 
 	// Show a toast whenever sync transitions into an error state
 	let prevSyncStatus = $state($syncStore.status);
@@ -46,6 +52,17 @@
 		}
 	}
 
+	async function redirectToOnboardingIfNeeded() {
+		if (localStorage.getItem(ONBOARDED_KEY) === '1' || page.url.pathname === onboardPath) {
+			return;
+		}
+
+		const habitCount = await db.habits.count();
+		if (habitCount === 0) {
+			goto(onboardPath, { replaceState: true });
+		}
+	}
+
 	// Initialize app systems on mount
 	onMount(() => {
 		if (browser) {
@@ -68,6 +85,11 @@
 
 			// Initialize push notifications
 			pushStore.init();
+
+			// Send first-time users through the guest-first onboarding flow.
+			redirectToOnboardingIfNeeded().catch((err) => {
+				console.error('[onboarding] Failed to check first-run state:', err);
+			});
 		}
 	});
 
